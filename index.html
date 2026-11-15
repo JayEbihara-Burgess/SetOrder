@@ -296,11 +296,12 @@ function saveGoal(){const B=U.base,w1=nv('gw'),bf1=nv('gbf');gok=false;
  const g={w0:B.w,bf0,w1,bf1,date};let gp=goalPlan(g);let note='';
  if(!gp.ok){
   if(U.goalMode=='date'){g.date=gp.earliest;gp=goalPlan(g);note=`That date is too tight to be realistic. Moved to ${fdate(g.date,{day:'numeric',month:'short',year:'numeric'})}, the earliest date with a 15% safety buffer. `}
-  else{const mk=t=>({w0:B.w,bf0,w1:+(B.w+t*(w1-B.w)).toFixed(1),bf1:+(bf0+t*(bf1-bf0)).toFixed(1),date});
+  else{const F0=B.w-L0,xh=Math.max(0,(w1-B.w)/1.667),rayAt=x=>({w0:B.w,bf0,w1:+(B.w+1.667*x).toFixed(1),bf1:+((F0+.667*x)/(B.w+1.667*x)*100).toFixed(1),date}),useRay=w1>B.w&&rayAt(xh).bf1<=bf1;
+   const mk=useRay?(t=>rayAt(t*xh)):(t=>({w0:B.w,bf0,w1:+(B.w+t*(w1-B.w)).toFixed(1),bf1:+(bf0+t*(bf1-bf0)).toFixed(1),date}));
    let lo=0,hi=1;for(let i=0;i<30;i++){const t=(lo+hi)/2;if(goalPlan(mk(t)).ok)lo=t;else hi=t}
    let t=lo,tg=mk(t);for(let k=0;k<80&&!goalPlan(tg).ok;k++){t*=.99;tg=mk(t)}
    g.w1=tg.w1;g.bf1=tg.bf1;g.want={w1,bf1};gp=goalPlan(g);
-   note=t<.02?`That date is too soon to change much safely, so the plan just holds your weight. Pick a later date for a real change. `:`Date kept. The goal was lowered from ${f(w1)} kg at ${f(bf1,0)}% to ${f(g.w1)} kg at ${f(g.bf1,0)}%, the most the plan can safely reach by then. `}}
+   note=t<.02?`That date is too soon to change much safely, so the plan just holds your weight. Pick a later date for a real change. `:`Date kept. The goal was lowered from ${f(w1)} kg at ${f(bf1,0)}% to ${f(g.w1)} kg at ${f(g.bf1)}%, ${useRay?'the most a steady bulk can safely add by then (some of the gain is fat, as it is in any bulk)':'the most the plan can safely reach by then'}. `}}
  U.goal=g;U.date=g.date;save();gok=true;gmsg=note+`Plan ends at about ${f(gp.wEnd)} kg and ${f(gp.bfEnd,0)}% body fat.`}
 function goalTable(){const gp=U.goal?goalPlan():null;if(!gp)return'';
  if(!gp.ok)return`<p class="warn">This goal no longer fits your timeline. Earliest realistic date is ${fdate(gp.earliest,{day:'numeric',month:'short',year:'numeric'})}. Save the goal again and it will ${U.goalMode=='date'?'move the date':'lower the goal to what fits'}.</p>`;

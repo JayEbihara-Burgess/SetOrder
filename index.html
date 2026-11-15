@@ -139,11 +139,11 @@ const mmss=s=>{if(s==null)return'–';const r=Math.round(s);return Math.floor(r/
 const fdate=(d,o)=>pd(d).toLocaleDateString('en-GB',o);
 const IC=p=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
 const I={today:IC('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),plan:IC('<rect x="4" y="5" width="16" height="15" rx="3.5"/><path d="M4 10h16M9 3v4M15 3v4"/>'),prog:IC('<path d="M4 18l5-6 4 3 7-9"/><path d="M15 6h5v5"/>'),me:IC('<circle cx="12" cy="9" r="4"/><path d="M4.5 20c1.5-4 5-5 7.5-5s6 1 7.5 5"/>'),left:IC('<path d="M15 5l-7 7 7 7"/>'),right:IC('<path d="M9 5l7 7-7 7"/>'),minus:IC('<path d="M6 12h12"/>'),plus:IC('<path d="M12 6v12M6 12h12"/>')};
-let U=null,user=null,tab='day',vd=TODAY,sub=null,editId=null,swapP=null,mode='login',msg='',un='',rest=null,AC=null,fa=null,draft=null,wmsg='',gmsg='',gok=false,swmsg='',es=null,wcarry=null,lift=null,amsg='',aok=false,booting=true,bootErr='',dname='',email='',pendingName='',msgok=false,dirty=false,pt=null,syncMsg='';
+let U=null,user=null,tab='day',vd=TODAY,sub=null,editId=null,swapP=null,mode='login',msg='',un='',rest=null,AC=null,fa=null,draft=null,wmsg='',gmsg='',gok=false,swmsg='',es=null,wcarry=null,lift=null,amsg='',aok=false,booting=true,bootErr='',dname='',email='',pendingName='',msgok=false,dirty=false,pt=null,syncMsg='',gdraft=null;
 
 // ---------- Accounts (Firebase Auth + Firestore cloud save) ----------
 const lsg=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},lss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-const newU=()=>({v:2,ready:0,base:{exp:1},wd:[0,1,1,0,1,1,0],cardio:[],goal:null,sw:{},winc:{},start:TODAY,eq:{db:1,bb:1,sm:1,cb:1,mc:1,lp:1,lm:1,bar:1,dip:1,lat:1},lvl:{},ov:{},sets:[],days:{},acts:[],set:Object.assign({},DS),date:fromN(dn(TODAY)+182)});
+const newU=()=>({v:2,ready:0,base:{exp:1},wd:[0,1,1,0,1,1,0],cardio:[],goal:null,goalMode:'goal',sw:{},winc:{},start:TODAY,eq:{db:1,bb:1,sm:1,cb:1,mc:1,lp:1,lm:1,bar:1,dip:1,lat:1},lvl:{},ov:{},sets:[],days:{},acts:[],set:Object.assign({},DS),date:fromN(dn(TODAY)+182)});
 function norm(u){u=u||newU();const d=newU();
  if(!u.v){u.eq=d.eq;u.set=Object.assign({},u.set,{sports:DS.sports});delete u.ergDay;u.cardio=[];u.v=2}
  for(const k in d)if(u[k]==null)u[k]=d[k];u.set=Object.assign({},DS,u.set);u.eq=Object.assign({},d.eq,u.eq);return u}
@@ -294,10 +294,16 @@ function saveGoal(){const B=U.base,w1=nv('gw'),bf1=nv('gbf');gok=false;
  if(L1<L0*.95){gmsg='That goal needs you to lose more than 5% of your lean mass. Raise the goal weight or body fat.';return}
  let date=$('#gd').value||fromN(dn(U.start)+182);if(dn(date)<dn(U.start)+14)date=fromN(dn(U.start)+14);
  const g={w0:B.w,bf0,w1,bf1,date};let gp=goalPlan(g);let note='';
- if(!gp.ok){g.date=gp.earliest;gp=goalPlan(g);note=`That date is too tight to be realistic. Moved to ${fdate(g.date,{day:'numeric',month:'short',year:'numeric'})}, the earliest date with a 15% safety buffer. `}
+ if(!gp.ok){
+  if(U.goalMode=='date'){g.date=gp.earliest;gp=goalPlan(g);note=`That date is too tight to be realistic. Moved to ${fdate(g.date,{day:'numeric',month:'short',year:'numeric'})}, the earliest date with a 15% safety buffer. `}
+  else{const mk=t=>({w0:B.w,bf0,w1:+(B.w+t*(w1-B.w)).toFixed(1),bf1:+(bf0+t*(bf1-bf0)).toFixed(1),date});
+   let lo=0,hi=1;for(let i=0;i<30;i++){const t=(lo+hi)/2;if(goalPlan(mk(t)).ok)lo=t;else hi=t}
+   let t=lo,tg=mk(t);for(let k=0;k<80&&!goalPlan(tg).ok;k++){t*=.99;tg=mk(t)}
+   g.w1=tg.w1;g.bf1=tg.bf1;g.want={w1,bf1};gp=goalPlan(g);
+   note=t<.02?`That date is too soon to change much safely, so the plan just holds your weight. Pick a later date for a real change. `:`Date kept. The goal was lowered from ${f(w1)} kg at ${f(bf1,0)}% to ${f(g.w1)} kg at ${f(g.bf1,0)}%, the most the plan can safely reach by then. `}}
  U.goal=g;U.date=g.date;save();gok=true;gmsg=note+`Plan ends at about ${f(gp.wEnd)} kg and ${f(gp.bfEnd,0)}% body fat.`}
 function goalTable(){const gp=U.goal?goalPlan():null;if(!gp)return'';
- if(!gp.ok)return`<p class="warn">This goal no longer fits your timeline. Earliest realistic date is ${fdate(gp.earliest,{day:'numeric',month:'short',year:'numeric'})}. Save the goal again to move it.</p>`;
+ if(!gp.ok)return`<p class="warn">This goal no longer fits your timeline. Earliest realistic date is ${fdate(gp.earliest,{day:'numeric',month:'short',year:'numeric'})}. Save the goal again and it will ${U.goalMode=='date'?'move the date':'lower the goal to what fits'}.</p>`;
  return`<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Stage</th><th>Days</th><th>kcal/day vs maintenance</th><th>Ends at</th></tr></thead><tbody>${gp.phases.map(p=>`<tr><td>${cap(p.t)}<br><span class="m">${Math.round(p.wk)} weeks</span></td><td>${p.s+1} to ${p.e}<br><span class="m">${fdate(fromN(dn(U.start)+p.s),{day:'numeric',month:'short'})}</span></td><td>${p.kcal>0?'+':''}${Math.round(p.kcal)}</td><td>${f(p.w1)} kg<br><span class="m">${f(p.bf1,0)}% fat</span></td></tr>`).join('')}</tbody></table></div>`}
 
 // ---------- UI pieces ----------
@@ -389,8 +395,9 @@ function cardioCard(){return`<p class="m" style="margin-top:0">Optional. Switch 
 function eqCard(){return`<div>${Object.keys(EQ).map(k=>`<button class="rowsw" data-eq="${k}"><span>${EQ[k]}</span><i class="tg${U.eq[k]?' on':''}"></i></button>`).join('')}</div><p class="m">Everything starts on. Switch off what your gym lacks and the ladders skip it. Bodyweight exercises are always available.</p>`}
 function baseCard(){const b=U.base;return`<p class="m" style="margin-top:0">Take height and weight from your NHS BMI check. Body fat can be a rough guess.</p>${sl('bh','Height',140,210,1,b.h??null,'cm',{b:'h',d:175})}${sl('bwt','Weight',40,120,.1,b.w??null,'kg',{b:'w',d:70})}${sl('bbf','Body fat',5,35,.5,b.bf??null,'%',{b:'bf',d:15})}
  <div class="fld"><div class="fl"><span>Lifting experience</span></div><div class="seg">${[['Beginner',.8],['Some',1],['Experienced',1.2]].map(([l,v])=>`<button data-exp="${v}" class="${(b.exp||1)==v?'on':''}">${l}</button>`).join('')}</div></div>`}
-function goalCard(){const g=U.goal,b=U.base;return`<p class="m" style="margin-top:0">Where do you want to end up? The plan splits the time into bulk and cut stages and keeps a 15% time buffer, so nothing unrealistic gets through.</p>${sl('gw','Goal weight',40,150,.5,g?g.w1:null,'kg',{d:b.w||70})}${sl('gbf','Goal body fat',6,35,.5,g?g.bf1:null,'%',{d:15})}
- <div class="fld"><div class="fl"><span>Reach it by</span></div><input type="date" id="gd" value="${g?g.date:fromN(dn(U.start)+182)}"></div>${gmsg?`<p class="${gok?'good':'warn'}">${gmsg}</p>`:''}<button class="btn dark" data-a="savegoal">Save goal</button>${goalTable()}`}
+function goalCard(){const g=U.goal,b=U.base,dr=gdraft||{};return`<p class="m" style="margin-top:0">Where do you want to end up? The plan splits the time into bulk and cut stages and keeps a 15% time buffer, so nothing unrealistic gets through.</p>${sl('gw','Goal weight',40,150,.5,dr.w??(g?g.w1:null),'kg',{d:b.w||70})}${sl('gbf','Goal body fat',6,35,.5,dr.b??(g?g.bf1:null),'%',{d:15})}
+ <div class="fld"><div class="fl"><span>Reach it by</span></div><input type="date" id="gd" value="${dr.d||(g?g.date:fromN(dn(U.start)+182))}"></div>
+ <div class="fld"><div class="fl"><span>If that is too fast to be realistic</span></div><div class="seg"><button data-gm="goal" class="${U.goalMode!='date'?'on':''}">Keep my date</button><button data-gm="date" class="${U.goalMode=='date'?'on':''}">Keep my goal</button></div><p class="m">${U.goalMode=='date'?'The date moves later until the goal fits.':'The goal weight and body fat are lowered to the most you can safely reach by your date.'}</p></div>${gmsg?`<p class="${gok?'good':'warn'}">${gmsg}</p>`:''}<button class="btn dark" data-a="savegoal">Save goal</button>${goalTable()}`}
 function setupV(){$('#app').innerHTML=`<div class="wrap" style="padding-bottom:40px"><div class="brand"><i></i>SetOrder</div><h1>Let's set you up</h1><p class="m" style="margin-bottom:18px">A minute now, then Day 1 appears with your workout and calories.</p>
  <div class="card"><div class="eyebrow">About you</div>${baseCard()}</div><div class="card"><div class="eyebrow">Your goal (optional)</div>${goalCard()}</div><div class="card"><div class="eyebrow">Your week</div>${daysCard()}</div><div class="card"><div class="eyebrow">Cardio (optional)</div>${cardioCard()}</div><div class="card"><div class="eyebrow">Your gym</div>${eqCard()}</div><button class="btn" data-a="ready">Start Day 1</button></div>`}
 function planV(){const up=Array.from({length:14},(_,i)=>{const d=fromN(Math.max(dn(TODAY),dn(U.start))+i),t=plan(d),cs=cdue(d);if(!t&&!cs.length)return'';return`<button class="rowsw" data-day="${d}"><span><b>Day ${dn(d)-dn(U.start)+1}</b> · ${fdate(d,{weekday:'short',day:'numeric',month:'short'})}</span><span class="m" style="margin:0;text-align:right">${[t,...cs.map(c=>c.type+': '+cardioRx(c,d).n)].filter(Boolean).join(' + ')}</span></button>`}).join('');
@@ -445,9 +452,10 @@ function render(){if(booting)return loadV();if(bootErr)return errV();if(!U)retur
 // ---------- Events ----------
 function addCardio(t){const days=[6,0,3,2,4,5,1];for(const i of days){const c={type:t,n:1,days:[i]};U.cardio.push(c);if(restFree())return true;U.cardio.pop()}return false}
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const D=b.dataset;
- if(D.tab){tab=D.tab;sub=null;wmsg='';gmsg='';swmsg='';amsg='';es=null;wcarry=null;window.scrollTo(0,0);return render()}
+ if(D.tab){gdraft=null;tab=D.tab;sub=null;wmsg='';gmsg='';swmsg='';amsg='';es=null;wcarry=null;window.scrollTo(0,0);return render()}
  if(D.day){vd=D.day;tab='day';sub=null;rest=null;swapP=null;es=null;wcarry=null;return render()}
  if(D.st){const i=$('#'+D.st);i.value=Math.max(0,+((parseFloat(i.value)||0)+parseFloat(D.dl)).toFixed(2));return}
+ if(D.gm){gdraft={w:nv('gw'),b:nv('gbf'),d:($('#gd')||{}).value};U.goalMode=D.gm;save();return render()}
  if(D.wi){const[n,v,t]=D.wi.split('|');U.winc=U.winc||{};U.winc[n]=+v;save();const wi=$('#'+t),ri=$('#'+(t=='iw'?'ir':'er'));wcarry={n,t,v:wi?wi.value:'',r:ri?ri.value:''};return wk()}
  if(D.mode){mode=D.mode;msg='';return render()}
  if(D.wd!=null){const i=+D.wd;U.wd[i]=U.wd[i]?0:1;wmsg='';if(!restFree()){U.wd[i]=0;wmsg='Keep at least one full rest day a week.'}save();return render()}
@@ -469,7 +477,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  else if(a=='afed'){fa=Object.assign({},fa);fa.fed=!fa.fed;$('#afedtg').classList.toggle('on',!!fa.fed)}
  else if(a=='toggle'){U.ov[vd]=isW(vd)?'rest':'work';save();render()}
  else if(a=='body'){sd(vd,{w:nv('lw'),kcal:nv('lk'),p:nv('lp_')});render()}
- else if(a=='savegoal'){saveGoal();render()}
+ else if(a=='savegoal'){saveGoal();gdraft=null;render()}
  else if(a=='ready'){U.start=$('#start').value||TODAY;U.date=fromN(dn(U.start)+182);if(nv('gw')!=null&&nv('gbf')!=null&&!U.goal)saveGoal();U.ready=1;save();vd=U.start>TODAY?U.start:TODAY;tab='day';gmsg='';render()}
  else if(a=='rxlog'){const c=U.cardio.find(x=>x.type==D.c),x=cardioRx(c,vd);draft={type:c.type,min:x.min,rpe:x.rpe,rx:x.rpe,dist:x.len&&x.kind=='r'?x.reps*x.len:null,note:x.n+': '+rxText(x),fed:!!gd(vd).fed};fa=draft;editId=null;sub='form';render()}
  else if(a=='newact'){fa={type:(U.cardio[0]||{}).type||'Running',min:30,rpe:6,fed:!!gd(vd).fed};editId=null;sub='form';render()}

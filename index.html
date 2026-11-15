@@ -325,7 +325,7 @@ function goalTable(){const gp=U.goal?goalPlan():null;if(!gp)return'';
  if(!gp.ok)return`<p class="warn">This goal no longer fits your timeline. Earliest realistic date is ${fdate(gp.earliest,{day:'numeric',month:'short',year:'numeric'})}. Save the goal again to move it.</p>`;
  return`<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Stage</th><th>Days</th><th>kcal/day vs maintenance</th><th>Ends at</th></tr></thead><tbody>${gp.phases.map(p=>`<tr><td>${cap(p.t)}<br><span class="m">${Math.round(p.wk)} weeks</span></td><td>${p.s+1} to ${p.e}<br><span class="m">${fdate(fromN(dn(U.start)+p.s),{day:'numeric',month:'short'})}</span></td><td>${p.kcal>0?'+':''}${Math.round(p.kcal)}</td><td>${f(p.w1)} kg<br><span class="m">${f(p.bf1,0)}% fat</span></td></tr>`).join('')}</tbody></table></div>`}
 
-// ---------- UI pieces, full-width side-by-side carousel slide & spring tab scrubbing ----------
+// ---------- UI pieces, full-width side-by-side carousel slide & live tab scrubbing ----------
 const opts=(a,s)=>a.map(x=>`<option${x==s?' selected':''}>${esc(x)}</option>`).join('');
 const sl=(id,l,min,max,st,v,u,o={})=>{const at=(o.k?` data-s="${o.k}"`:'')+(o.f?` data-f="${o.f}"`:'')+(o.b?` data-b="${o.b}"`:'');
  return`<div class="fld"><div class="fl"><span>${l}</span>${u?`<em>${u}</em>`:''}</div><div class="sl"><input type="range" data-p="${id}"${at} min="${min}" max="${max}" step="${st}" value="${v??o.d??min}" aria-label="${l}"><input type="number" inputmode="decimal" id="${id}" data-p="${id}"${at} step="${st}" value="${v??''}"></div></div>`};
@@ -360,7 +360,7 @@ function morphPill(pill,fromPos,toIdx,startSx=1,startSy=1){
  pillAnim.onfinish=()=>{pillAnim=null};
 }
 
-let scrub={active:false,dragging:false,pid:null,startX:0,startY:0,targetPos:0,pos:0,vel:0,sx:1,sy:1,lastHover:-1,holdTimer:null,raf:null};
+let scrub={active:false,dragging:false,pid:null,startX:0,startY:0,targetPos:0,pos:0,vel:0,sx:1,sy:1,lastHover:-1,raf:null};
 let suppressClickUntil=0;
 
 function bindTabScrub(){
@@ -407,11 +407,13 @@ function bindTabScrub(){
   if(hoverIdx!==scrub.lastHover){
    scrub.lastHover=hoverIdx;
    try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
+   const nextTab=TABS[hoverIdx];
+   if(nextTab&&nextTab!==tab)switchTab(nextTab,true);
   }
   scrub.raf=requestAnimationFrame(tickScrub);
  };
 
- const engageDrag=(clientX)=>{
+ const engageDrag=clientX=>{
   if(scrub.dragging)return;
   scrub.dragging=true;
   nav.classList.add('scrubbing');
@@ -426,7 +428,6 @@ function bindTabScrub(){
 
  nav.addEventListener('pointerdown',e=>{
   if(e.button!==0&&e.pointerType==='mouse')return;
-  clearTimeout(scrub.holdTimer);
   if(scrub.raf){cancelAnimationFrame(scrub.raf);scrub.raf=null}
   const curIdx=Math.max(0,TABS.indexOf(tab));
   scrub={
@@ -441,7 +442,6 @@ function bindTabScrub(){
    sx:1,
    sy:1,
    lastHover:curIdx,
-   holdTimer:setTimeout(()=>engageDrag(e.clientX),190),
    raf:null
   };
   try{nav.setPointerCapture(e.pointerId)}catch(err){}
@@ -454,8 +454,9 @@ function bindTabScrub(){
  nav.addEventListener('pointermove',e=>{
   if(!scrub.active||e.pointerId!==scrub.pid)return;
   if(!scrub.dragging){
-   if(Math.hypot(e.clientX-scrub.startX,e.clientY-scrub.startY)>7){
-    clearTimeout(scrub.holdTimer);
+   const dx=Math.abs(e.clientX-scrub.startX);
+   const dy=Math.abs(e.clientY-scrub.startY);
+   if(dx>8&&dx>=dy){
     engageDrag(e.clientX);
    }
    return;
@@ -466,7 +467,6 @@ function bindTabScrub(){
 
  const finishScrub=e=>{
   if(!scrub.active||(e&&e.pointerId!==scrub.pid))return;
-  clearTimeout(scrub.holdTimer);
   if(scrub.raf){cancelAnimationFrame(scrub.raf);scrub.raf=null}
   try{nav.releasePointerCapture(scrub.pid)}catch(err){}
   const wasDragging=scrub.dragging;

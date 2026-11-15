@@ -92,7 +92,7 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{padding:9px 4px
 <script>
 // ---------- Exercise library ----------
 // pattern: [label, 'name|equipment|repLow|repHigh|kg step (0 = bodyweight)|rest s|day-1 kg per kg bodyweight', ...] ordered easiest to hardest
-// equipment: bw bodyweight, bar pull-up bar, dip dip station, db dumbbells, bb barbell+rack, sm smith, cb cable, mc machines, lp leg press, lm leg curl/extension, lat lat pulldown
+// equipment: pm pulley machine, bw bodyweight, bar pull-up bar, dip dip station, db dumbbells, bb barbell+rack, sm smith, cb cable, mc machines, lp leg press, lm leg curl/extension, lat lat pulldown
 const LAD={
 push_h:['Chest press','Incline push-up|bw|8|15|0|60|0','Push-up|bw|8|20|0|60|0','Feet-elevated push-up|bw|8|15|0|75|0','Machine chest press|mc|8|12|2.5|120|.5','DB bench press|db|6|10|2|120|.28','Smith bench press|sm|6|10|2.5|150|.5','Barbell bench press|bb|6|10|2.5|150|.6'],
 push_i:['Incline press','Wide push-up|bw|8|15|0|60|0','Incline DB press|db|6|10|2|120|.22','Smith incline press|sm|6|10|2.5|150|.4','Incline barbell press|bb|6|10|2.5|150|.5'],
@@ -100,11 +100,11 @@ fly:['Chest fly','Cable fly|cb|10|15|1.25|75|.08','Pec deck|mc|10|15|2.5|75|.3',
 dips:['Dips','Bench dip|bw|8|15|0|60|0','Dips|dip|6|12|0|90|0','Weighted dip|dip|5|10|2.5|120|0'],
 push_v:['Shoulder press','Pike push-up|bw|6|15|0|75|0','Feet-elevated pike push-up|bw|5|12|0|90|0','Machine shoulder press|mc|8|12|2.5|120|.35','DB shoulder press|db|6|10|2|120|.2','Smith shoulder press|sm|6|10|2.5|120|.3','Barbell overhead press|bb|6|10|2.5|150|.4'],
 side:['Side delts','Y-raise|bw|12|20|0|45|0','Lateral raise|db|12|20|1|60|.07','Cable lateral raise|cb|12|20|1.25|60|.06','Machine lateral raise|mc|12|20|2.5|60|.2'],
-tri:['Triceps','Close-grip push-up|bw|8|15|0|60|0','Overhead DB extension|db|8|12|2|75|.2','Cable pushdown|cb|10|15|2.5|75|.3','Cable overhead extension|cb|10|15|2.5|75|.25','Skull crusher|bb|8|12|2.5|90|.25'],
+tri:['Triceps','Close-grip push-up|bw|8|15|0|60|0','Overhead DB extension|db|8|12|2|75|.2','Cable pushdown|cb|10|15|2.5|75|.3','Cable overhead extension|cb|10|15|2.5|75|.25','Skull crusher|bb|8|12|2.5|90|.25','Pulley pushdown|pm|10|15|2.5|75|.3'],
 pull_v:['Vertical pull','Negative pull-up|bar|3|6|0|90|0','Lat pulldown|lat|8|12|2.5|120|.65','Pull-up|bar|5|12|0|120|0','Chin-up|bar|5|12|0|120|0','Weighted pull-up|bar|5|10|1.25|150|0'],
-pull_h:['Row','Inverted row|sm|8|15|0|75|0','Feet-elevated inverted row|sm|8|15|0|75|0','Seated cable row|cb|8|12|2.5|120|.5','One-arm DB row|db|8|12|2|90|.28','Chest-supported row|mc|8|12|2.5|120|.5','Barbell row|bb|6|10|2.5|150|.5'],
-rear:['Rear delts','Prone Y-T raise|bw|10|20|0|45|0','Cable face pull|cb|12|20|2.5|60|.2','DB rear delt fly|db|12|20|1|60|.1','Reverse pec deck|mc|12|20|2.5|60|.25'],
-bi:['Biceps','Supinated inverted row|sm|8|15|0|60|0','DB curl|db|8|12|1|75|.13','Hammer curl|db|8|12|1|75|.14','Cable curl|cb|10|15|2.5|60|.2','Barbell curl|bb|8|12|2.5|75|.25'],
+pull_h:['Row','Inverted row|sm|8|15|0|75|0','Feet-elevated inverted row|sm|8|15|0|75|0','Seated cable row|cb|8|12|2.5|120|.5','One-arm DB row|db|8|12|2|90|.28','Chest-supported row|mc|8|12|2.5|120|.5','Barbell row|bb|6|10|2.5|150|.5','Pulley seated row|pm|8|12|2.5|120|.5'],
+rear:['Rear delts','Prone Y-T raise|bw|10|20|0|45|0','Cable face pull|cb|12|20|2.5|60|.2','DB rear delt fly|db|12|20|1|60|.1','Reverse pec deck|mc|12|20|2.5|60|.25','Pulley face pull|pm|12|20|2.5|60|.2'],
+bi:['Biceps','Supinated inverted row|sm|8|15|0|60|0','DB curl|db|8|12|1|75|.13','Hammer curl|db|8|12|1|75|.14','Cable curl|cb|10|15|2.5|60|.2','Barbell curl|bb|8|12|2.5|75|.25','Pulley curl|pm|10|15|2.5|60|.2'],
 traps:['Traps','Scapular pull-up|bar|8|15|0|45|0','DB shrug|db|10|15|2|60|.4','Smith shrug|sm|10|15|5|60|.5','Barbell shrug|bb|8|12|5|75|.6'],
 squat:['Squat','Bodyweight squat|bw|12|25|0|60|0','Goblet squat|db|8|12|2|90|.3','Leg press|lp|8|12|5|150|1.5','Smith squat|sm|6|10|2.5|150|.6','Barbell back squat|bb|6|10|2.5|180|.8'],
 hinge:['Hinge','Back extension|bw|10|20|0|60|0','DB Romanian deadlift|db|8|12|2|120|.3','Smith Romanian deadlift|sm|8|12|2.5|120|.5','Barbell Romanian deadlift|bb|6|10|2.5|150|.8','Deadlift|bb|4|8|2.5|180|1'],
@@ -120,11 +120,11 @@ const SES={
 'Upper B':[['pull_v',3],['push_i',3],['dips',2],['rear',3],['bi',3],['traps',2]],
 'Lower B':[['uni',3],['glute',3],['quad',3],['ham',2],['core',2]]};
 const SPLIT=Object.keys(SES),LOWER=new Set(['squat','hinge','glute','uni','quad','ham','calf']);
-const EQ={db:'Dumbbells',bb:'Barbell and squat rack',sm:'Smith machine',cb:'Cable machine',mc:'Chest, shoulder and row machines',lp:'Leg press',lm:'Leg curl and extension machines',bar:'Pull-up bar',dip:'Dip station',lat:'Lat pulldown'};
-const CARDIO=['Rowing erg','Running','Cycling','Swimming','Ski erg','Incline walk','Elliptical'];
-const CMET={'Rowing erg':7,'Running':9.8,'Cycling':7.5,'Swimming':8,'Ski erg':8,'Incline walk':5,'Elliptical':5};
+const EQ={db:'Dumbbells',bb:'Barbell and squat rack',sm:'Smith machine',cb:'Cable machine',pm:'Pulley machine',mc:'Chest, shoulder and row machines',lp:'Leg press',lm:'Leg curl and extension machines',bar:'Pull-up bar',dip:'Dip station',lat:'Lat pulldown'};
+const CARDIO=['Rowing erg','Ski erg','Bike erg'];
+const CMET={'Bike erg':7.5,'Rowing erg':7,'Running':9.8,'Cycling':7.5,'Swimming':8,'Ski erg':8,'Incline walk':5,'Elliptical':5};
 const NM=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],ORD=[1,2,3,4,5,6,0],DL='SMTWTFS';
-const DS={pal:1.6,sc:2,fc:2,setAU:20,actAdd:.5,rest:1,sports:'Rowing erg, 7\nRunning, 9.8\nCycling, 7.5\nSwimming, 8\nSki erg, 8\nIncline walk, 5\nElliptical, 5\nUltimate, 8\nTennis, 7\nOther, 5'};
+const DS={pal:1.6,sc:2,fc:2,setAU:20,actAdd:.5,rest:1,sports:'Rowing erg, 7\nRunning, 9.8\nCycling, 7.5\nSwimming, 8\nSki erg, 8\nBike erg, 7.5\nIncline walk, 5\nElliptical, 5\nUltimate, 8\nTennis, 7\nOther, 5'};
 const lad=p=>LAD[p].slice(1).map(s=>{const[n,eq,lo,hi,step,rest,ratio]=s.split('|');return{n,eq,lo:+lo,hi:+hi,step:+step,rest:+rest,ratio:+ratio}});
 
 // ---------- Helpers ----------
@@ -143,7 +143,7 @@ let U=null,user=null,tab='day',vd=TODAY,sub=null,editId=null,swapP=null,mode='lo
 
 // ---------- Accounts (Firebase Auth + Firestore cloud save) ----------
 const lsg=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},lss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-const newU=()=>({v:2,ready:0,base:{exp:1},wd:[0,1,1,0,1,1,0],cardio:[],goal:null,goalMode:'goal',sw:{},winc:{},start:TODAY,eq:{db:1,bb:1,sm:1,cb:1,mc:1,lp:1,lm:1,bar:1,dip:1,lat:1},lvl:{},ov:{},sets:[],days:{},acts:[],set:Object.assign({},DS),date:fromN(dn(TODAY)+182)});
+const newU=()=>({v:2,ready:0,base:{exp:1},wd:[0,1,1,0,1,1,0],cardio:[],goal:null,goalMode:'goal',sw:{},winc:{},start:TODAY,eq:{db:1,bb:1,sm:1,cb:1,pm:1,mc:1,lp:1,lm:1,bar:1,dip:1,lat:1},lvl:{},ov:{},sets:[],days:{},acts:[],set:Object.assign({},DS),date:fromN(dn(TODAY)+182)});
 function norm(u){u=u||newU();const d=newU();
  if(!u.v){u.eq=d.eq;u.set=Object.assign({},u.set,{sports:DS.sports});delete u.ergDay;u.cardio=[];u.v=2}
  for(const k in d)if(u[k]==null)u[k]=d[k];u.set=Object.assign({},DS,u.set);u.eq=Object.assign({},d.eq,u.eq);return u}
@@ -233,7 +233,7 @@ const wpts=()=>Object.keys(U.days).filter(k=>U.days[k].w!=null&&dn(k)>dn(TODAY)-
 function calc(){const P=wpts(),r=reg(P,6),ks=Object.keys(U.days).filter(k=>U.days[k].kcal!=null&&dn(k)>dn(TODAY)-14),kc=avg(ks.map(k=>U.days[k].kcal)),tdee=r&&ks.length>=5?kc-r.b*7700:null,B=base();return{r,kc,kn:ks.length,tdee,maint:tdee||(B?B.tdee:null),src:tdee?'your logged data':B?'your baseline':'a default estimate'}}
 const sports=()=>U.set.sports.split('\n').map(l=>{const[n,m]=l.split(',');return{n:(n||'').trim(),met:parseFloat(m)||6}}).filter(x=>x.n);
 function am(a){const arr=(a.splits||'').split(/[,\s]+/).filter(Boolean).map(ps).filter(x=>x>0),sp=arr.length?avg(arr):(a.split?ps(a.split):null),w=sp&&a.type=='Rowing erg'?2.8/(sp/500)**3:null;
- const m=sports().find(x=>x.n==a.type),rpe=a.rpe||6,kcal=w?w*a.min*60/4184/.24:(m?m.met:6)*bw()*(a.min/60)*(rpe/6);let drift=null;
+ const m=sports().find(x=>x.n==a.type),rpe=a.rpe||6,kcal=w?w*a.min*60/4184/.24:(m?m.met:(CMET[a.type]||6))*bw()*(a.min/60)*(rpe/6);let drift=null;
  if(arr.length>=4){const h=Math.floor(arr.length/2);drift=avg(arr.slice(h))-avg(arr.slice(0,h))}return{sp,w,kcal,drift}}
 const dayActs=()=>U.acts.filter(a=>a.d==vd);
 function loads(){const au=d=>U.sets.filter(s=>s.d==d).length*U.set.setAU+U.acts.filter(a=>a.d==d).reduce((t,a)=>t+a.min*(a.rpe||6),0),t=dn(TODAY);let ac=0,ch=0;for(let i=0;i<28;i++){const v=au(fromN(t-i));if(i<7)ac+=v;ch+=v}ch/=4;return{ac,ch,r:ch>0?ac/ch:null}}
@@ -377,7 +377,7 @@ setInterval(()=>{const el=$('#rest');if(!rest){el.hidden=true;return}el.hidden=f
 function readForm(){fa=Object.assign({},fa,{type:$('#atype').value,min:nv('amin')||0,dist:nv('adist'),hr:nv('ahr'),rpe:nv('arpe')||6,split:($('#asplit')||{value:(fa&&fa.split)||''}).value,splits:($('#asplits')||{value:(fa&&fa.splits)||''}).value,spm:$('#aspm')?nv('aspm'):(fa&&fa.spm),note:$('#anote').value})}
 function formV(){const a=fa||{type:'Running',min:30,rpe:6};
  $('#app').innerHTML=`<div class="wrap"><div class="top"><div><div class="eyebrow">${fdate(vd,{weekday:'long',day:'numeric',month:'long'})}</div><h1 style="font-size:2.2rem">${editId?'Edit session':'New session'}</h1></div><button class="ib" data-a="cancel" aria-label="Back">${I.left}</button></div>
- <div class="card"><div class="fl"><span>What was it?</span></div><select id="atype">${opts(sports().map(x=>x.n),a.type)}</select>
+ <div class="card"><div class="fl"><span>What was it?</span></div><select id="atype">${opts([...new Set([...sports().map(x=>x.n),...U.cardio.map(c=>c.type),'Bike erg'])],a.type)}</select>
  ${sl('amin','Duration',0,180,5,a.min,'min')}${sl('adist','Distance (optional)',0,42000,100,a.dist??null,'m')}${sl('ahr','Average heart rate (optional)',60,200,1,a.hr??null,'bpm')}${sl('arpe','Effort, RPE (10 is all out)',1,10,.5,a.rpe,'')}</div>
  ${a.type=='Rowing erg'?`<div class="card"><div class="two"><div><div class="fl"><span>Average split /500m</span></div><input type="text" id="asplit" placeholder="2:05" value="${esc(a.split||'')}"></div><div><div class="fl"><span>Stroke rate</span></div><input type="number" id="aspm" inputmode="numeric" value="${a.spm??''}"></div></div>
  <div class="fld"><div class="fl"><span>Individual splits</span><em>comma separated, overrides the average</em></div><textarea id="asplits" rows="2" placeholder="2:08, 2:06, 2:05, 2:07">${esc(a.splits||'')}</textarea></div></div>`:''}
@@ -390,7 +390,7 @@ const restFree=()=>[0,1,2,3,4,5,6].some(i=>!U.wd[i]&&!U.cardio.some(c=>c.days.in
 function daysCard(){return`<div class="fl"><span>Lifting days</span><em>keep at least one full rest day</em></div><div class="chips7">${ORD.map(i=>`<button class="dchip${U.wd[i]?' on':''}" data-wd="${i}">${NM[i]}</button>`).join('')}</div>
  <p class="m">Sessions rotate through ${SPLIT.join(', ')} on these days. You can still add or skip a single day from Today.</p>${wmsg?`<p class="warn">${wmsg}</p>`:''}
  <div class="fld"><div class="fl"><span>Day 1 is</span></div><input type="date" id="start" value="${U.start}"></div>`}
-function cardioCard(){return`<p class="m" style="margin-top:0">Optional. Switch on what you do, then choose sessions per week and which days. Intensity is set for you.</p><div>${CARDIO.map(t=>`<button class="rowsw" data-cd="${t}"><span>${t}</span><i class="tg${U.cardio.some(c=>c.type==t)?' on':''}"></i></button>`).join('')}</div>
+function cardioCard(){return`<p class="m" style="margin-top:0">Optional. Switch on what you do, then choose sessions per week and which days. Intensity is set for you.</p><div>${[...new Set([...CARDIO,...U.cardio.map(c=>c.type)])].map(t=>`<button class="rowsw" data-cd="${t}"><span>${t}</span><i class="tg${U.cardio.some(c=>c.type==t)?' on':''}"></i></button>`).join('')}</div>
  ${U.cardio.map(c=>`<div class="fld"><div class="fl"><span>${c.type}: sessions per week</span><em>${c.days.length} of ${c.n} days chosen</em></div><div class="seg">${[1,2,3,4,5].map(n=>`<button data-cn="${c.type}|${n}" class="${c.n==n?'on':''}">${n}</button>`).join('')}</div><div class="chips7" style="margin-top:8px">${ORD.map(i=>`<button class="dchip${c.days.includes(i)?' on':''}" data-cday="${c.type}|${i}">${NM[i]}</button>`).join('')}</div></div>`).join('')}
  ${U.cardio.some(c=>c.type=='Rowing erg')?`<div class="fld"><div class="fl"><span>Rough 2k erg split</span><em>optional, like 2:05</em></div><input type="text" data-b="s2k" placeholder="2:05" value="${esc(U.base.s2k||'')}"></div>`:''}`}
 function eqCard(){return`<div>${Object.keys(EQ).map(k=>`<button class="rowsw" data-eq="${k}"><span>${EQ[k]}</span><i class="tg${U.eq[k]?' on':''}"></i></button>`).join('')}</div><p class="m">Everything starts on. Switch off what your gym lacks and the ladders skip it. Bodyweight exercises are always available.</p>`}

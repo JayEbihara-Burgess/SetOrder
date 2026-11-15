@@ -69,6 +69,12 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .dchip{border:0;background:var(--soft);color:var(--ink);border-radius:14px;padding:12px 0;font-weight:600;font-size:.78rem;cursor:pointer;font-family:inherit}.dchip.on{background:var(--ink);color:var(--bg)}
 .rowsw{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;border:0;border-bottom:1px solid var(--line);background:none;padding:13px 0;font-family:inherit;font-size:1rem;color:var(--ink);cursor:pointer;text-align:left}
 .rowsw:last-child{border-bottom:0}
+.fold-hd{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;border:0;background:none;padding:2px 0;font-family:inherit;color:var(--ink);cursor:pointer;text-align:left}
+.fold-hd .eyebrow{margin:0}
+.fold-meta{display:flex;align-items:center;gap:8px;color:var(--mute);font-size:.78rem;font-weight:600;flex:none}
+.fold-meta .ic{width:18px;height:18px;transition:transform .22s ease}
+.fold-meta .ic.open{transform:rotate(180deg)}
+.fold-body{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .tg{width:46px;height:28px;border-radius:14px;background:var(--soft);position:relative;flex:none;transition:.15s;box-shadow:inset 0 0 0 1px var(--line)}
 .tg::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.3);transition:.15s}
 .tg.on{background:var(--acc)}.tg.on::after{transform:translateX(18px);background:#15171a}
@@ -161,16 +167,16 @@ const ps=x=>{const[a,b]=String(x).trim().split(':');return b!=null?(+a)*60+(+b):
 const mmss=s=>{if(s==null)return'–';const r=Math.round(s);return Math.floor(r/60)+':'+z(r%60)};
 const fdate=(d,o)=>pd(d).toLocaleDateString('en-GB',o);
 const IC=p=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
-const I={today:IC('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),plan:IC('<rect x="4" y="5" width="16" height="15" rx="3.5"/><path d="M4 10h16M9 3v4M15 3v4"/>'),prog:IC('<path d="M4 18l5-6 4 3 7-9"/><path d="M15 6h5v5"/>'),me:IC('<circle cx="12" cy="9" r="4"/><path d="M4.5 20c1.5-4 5-5 7.5-5s6 1 7.5 5"/>'),left:IC('<path d="M15 5l-7 7 7 7"/>'),right:IC('<path d="M9 5l7 7-7 7"/>'),minus:IC('<path d="M6 12h12"/>'),plus:IC('<path d="M12 6v12M6 12h12"/>')};
-let U=null,user=null,tab='day',renderedTab=null,pillAnim=null,slideCleanup=null,vd=TODAY,stripAnimDir=0,sub=null,editId=null,swapP=null,mode='login',msg='',un='',rest=null,AC=null,fa=null,draft=null,wmsg='',gmsg='',gok=false,swmsg='',es=null,wcarry=null,lift=null,amsg='',aok=false,booting=true,bootErr='',dname='',email='',pendingName='',msgok=false,dirty=false,pt=null,syncMsg='';
+const I={today:IC('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),plan:IC('<rect x="4" y="5" width="16" height="15" rx="3.5"/><path d="M4 10h16M9 3v4M15 3v4"/>'),prog:IC('<path d="M4 18l5-6 4 3 7-9"/><path d="M15 6h5v5"/>'),me:IC('<circle cx="12" cy="9" r="4"/><path d="M4.5 20c1.5-4 5-5 7.5-5s6 1 7.5 5"/>'),left:IC('<path d="M15 5l-7 7 7 7"/>'),right:IC('<path d="M9 5l7 7-7 7"/>'),minus:IC('<path d="M6 12h12"/>'),plus:IC('<path d="M12 6v12M6 12h12"/>'),down:IC('<path d="M6 9l6 6 6-6"/>')};
+let U=null,user=null,tab='day',renderedTab=null,pillAnim=null,slideCleanup=null,vd=TODAY,stripAnimDir=0,sub=null,editId=null,swapP=null,mode='login',msg='',un='',rest=null,AC=null,fa=null,draft=null,wmsg='',gmsg='',gok=false,swmsg='',es=null,wcarry=null,lift=null,amsg='',aok=false,booting=true,bootErr='',dname='',email='',pendingName='',msgok=false,dirty=false,pt=null,syncMsg='',folds={cal:false,wt:false};
 
 // ---------- Accounts (Firebase Auth + Firestore cloud save) ----------
 const lsg=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},lss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-const newU=()=>({v:2,ready:0,base:{exp:1},wd:[0,1,1,0,1,1,0],cardio:[],goal:null,cal:{pct:0,off:{}},man:{},sw:{},winc:{},start:TODAY,eq:{db:1,bb:1,sm:1,cb:1,mc:1,lp:1,lm:1,bar:1,dip:1,lat:1},lvl:{},ov:{},sets:[],days:{},acts:[],set:Object.assign({},DS),date:fromN(dn(TODAY)+182)});
+const newU=()=>({v:2,ready:0,base:{exp:1},wd:[0,1,1,0,1,1,0],cardio:[],goal:null,cal:{pct:0,off:{}},wtoff:{},man:{},sw:{},winc:{},start:TODAY,eq:{db:1,bb:1,sm:1,cb:1,mc:1,lp:1,lm:1,bar:1,dip:1,lat:1},lvl:{},ov:{},sets:[],days:{},acts:[],set:Object.assign({},DS),date:fromN(dn(TODAY)+182)});
 function norm(u){u=u||newU();const d=newU();
  if(!u.v){u.eq=d.eq;u.set=Object.assign({},u.set,{sports:DS.sports});delete u.ergDay;u.cardio=[];u.v=2}
  for(const k in d)if(u[k]==null)u[k]=d[k];u.set=Object.assign({},DS,u.set);u.eq=Object.assign({},d.eq,u.eq);
- u.cal=Object.assign({pct:0,off:{}},u.cal);u.cal.off=u.cal.off||{};u.man=u.man||{};return u}
+ u.cal=Object.assign({pct:0,off:{}},u.cal);u.cal.off=u.cal.off||{};u.wtoff=u.wtoff||{};u.man=u.man||{};return u}
 const save=()=>{if(!user||!U)return;U.t=Date.now();lss('setorder-d-'+user,U);push()};
 function push(){dirty=true;clearTimeout(pt);pt=setTimeout(flush,600);updSync()}
 async function flush(){clearTimeout(pt);if(!user||!U||!window.FB)return;const t=U.t,uid=user;
@@ -237,7 +243,8 @@ const avail=p=>{const a=lad(p).map((e,i)=>({e,i})),r=a.filter(x=>x.e.eq=='bw'||U
 // Training style: calisthenics exercises have no per-kg start ratio (bodyweight, or weighted dips and pull-ups).
 // U.cal.pct is the share of movements done with bodyweight. The movements best suited to calisthenics switch first.
 const isCal=e=>!e.ratio,CORD=['push_h','pull_v','dips','push_v','core','pull_h','uni','squat','push_i','tri','bi','glute','hinge','calf','ham','quad','traps','rear','side'];
-const av=p=>{const a=avail(p),r=a.filter(x=>!(isCal(x.e)&&U.cal.off[x.e.n]));return r.length?r:a};
+const isExOff=e=>isCal(e)?!!U.cal.off[e.n]:!!U.wtoff[e.n];
+const av=p=>{const a=avail(p),r=a.filter(x=>!isExOff(x.e));return r.length?r:a};
 function bwSet(){const c=CORD.filter(p=>avail(p).some(x=>isCal(x.e)&&!U.cal.off[x.e.n]));return new Set(c.slice(0,Math.round((U.cal.pct||0)/100*c.length)))}
 function pool(p){const A=av(p),W=A.filter(x=>!isCal(x.e)),B=A.filter(x=>isCal(x.e));if(bwSet().has(p)&&B.length)return B;return W.length?W:(B.length?B:A)}
 const bw=()=>U.base.w||(wpts().slice(-1)[0]||[0,70])[1];
@@ -740,12 +747,20 @@ function goalCard(){const g=U.goal,b=U.base;return`<p class="m" style="margin-to
  <div class="fld"><div class="fl"><span>Reach it by</span></div><input type="date" id="gd" value="${g?g.date:fromN(dn(U.start)+182)}"></div>${gmsg?`<p class="${gok?'good':'warn'}">${gmsg}</p>`:''}<button class="btn dark" data-a="savegoal">Save goal</button>${goalTable()}`}
 function styleCard(){const pct=U.cal.pct||0,bs=[...bwSet()].map(p=>LAD[p][0]);
  return`<p class="m" style="margin-top:0">How much of your training is bodyweight. 0% is all weights. At 100% every movement that has a bodyweight option uses one. In between, the movements best suited to calisthenics switch first.</p><div class="seg">${[['Weights',0],['Mixed',50],['Calisthenics',100]].map(([l,v])=>`<button data-cp="${v}" class="${pct==v?'on':''}">${l}</button>`).join('')}</div>${sl('cpct','Bodyweight share',0,100,5,pct,'%',{cal:1})}<p class="m">${bs.length?'Bodyweight: '+bs.join(', ')+'.':'Every movement uses weights where it can.'}</p>`}
-function calCard(){if(!(U.cal.pct>0))return'';
- return`<div class="card"><div class="eyebrow">Calisthenics exercises</div><p class="m" style="margin-top:0">Switch off any you do not want. They will not be picked or offered as swaps.</p>${Object.keys(LAD).map(p=>{const xs=avail(p).filter(x=>isCal(x.e));if(!xs.length)return'';return`<div class="fld"><div class="fl"><span>${LAD[p][0]}</span></div>${xs.map(x=>`<button class="rowsw" data-cx="${esc(x.e.n)}"><span>${x.e.n}</span><i class="tg${U.cal.off[x.e.n]?'':' on'}"></i></button>`).join('')}</div>`}).join('')}</div>`}
+function calCard(){
+ const all=Object.keys(LAD).flatMap(p=>avail(p).filter(x=>isCal(x.e)));
+ if(!all.length)return'';
+ const onCount=all.filter(x=>!U.cal.off[x.e.n]).length,open=!!folds.cal;
+ return`<div class="card"><button class="fold-hd" data-fold="cal" aria-expanded="${open}"><div><div class="eyebrow">Calisthenics exercises</div><div class="m" style="margin-top:2px">${onCount} of ${all.length} enabled</div></div><span class="fold-meta">${open?'Hide':'Show'}${I.down.replace('class="ic"','class="ic'+(open?' open':'')+'"')}</span></button>${open?`<div class="fold-body"><p class="m" style="margin-top:0">Switch off any you do not want. They will not be picked or offered as swaps.</p>${Object.keys(LAD).map(p=>{const xs=avail(p).filter(x=>isCal(x.e));if(!xs.length)return'';return`<div class="fld"><div class="fl"><span>${LAD[p][0]}</span></div>${xs.map(x=>`<button class="rowsw" data-cx="${esc(x.e.n)}"><span>${x.e.n}</span><i class="tg${U.cal.off[x.e.n]?'':' on'}"></i></button>`).join('')}</div>`}).join('')}</div>`:''}</div>`}
+function wtCard(){
+ const all=Object.keys(LAD).flatMap(p=>avail(p).filter(x=>!isCal(x.e)));
+ if(!all.length)return'';
+ const onCount=all.filter(x=>!U.wtoff[x.e.n]).length,open=!!folds.wt;
+ return`<div class="card"><button class="fold-hd" data-fold="wt" aria-expanded="${open}"><div><div class="eyebrow">Weights exercises</div><div class="m" style="margin-top:2px">${onCount} of ${all.length} enabled</div></div><span class="fold-meta">${open?'Hide':'Show'}${I.down.replace('class="ic"','class="ic'+(open?' open':'')+'"')}</span></button>${open?`<div class="fold-body"><p class="m" style="margin-top:0">Switch off any you do not want. They will not be picked or offered as swaps.</p>${Object.keys(LAD).map(p=>{const xs=avail(p).filter(x=>!isCal(x.e));if(!xs.length)return'';return`<div class="fld"><div class="fl"><span>${LAD[p][0]}</span></div>${xs.map(x=>`<button class="rowsw" data-wx="${esc(x.e.n)}"><span>${x.e.n}</span><i class="tg${U.wtoff[x.e.n]?'':' on'}"></i></button>`).join('')}</div>`}).join('')}</div>`:''}</div>`}
 function setupV(){const y=window.scrollY||0;renderedTab=null;$('#app').innerHTML=`<div class="wrap" style="padding-bottom:40px"><div class="brand"><i></i>SetOrder<button class="signout-top" data-a="out" type="button" style="margin-left:auto">Sign out</button></div><h1>Let's set you up</h1><p class="m" style="margin-bottom:18px">A minute now, then Day 1 appears with your workout and calories.</p>
- <div class="card"><div class="eyebrow">About you</div>${baseCard()}</div><div class="card"><div class="eyebrow">Your goal (optional)</div>${goalCard()}</div><div class="card"><div class="eyebrow">Your week</div>${daysCard()}</div><div class="card"><div class="eyebrow">Training style</div>${styleCard()}</div>${calCard()}<div class="card"><div class="eyebrow">Cardio (optional)</div>${cardioCard()}</div><div class="card"><div class="eyebrow">Your gym</div>${eqCard()}</div><button class="btn" data-a="ready">Start Day 1</button></div>`;window.scrollTo(0,y)}
+ <div class="card"><div class="eyebrow">About you</div>${baseCard()}</div><div class="card"><div class="eyebrow">Your goal (optional)</div>${goalCard()}</div><div class="card"><div class="eyebrow">Your week</div>${daysCard()}</div><div class="card"><div class="eyebrow">Training style</div>${styleCard()}</div>${calCard()}${wtCard()}<div class="card"><div class="eyebrow">Cardio (optional)</div>${cardioCard()}</div><div class="card"><div class="eyebrow">Your gym</div>${eqCard()}</div><button class="btn" data-a="ready">Start Day 1</button></div>`;window.scrollTo(0,y)}
 function planV(fromScrub=false){const up=Array.from({length:14},(_,i)=>{const d=fromN(Math.max(dn(TODAY),dn(U.start))+i),t=plan(d),cs=cdue(d);if(!t&&!cs.length)return'';return`<button class="rowsw" data-day="${d}"><span><b>Day ${dn(d)-dn(U.start)+1}</b> · ${fdate(d,{weekday:'short',day:'numeric',month:'short'})}</span><span class="m" style="margin:0;text-align:right">${[t,...cs.map(c=>c.type+': '+cardioRx(c,d).n)].filter(Boolean).join(' + ')}</span></button>`}).join('');
- shell(`<h1 style="margin-bottom:18px">Plan</h1><div class="card"><div class="eyebrow">Goal</div>${goalCard()}</div><div class="card"><div class="eyebrow">Your week</div>${daysCard()}</div><div class="card"><div class="eyebrow">Training style</div>${styleCard()}</div>${calCard()}<div class="card"><div class="eyebrow">Cardio</div>${cardioCard()}</div><div class="card"><div class="eyebrow">Next two weeks</div>${up||'<p class="m">No sessions planned. Pick lifting days above.</p>'}</div><div class="card"><div class="eyebrow">Your gym</div>${eqCard()}</div>
+ shell(`<h1 style="margin-bottom:18px">Plan</h1><div class="card"><div class="eyebrow">Goal</div>${goalCard()}</div><div class="card"><div class="eyebrow">Your week</div>${daysCard()}</div><div class="card"><div class="eyebrow">Training style</div>${styleCard()}</div>${calCard()}${wtCard()}<div class="card"><div class="eyebrow">Cardio</div>${cardioCard()}</div><div class="card"><div class="eyebrow">Next two weeks</div>${up||'<p class="m">No sessions planned. Pick lifting days above.</p>'}</div><div class="card"><div class="eyebrow">Your gym</div>${eqCard()}</div>
  <div class="card"><div class="eyebrow">Exercises and starting weights</div><p class="m" style="margin-top:0">Each movement is a ladder from bodyweight to heavy weights. Pick the step you want and, for loaded lifts, the weight you start at (any value, such as 11.5 kg dumbbells). After your first session the app sets reps for each session and tells you how much to add.</p>${swmsg?`<p class="warn">${swmsg}</p>`:''}${Object.keys(LAD).map(p=>{const c=cur(p,3);return`<div class="fld"><div class="fl"><span>${LAD[p][0]}</span></div><div class="${c.ex.step?'swr':''}"><select data-p2="${p}">${av(p).map(x=>`<option value="${x.i}"${x.e.n==c.ex.n?' selected':''}>${x.e.n}</option>`).join('')}</select>${c.ex.step?`<input type="number" inputmode="decimal" step="0.5" data-sw="${esc(c.ex.n)}" placeholder="${c.first?c.w:'kg'}" value="${U.sw[c.ex.n]??''}" aria-label="Starting weight for ${esc(c.ex.n)}">`:''}</div></div>`}).join('')}<p class="m">Weights are in kg. Leave a box empty to use the estimate from your bodyweight.</p></div>`,fromScrub)}
 
 // ---------- Progress ----------
@@ -800,8 +815,10 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(D.tab){switchTab(D.tab,false);return}
  if(D.day){vd=D.day;tab='day';sub=null;rest=null;swapP=null;es=null;wcarry=null;return render()}
  if(D.st){const i=$('#'+D.st);i.value=Math.max(0,+((parseFloat(i.value)||0)+parseFloat(D.dl)).toFixed(2));return}
+ if(D.fold){folds[D.fold]=!folds[D.fold];return render()}
  if(D.cp!=null){U.cal.pct=+D.cp;U.man={};save();return render()}
  if(D.cx){if(U.cal.off[D.cx])delete U.cal.off[D.cx];else U.cal.off[D.cx]=1;save();return render()}
+ if(D.wx){if(U.wtoff[D.wx])delete U.wtoff[D.wx];else U.wtoff[D.wx]=1;save();return render()}
  if(D.wi){const[n,v,t]=D.wi.split('|');U.winc=U.winc||{};U.winc[n]=+v;save();const wi=$('#'+t),ri=$('#'+(t=='iw'?'ir':'er'));wcarry={n,t,v:wi?wi.value:'',r:ri?ri.value:''};return wk()}
  if(D.mode){mode=D.mode;msg='';return render()}
  if(D.wd!=null){const i=+D.wd;U.wd[i]=U.wd[i]?0:1;wmsg='';if(!restFree()){U.wd[i]=0;wmsg='Keep at least one full rest day a week.'}save();return render()}

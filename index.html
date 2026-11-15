@@ -34,7 +34,7 @@ h3{margin:0;font-size:1.1rem;font-weight:700}
 .bar{height:8px;background:rgba(128,128,128,.3);border-radius:4px;margin-top:16px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc);border-radius:4px;transition:width .25s}
 .top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
 .nav2{display:flex;gap:8px}
-.ib{width:42px;height:42px;border-radius:14px;background:var(--card);border:0;color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:var(--sh)}
+.ib{width:42px;height:42px;border-radius:14px;background:var(--card);border:0;color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:var(--sh);flex:none}
 .ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .strip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:18px 0 16px}
 .dc{border:0;background:var(--card);border-radius:16px;padding:9px 0 9px;font-family:inherit;color:var(--mute);font-size:.7rem;font-weight:600;cursor:pointer;box-shadow:var(--sh)}
@@ -51,7 +51,9 @@ h3{margin:0;font-size:1.1rem;font-weight:700}
 .stage{display:inline-block;background:var(--acc);color:var(--on);border-radius:10px;padding:3px 10px;font-size:.78rem;font-weight:700;margin-bottom:10px}
 .fld{margin-top:16px}.fl{display:flex;justify-content:space-between;font-size:.85rem;font-weight:600;margin-bottom:7px;gap:8px}.fl em{font-style:normal;color:var(--mute);font-weight:500;text-align:right}
 .sl{display:flex;gap:12px;align-items:center}.sl input[type=range]{flex:1;min-width:0;accent-color:var(--ink)}.sl input[type=number]{width:88px;flex:none;text-align:center}
-input[type=number],input[type=text],input[type=password],input[type=email],input[type=date],select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--soft);border:0;border-radius:14px;padding:12px 14px;width:100%}
+input[type=number],input[type=text],input[type=password],input[type=email],input[type=date],select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--soft);border:0;border-radius:14px;padding:12px 14px;width:100%;min-width:0;max-width:100%;display:block}
+input[type=date]{-webkit-appearance:none;appearance:none;min-height:46px;line-height:1.25}
+input[type=date]::-webkit-date-and-time-value{text-align:left}
 input,textarea{-webkit-user-select:text;user-select:text}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--ink);outline-offset:1px}
 button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
@@ -84,8 +86,8 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{padding:9px 4px
 .kv div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:.92rem}.kv div:last-child{border:0}.kv span{color:var(--mute)}
 .tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));width:min(calc(100% - 28px),420px);display:grid;grid-template-columns:repeat(4,1fr);background:var(--tb);border-radius:28px;padding:6px;box-shadow:0 12px 30px rgba(0,0,0,.28);z-index:5;touch-action:none}
 .tab-pill{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/4);background:var(--acc);border-radius:22px;transform-origin:50% 50%;will-change:transform;pointer-events:none;z-index:0}
-.tabs button{position:relative;z-index:1;background:none;border:0;color:var(--tf);display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;border-radius:22px;font-family:inherit;cursor:pointer;transition:color .24s ease,transform .2s ease;touch-action:none}
-.tabs button.on{color:var(--on)}.tabs.scrubbing button.on{transform:scale(1.06)}.tabs em{font-style:normal;font-size:.68rem;font-weight:700}
+.tabs button{position:relative;z-index:1;background:none;border:0;color:var(--tf);display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;border-radius:22px;font-family:inherit;cursor:pointer;transition:color .22s ease;touch-action:none}
+.tabs button.on{color:var(--on)}.tabs em{font-style:normal;font-size:.68rem;font-weight:700}
 #rest{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(94px + env(safe-area-inset-bottom,0px));width:min(calc(100% - 28px),420px);background:var(--acc);color:var(--on);border-radius:20px;padding:12px 14px 12px 18px;display:flex;align-items:center;gap:12px;z-index:6;box-shadow:0 10px 26px rgba(0,0,0,.25)}
 #rest[hidden]{display:none}#rest b{font-size:1.7rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em}#rest span{flex:1;font-size:.85rem;font-weight:600;line-height:1.2}
 #rest button{background:var(--on);color:var(--acc);border:0;border-radius:12px;padding:8px 12px;font-family:inherit;font-weight:700;cursor:pointer}
@@ -277,7 +279,7 @@ function cardioRx(c,d){let k=0;for(let x=dn(U.start);x<dn(d);x++)if(c.days.inclu
  let x=Object.assign({},T[kind]),why='';
  const last=U.acts.filter(a=>a.type==c.type&&a.rx&&a.d<d).sort((p,q)=>p.d<q.d?-1:1).pop();
  if(last){const df=(last.rpe||6)-last.rx;if(df>=1.5){x.pct-=.03;why='Last session felt harder than planned, so this one is 3% easier.'}else if(df<=-1.5){x.pct+=.03;why='Last session felt easier than planned, so this one is 3% harder.'}}
- if((D.sleep!=null&&D.sleep<6)||(L.r&&L.r>1.4)){x={n:'Easy steady state',kind:'t',min:20,pct:.58,rpe:4,spm:'16-18',d:'A recovery session. Keep it light.'};why=D.sleep!=null&&D.sleep<6?'Short sleep, so today is light.':'Training load is spiking, so today is light.'}
+ if((D.sleep!=null&&D.sleep<6)||(L.r&&L.r>1.4)){x={n:'Easy steady state',kind:'t',min:20,pct:'0.58'*1,rpe:4,spm:'16-18',d:'A recovery session. Keep it light.'};why=D.sleep!=null&&D.sleep<6?'Short sleep, so today is light.':'Training load is spiking, so today is light.'}
  if(!erg&&c.type!='Ski erg')x.spm='';
  const w=W?W*x.pct:null,sp=w?500*Math.cbrt(2.8/w):null;let min=x.min,wm=x.min;
  if(x.kind=='i'){wm=x.reps*x.on;min=wm+(x.reps-1)*x.off}
@@ -323,18 +325,18 @@ function goalTable(){const gp=U.goal?goalPlan():null;if(!gp)return'';
  if(!gp.ok)return`<p class="warn">This goal no longer fits your timeline. Earliest realistic date is ${fdate(gp.earliest,{day:'numeric',month:'short',year:'numeric'})}. Save the goal again to move it.</p>`;
  return`<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Stage</th><th>Days</th><th>kcal/day vs maintenance</th><th>Ends at</th></tr></thead><tbody>${gp.phases.map(p=>`<tr><td>${cap(p.t)}<br><span class="m">${Math.round(p.wk)} weeks</span></td><td>${p.s+1} to ${p.e}<br><span class="m">${fdate(fromN(dn(U.start)+p.s),{day:'numeric',month:'short'})}</span></td><td>${p.kcal>0?'+':''}${Math.round(p.kcal)}</td><td>${f(p.w1)} kg<br><span class="m">${f(p.bf1,0)}% fat</span></td></tr>`).join('')}</tbody></table></div>`}
 
-// ---------- UI pieces, full-width side-by-side carousel slide & spring tab scrubbing ----------
+// ---------- UI pieces, full-width side-by-side carousel slide & calm tab scrubbing ----------
 const opts=(a,s)=>a.map(x=>`<option${x==s?' selected':''}>${esc(x)}</option>`).join('');
 const sl=(id,l,min,max,st,v,u,o={})=>{const at=(o.k?` data-s="${o.k}"`:'')+(o.f?` data-f="${o.f}"`:'')+(o.b?` data-b="${o.b}"`:'');
  return`<div class="fld"><div class="fl"><span>${l}</span>${u?`<em>${u}</em>`:''}</div><div class="sl"><input type="range" data-p="${id}"${at} min="${min}" max="${max}" step="${st}" value="${v??o.d??min}" aria-label="${l}"><input type="number" inputmode="decimal" id="${id}" data-p="${id}"${at} step="${st}" value="${v??''}"></div></div>`};
 const stp=(id,v,s)=>`<div class="step"><button data-st="${id}" data-dl="${-s}" aria-label="less">${I.minus}</button><input id="${id}" type="number" inputmode="decimal" step="${s}" value="${v??''}"><button data-st="${id}" data-dl="${s}" aria-label="more">${I.plus}</button></div>`;
 const days7=()=>{const x=dn(vd),off=(pd(vd).getDay()+6)%7;return Array.from({length:7},(_,i)=>fromN(x-off+i))};
 
-function morphPill(pill,fromPos,toIdx,startSx=1,startSy=1){
+function morphPill(pill,fromPos,toIdx){
  if(!pill)return;
  if(pillAnim){try{pillAnim.cancel()}catch(e){}pillAnim=null}
  const endTf=`translate3d(${toIdx*100}%,0,0) scale3d(1,1,1)`;
- if((Math.abs(fromPos-toIdx)<0.001&&Math.abs(startSx-1)<0.001)||fromPos<0||!pill.animate){
+ if(Math.abs(fromPos-toIdx)<0.001||fromPos<0||!pill.animate){
   pill.style.transform=endTf;
   return;
  }
@@ -346,11 +348,8 @@ function morphPill(pill,fromPos,toIdx,startSx=1,startSy=1){
   const trail=u>=1?1:td<=0?0:1-Math.exp(-5.6*td)*Math.cos(2.6*td);
   const L=fromPos+dist*(right?trail:lead);
   const R=fromPos+1+dist*(right?lead:trail);
-  const stretchW=Math.max(.9,R-L);
-  const easeOut=Math.pow(1-u,3);
-  const w=stretchW+(startSx-1)*easeOut;
-  const stretchSy=1-Math.min(.14,Math.max(0,(w-1)*.17));
-  const sy=stretchSy+(startSy-1)*easeOut;
+  const w=Math.max(.9,R-L);
+  const sy=1-Math.min(.14,Math.max(0,(w-1)*.17));
   frames.push({transform:`translate3d(${(L*100).toFixed(2)}%,0,0) scale3d(${w.toFixed(4)},${sy.toFixed(4)},1)`});
  }
  pill.style.transform=endTf;
@@ -358,7 +357,23 @@ function morphPill(pill,fromPos,toIdx,startSx=1,startSy=1){
  pillAnim.onfinish=()=>{pillAnim=null};
 }
 
-let scrub={active:false,dragging:false,pid:null,startX:0,startY:0,targetPos:0,pos:0,vel:0,sx:1,sy:1,lastHover:-1,holdTimer:null,raf:null};
+function settlePill(pill,fromPos,toIdx){
+ if(!pill)return;
+ if(pillAnim){try{pillAnim.cancel()}catch(e){}pillAnim=null}
+ const endTf=`translate3d(${toIdx*100}%,0,0) scale3d(1,1,1)`;
+ if(!pill.animate){
+  pill.style.transform=endTf;
+  return;
+ }
+ pill.style.transform=endTf;
+ pillAnim=pill.animate([
+  {transform:`translate3d(${(fromPos*100).toFixed(2)}%,0,0) scale3d(1.03,1.03,1)`},
+  {transform:endTf}
+ ],{duration:220,easing:'cubic-bezier(.22,1,.36,1)'});
+ pillAnim.onfinish=()=>{pillAnim=null};
+}
+
+let scrub={active:false,dragging:false,moved:false,pid:null,startX:0,startY:0,targetPos:0,pos:0,smoothSpeed:0,lastHover:-1,holdTimer:null,raf:null};
 let suppressClickUntil=0;
 
 function bindTabScrub(){
@@ -391,17 +406,20 @@ function bindTabScrub(){
 
  const tickScrub=()=>{
   if(!scrub.dragging){scrub.raf=null;return}
+  const prevPos=scrub.pos;
   const diff=scrub.targetPos-scrub.pos;
-  scrub.vel=scrub.vel*0.58+diff*0.36;
-  scrub.pos+=scrub.vel;
-  if(Math.abs(diff)<0.0005&&Math.abs(scrub.vel)<0.0005){
+  // Critically damped exponential tracking — zero overshoot or oscillation
+  if(Math.abs(diff)<0.0008){
    scrub.pos=scrub.targetPos;
-   scrub.vel=0;
+  }else{
+   scrub.pos+=diff*0.28;
   }
-  const stretch=Math.min(.22,Math.abs(scrub.vel)*1.15);
-  scrub.sx=1.06+stretch;
-  scrub.sy=1.06-stretch*.42;
-  const hoverIdx=applyVisual(scrub.pos,scrub.sx,scrub.sy);
+  const step=Math.abs(scrub.pos-prevPos);
+  scrub.smoothSpeed=scrub.smoothSpeed*0.72+step*0.28;
+  const stretch=Math.min(0.07,scrub.smoothSpeed*0.65);
+  const sx=1.03+stretch;
+  const sy=1.03-stretch*0.35;
+  const hoverIdx=applyVisual(scrub.pos,sx,sy);
   if(hoverIdx!==scrub.lastHover){
    scrub.lastHover=hoverIdx;
    try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
@@ -409,14 +427,14 @@ function bindTabScrub(){
   scrub.raf=requestAnimationFrame(tickScrub);
  };
 
- const engageDrag=(clientX)=>{
+ const engageDrag=(clientX,didMove)=>{
   if(scrub.dragging)return;
   scrub.dragging=true;
-  nav.classList.add('scrubbing');
+  scrub.moved=!!didMove;
   const curIdx=Math.max(0,TABS.indexOf(tab));
   scrub.pos=curIdx;
-  scrub.targetPos=clientX!=null?posFromX(clientX):curIdx;
-  scrub.vel=0;
+  scrub.targetPos=(didMove&&clientX!=null)?posFromX(clientX):curIdx;
+  scrub.smoothSpeed=0;
   scrub.lastHover=curIdx;
   try{navigator.vibrate&&navigator.vibrate(10)}catch(e){}
   if(!scrub.raf)scrub.raf=requestAnimationFrame(tickScrub);
@@ -430,35 +448,40 @@ function bindTabScrub(){
   scrub={
    active:true,
    dragging:false,
+   moved:false,
    pid:e.pointerId,
    startX:e.clientX,
    startY:e.clientY,
    targetPos:curIdx,
    pos:curIdx,
-   vel:0,
-   sx:1,
-   sy:1,
+   smoothSpeed:0,
    lastHover:curIdx,
-   holdTimer:setTimeout(()=>engageDrag(e.clientX),190),
+   holdTimer:setTimeout(()=>engageDrag(e.clientX,false),210),
    raf:null
   };
   try{nav.setPointerCapture(e.pointerId)}catch(err){}
   const pill=$('.tab-pill');
   if(pill&&!pillAnim){
-   pill.style.transform=`translate3d(${curIdx*100}%,0,0) scale3d(0.95,0.95,1)`;
+   pill.style.transform=`translate3d(${curIdx*100}%,0,0) scale3d(0.96,0.96,1)`;
   }
  });
 
  nav.addEventListener('pointermove',e=>{
   if(!scrub.active||e.pointerId!==scrub.pid)return;
+  const dist=Math.hypot(e.clientX-scrub.startX,e.clientY-scrub.startY);
   if(!scrub.dragging){
-   if(Math.hypot(e.clientX-scrub.startX,e.clientY-scrub.startY)>7){
+   if(dist>8){
     clearTimeout(scrub.holdTimer);
-    engageDrag(e.clientX);
+    engageDrag(e.clientX,true);
    }
    return;
   }
   e.preventDefault();
+  if(!scrub.moved){
+   // Ignore tiny thumb-pad micro-jitter until finger intentionally moves
+   if(dist<9)return;
+   scrub.moved=true;
+  }
   scrub.targetPos=posFromX(e.clientX);
  });
 
@@ -469,17 +492,15 @@ function bindTabScrub(){
   try{nav.releasePointerCapture(scrub.pid)}catch(err){}
   const wasDragging=scrub.dragging;
   const fromPos=scrub.pos;
-  const fromSx=scrub.sx;
-  const fromSy=scrub.sy;
   scrub.active=false;
   scrub.dragging=false;
-  nav.classList.remove('scrubbing');
+  scrub.moved=false;
 
   if(wasDragging){
    suppressClickUntil=Date.now()+350;
    const finalIdx=Math.max(0,Math.min(3,Math.round(fromPos)));
    const finalTab=TABS[finalIdx];
-   morphPill($('.tab-pill'),fromPos,finalIdx,fromSx,fromSy);
+   settlePill($('.tab-pill'),fromPos,finalIdx);
    if(finalTab&&finalTab!==tab){
     switchTab(finalTab,true);
    }else{
@@ -648,7 +669,7 @@ setInterval(()=>{const el=$('#rest');if(!rest){el.hidden=true;return}el.hidden=f
 // ---------- Cardio and sport form ----------
 function readForm(){fa=Object.assign({},fa,{type:$('#atype').value,min:nv('amin')||0,dist:nv('adist'),hr:nv('ahr'),rpe:nv('arpe')||6,split:($('#asplit')||{value:(fa&&fa.split)||''}).value,splits:($('#asplits')||{value:(fa&&fa.splits)||''}).value,spm:$('#aspm')?nv('aspm'):(fa&&fa.spm),note:$('#anote').value})}
 function formV(){renderedTab=null;const a=fa||{type:'Running',min:30,rpe:6};
- $('#app').innerHTML=`<div class="wrap"><div class="top"><div><div class="eyebrow">${fdate(vd,{weekday:'long',day:'numeric',month:'long'})}</div><h1 style="font-size:2.2rem">${editId?'Edit session':'New session'}</h1></div><button class="ib" data-a="cancel" aria-label="Back">${I.left}</button></div>
+ $('#app').innerHTML=`<div class="wrap"><div class="top" style="margin-bottom:20px;align-items:center"><div><div class="eyebrow">${fdate(vd,{weekday:'long',day:'numeric',month:'long'})}</div><h1 style="font-size:2.2rem">${editId?'Edit session':'New session'}</h1></div><button class="ib" data-a="cancel" aria-label="Back">${I.left}</button></div>
  <div class="card"><div class="fl"><span>What was it?</span></div><select id="atype">${opts(sports().map(x=>x.n),a.type)}</select>
  ${sl('amin','Duration',0,180,5,a.min,'min')}${sl('adist','Distance (optional)',0,42000,100,a.dist??null,'m')}${sl('ahr','Average heart rate (optional)',60,200,1,a.hr??null,'bpm')}${sl('arpe','Effort, RPE (10 is all out)',1,10,.5,a.rpe,'')}</div>
  ${a.type=='Rowing erg'?`<div class="card"><div class="two"><div><div class="fl"><span>Average split /500m</span></div><input type="text" id="asplit" placeholder="2:05" value="${esc(a.split||'')}"></div><div><div class="fl"><span>Stroke rate</span></div><input type="number" id="aspm" inputmode="numeric" value="${a.spm??''}"></div></div>

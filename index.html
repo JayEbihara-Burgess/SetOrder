@@ -143,7 +143,7 @@ let U=null,user=null,tab='day',vd=TODAY,sub=null,editId=null,swapP=null,mode='lo
 
 // ---------- Accounts (Firebase Auth + Firestore cloud save) ----------
 const lsg=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},lss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-const newU=()=>({v:2,ready:0,base:{exp:1},wd:[0,1,1,0,1,1,0],cardio:[],goal:null,goalMode:'goal',sw:{},winc:{},start:TODAY,eq:{db:1,bb:1,sm:1,cb:1,pm:1,mc:1,lp:1,lm:1,bar:1,dip:1,lat:1},lvl:{},ov:{},sets:[],days:{},acts:[],set:Object.assign({},DS),date:fromN(dn(TODAY)+182)});
+const newU=()=>({v:2,ready:0,base:{exp:1},wd:[0,1,1,0,1,1,0],cardio:[],goal:null,goalMode:'goal',cal:{pct:0,off:{}},man:{},sw:{},winc:{},start:TODAY,eq:{db:1,bb:1,sm:1,cb:1,pm:1,mc:1,lp:1,lm:1,bar:1,dip:1,lat:1},lvl:{},ov:{},sets:[],days:{},acts:[],set:Object.assign({},DS),date:fromN(dn(TODAY)+182)});
 function norm(u){u=u||newU();const d=newU();
  if(!u.v){u.eq=d.eq;u.set=Object.assign({},u.set,{sports:DS.sports});delete u.ergDay;u.cardio=[];u.v=2}
  for(const k in d)if(u[k]==null)u[k]=d[k];u.set=Object.assign({},DS,u.set);u.eq=Object.assign({},d.eq,u.eq);return u}
@@ -202,14 +202,20 @@ const isW=d=>U.ov[d]?U.ov[d]=='work':!!U.wd[pd(d).getDay()];
 const cdue=d=>d<U.start?[]:U.cardio.filter(c=>c.days.includes(pd(d).getDay()));
 function plan(d){if(d<U.start||!isW(d))return null;let k=0;for(let x=dn(U.start);x<dn(d);x++)if(isW(fromN(x)))k++;return SPLIT[k%SPLIT.length]}
 const avail=p=>{const a=lad(p).map((e,i)=>({e,i})),r=a.filter(x=>x.e.eq=='bw'||U.eq[x.e.eq]);return r.length?r:a};
+// Training style: calisthenics exercises have no per-kg start ratio (bodyweight, or weighted dips and pull-ups).
+// U.cal.pct is the share of movements done with bodyweight. The movements best suited to calisthenics switch first.
+const isCal=e=>!e.ratio,CORD=['push_h','pull_v','dips','push_v','core','pull_h','uni','squat','push_i','tri','bi','glute','hinge','calf','ham','quad','traps','rear','side'];
+const av=p=>{const a=avail(p),r=a.filter(x=>!(isCal(x.e)&&U.cal.off[x.e.n]));return r.length?r:a};
+function bwSet(){const c=CORD.filter(p=>avail(p).some(x=>isCal(x.e)&&!U.cal.off[x.e.n]));return new Set(c.slice(0,Math.round((U.cal.pct||0)/100*c.length)))}
+function pool(p){const A=av(p),W=A.filter(x=>!isCal(x.e)),B=A.filter(x=>isCal(x.e));if(bwSet().has(p)&&B.length)return B;return W.length?W:(B.length?B:A)}
 const bw=()=>U.base.w||(wpts().slice(-1)[0]||[0,70])[1];
 function hist(n,d){const ds=[...new Set(U.sets.filter(s=>s.ex==n&&s.d<d).map(s=>s.d))].sort();return ds.length?U.sets.filter(s=>s.ex==n&&s.d==ds[ds.length-1]):null}
 // Progression: double progression. Add reps each session until every set hits the top of the range, then add load.
 // The load jump is 2.5% (upper body) or 5% (lower body) of the working weight, rounded to the plate step, and the rep target after the jump keeps estimated 1RM equal (Epley).
-function cur(p,ns){const L=lad(p),A=avail(p),x=U.base.exp||1,n=A.length;let i=U.lvl[p];
- if(i==null||!L[i]||!A.some(a=>a.i==i))i=A[x<.9?0:x>=1.1?Math.min(n-1,Math.floor(n*.7)):Math.floor((n-1)/2)].i;
+function cur(p,ns){const L=lad(p),P=pool(p),Q=U.man[p]?av(p):P,x=U.base.exp||1,n=P.length;let i=U.lvl[p];
+ if(i==null||!L[i]||!Q.some(a=>a.i==i))i=P[x<.9?0:x>=1.1?Math.min(n-1,Math.floor(n*.7)):Math.floor((n-1)/2)].i;
  let ex=L[i],note='';const H=hist(ex.n,vd);
- if(!ex.step&&H&&H.length>=ns&&H.every(s=>s.r>=ex.hi)){const j=A.find(a=>a.i>i);if(j){i=j.i;ex=j.e;note='You topped the last one, so you moved up a step.'}}
+ if(!ex.step&&H&&H.length>=ns&&H.every(s=>s.r>=ex.hi)){const j=Q.find(a=>a.i>i);if(j){i=j.i;ex=j.e;note='You topped the last one, so you moved up a step.'}}
  if(vd>=TODAY&&U.lvl[p]!==i){U.lvl[p]=i;save()}
  const H2=hist(ex.n,vd),pct=LOWER.has(p)?.05:.025,inc=w=>Math.max(ex.step,rnd(w*pct,ex.step||1));let w=ex.step?null:0,r=ex.lo,last='';
  if(H2){const mw=Math.max(...H2.map(s=>s.w)),at=H2.filter(s=>s.w==mw);last=H2.map(s=>(s.w?s.w+'×':'')+s.r).join(', ');
@@ -309,7 +315,7 @@ function goalTable(){const gp=U.goal?goalPlan():null;if(!gp)return'';
 
 // ---------- UI pieces ----------
 const opts=(a,s)=>a.map(x=>`<option${x==s?' selected':''}>${esc(x)}</option>`).join('');
-const sl=(id,l,min,max,st,v,u,o={})=>{const at=(o.k?` data-s="${o.k}"`:'')+(o.f?` data-f="${o.f}"`:'')+(o.b?` data-b="${o.b}"`:'');
+const sl=(id,l,min,max,st,v,u,o={})=>{const at=(o.k?` data-s="${o.k}"`:'')+(o.f?` data-f="${o.f}"`:'')+(o.b?` data-b="${o.b}"`:'')+(o.cal?' data-cal="1"':'');
  return`<div class="fld"><div class="fl"><span>${l}</span>${u?`<em>${u}</em>`:''}</div><div class="sl"><input type="range" data-p="${id}"${at} min="${min}" max="${max}" step="${st}" value="${v??o.d??min}" aria-label="${l}"><input type="number" inputmode="decimal" id="${id}" data-p="${id}"${at} step="${st}" value="${v??''}"></div></div>`};
 const stp=(id,v,s)=>`<div class="step"><button data-st="${id}" data-dl="${-s}" aria-label="less">${I.minus}</button><input id="${id}" type="number" inputmode="decimal" step="${s}" value="${v??''}"><button data-st="${id}" data-dl="${s}" aria-label="more">${I.plus}</button></div>`;
 const days7=()=>{const x=dn(vd),off=(pd(vd).getDay()+6)%7;return Array.from({length:7},(_,i)=>fromN(x-off+i))};
@@ -358,7 +364,7 @@ function wk(){const t=plan(vd),el=$('#wk');if(!t||!el)return;const m=mod(vd),rd=
   const aw=ex.step&&c.w!=null?Math.max(ex.step,rnd(c.w*(1+m),ex.step)):c.w;
   const tgt=c.first?(ex.step?`First time: ${c.own?'your starting weight is':'start at'} ${aw} kg for ${ex.lo} reps, with about 3 reps spare. `:`First time: ${ns} sets of ${ex.lo}, stopping 2 reps short of failure. `)+progL(Object.assign({},c,{sess:ex.hi-ex.lo})):`Aim for ${ex.step?aw+' kg × ':''}${c.r} on every set. Last time: ${c.last}. ${progL(c)}`;
   const l=done[done.length-1],form=isA?`<div class="two" style="margin-top:12px">${ex.step?`<div><div class="fl"><span>kg</span></div>${stp('iw',cv(ex.n,'iw','v',l?l.w:aw),stepFor(ex))}</div>`:'<div></div>'}<div><div class="fl"><span>Reps</span></div>${stp('ir',cv(ex.n,'iw','r',c.r),1)}</div></div>${ex.step?wchips(ex,'iw'):''}<button class="btn" data-a="log" data-p="${p}" data-ns="${ns}">Log set ${done.length+1} of ${ns}</button>`:'';
-  const sw=swapP==p?`<div class="fld"><select data-p2="${p}" aria-label="Swap exercise">${avail(p).map(x=>`<option value="${x.i}"${x.e.n==ex.n?' selected':''}>${x.e.n}</option>`).join('')}</select></div>`:'';
+  const sw=swapP==p?`<div class="fld"><select data-p2="${p}" aria-label="Swap exercise">${av(p).map(x=>`<option value="${x.i}"${x.e.n==ex.n?' selected':''}>${x.e.n}</option>`).join('')}</select></div>`:'';
   const pills=Array.from({length:Math.max(ns,doneI.length)},(_,i)=>doneI[i]?`<button class="sp${es==doneI[i].i?' ed':''}" data-a="editset" data-si="${doneI[i].i}" aria-label="Edit set ${i+1}">${doneI[i].s.w?doneI[i].s.w+'×':''}${doneI[i].s.r}</button>`:`<span class="sp o">${i+1}</span>`).join('');
   const eo=doneI.find(o=>o.i==es),edit=eo?`<div class="edit"><div class="eyebrow">Edit set ${doneI.indexOf(eo)+1}</div><div class="two">${ex.step?`<div><div class="fl"><span>kg</span></div>${stp('ew',cv(ex.n,'ew','v',eo.s.w),stepFor(ex))}</div>`:'<div></div>'}<div><div class="fl"><span>Reps</span></div>${stp('er',cv(ex.n,'ew','r',eo.s.r),1)}</div></div>${ex.step?wchips(ex,'ew'):''}<button class="btn" data-a="saveset">Save changes</button><div class="row"><button class="tx" data-a="delset">Delete set</button><button class="tx" data-a="cancelset">Cancel</button></div></div>`:'';
   return`<div class="ex${isA?' act':''}${comp?' done':''}"><div class="row"><div><h3>${ex.n}</h3><div class="m" style="margin:2px 0 0">${LAD[p][0]} · ${ns} × ${ex.lo}-${ex.hi}${ex.step?'':' · bodyweight'}</div></div><button class="tx" data-a="swap" data-p="${p}">Swap</button></div>${sw}<p class="m">${c.note?c.note+' ':''}${tgt}</p><div class="sets">${pills}</div>${done.length?'<p class="m" style="font-size:.78rem">Tap a logged set to edit it.</p>':''}${edit}${form}</div>`}).join('')
@@ -399,11 +405,15 @@ function baseCard(){const b=U.base;return`<p class="m" style="margin-top:0">Take
 function goalCard(){const g=U.goal,b=U.base,dr=gdraft||{};return`<p class="m" style="margin-top:0">Where do you want to end up? The plan splits the time into bulk and cut stages and keeps a 15% time buffer, so nothing unrealistic gets through.</p>${sl('gw','Goal weight',40,150,.5,dr.w??(g?g.w1:null),'kg',{d:b.w||70})}${sl('gbf','Goal body fat',6,35,.5,dr.b??(g?g.bf1:null),'%',{d:15})}
  <div class="fld"><div class="fl"><span>Reach it by</span></div><input type="date" id="gd" value="${dr.d||(g?g.date:fromN(dn(U.start)+182))}"></div>
  <div class="fld"><div class="fl"><span>If that is too fast to be realistic</span></div><div class="seg"><button data-gm="goal" class="${U.goalMode!='date'?'on':''}">Keep my date</button><button data-gm="date" class="${U.goalMode=='date'?'on':''}">Keep my goal</button></div><p class="m">${U.goalMode=='date'?'The date moves later until the goal fits.':'The goal weight and body fat are lowered to the most you can safely reach by your date.'}</p></div>${gmsg?`<p class="${gok?'good':'warn'}">${gmsg}</p>`:''}<button class="btn dark" data-a="savegoal">Save goal</button>${goalTable()}`}
+function styleCard(){const pct=U.cal.pct||0,bs=[...bwSet()].map(p=>LAD[p][0]);
+ return`<p class="m" style="margin-top:0">How much of your training is bodyweight. 0% is all weights. At 100% every movement that has a bodyweight option uses one. In between, the movements best suited to calisthenics switch first.</p><div class="seg">${[['Weights',0],['Mixed',50],['Calisthenics',100]].map(([l,v])=>`<button data-cp="${v}" class="${pct==v?'on':''}">${l}</button>`).join('')}</div>${sl('cpct','Bodyweight share',0,100,5,pct,'%',{cal:1})}<p class="m">${bs.length?'Bodyweight: '+bs.join(', ')+'.':'Every movement uses weights where it can.'}</p>`}
+function calCard(){if(!(U.cal.pct>0))return'';
+ return`<div class="card"><div class="eyebrow">Calisthenics exercises</div><p class="m" style="margin-top:0">Switch off any you do not want. They will not be picked or offered as swaps.</p>${Object.keys(LAD).map(p=>{const xs=avail(p).filter(x=>isCal(x.e));if(!xs.length)return'';return`<div class="fld"><div class="fl"><span>${LAD[p][0]}</span></div>${xs.map(x=>`<button class="rowsw" data-cx="${esc(x.e.n)}"><span>${x.e.n}</span><i class="tg${U.cal.off[x.e.n]?'':' on'}"></i></button>`).join('')}</div>`}).join('')}</div>`}
 function setupV(){$('#app').innerHTML=`<div class="wrap" style="padding-bottom:40px"><div class="brand"><i></i>SetOrder</div><h1>Let's set you up</h1><p class="m" style="margin-bottom:18px">A minute now, then Day 1 appears with your workout and calories.</p>
- <div class="card"><div class="eyebrow">About you</div>${baseCard()}</div><div class="card"><div class="eyebrow">Your goal (optional)</div>${goalCard()}</div><div class="card"><div class="eyebrow">Your week</div>${daysCard()}</div><div class="card"><div class="eyebrow">Cardio (optional)</div>${cardioCard()}</div><div class="card"><div class="eyebrow">Your gym</div>${eqCard()}</div><button class="btn" data-a="ready">Start Day 1</button></div>`}
+ <div class="card"><div class="eyebrow">About you</div>${baseCard()}</div><div class="card"><div class="eyebrow">Your goal (optional)</div>${goalCard()}</div><div class="card"><div class="eyebrow">Your week</div>${daysCard()}</div><div class="card"><div class="eyebrow">Training style</div>${styleCard()}</div>${calCard()}<div class="card"><div class="eyebrow">Cardio (optional)</div>${cardioCard()}</div><div class="card"><div class="eyebrow">Your gym</div>${eqCard()}</div><button class="btn" data-a="ready">Start Day 1</button></div>`}
 function planV(){const up=Array.from({length:14},(_,i)=>{const d=fromN(Math.max(dn(TODAY),dn(U.start))+i),t=plan(d),cs=cdue(d);if(!t&&!cs.length)return'';return`<button class="rowsw" data-day="${d}"><span><b>Day ${dn(d)-dn(U.start)+1}</b> · ${fdate(d,{weekday:'short',day:'numeric',month:'short'})}</span><span class="m" style="margin:0;text-align:right">${[t,...cs.map(c=>c.type+': '+cardioRx(c,d).n)].filter(Boolean).join(' + ')}</span></button>`}).join('');
- shell(`<h1 style="margin-bottom:18px">Plan</h1><div class="card"><div class="eyebrow">Goal</div>${goalCard()}</div><div class="card"><div class="eyebrow">Your week</div>${daysCard()}</div><div class="card"><div class="eyebrow">Cardio</div>${cardioCard()}</div><div class="card"><div class="eyebrow">Next two weeks</div>${up||'<p class="m">No sessions planned. Pick lifting days above.</p>'}</div><div class="card"><div class="eyebrow">Your gym</div>${eqCard()}</div>
- <div class="card"><div class="eyebrow">Exercises and starting weights</div><p class="m" style="margin-top:0">Each movement is a ladder from bodyweight to heavy weights. Pick the step you want and, for loaded lifts, the weight you start at (any value, such as 11.5 kg dumbbells). After your first session the app sets reps for each session and tells you how much to add.</p>${swmsg?`<p class="warn">${swmsg}</p>`:''}${Object.keys(LAD).map(p=>{const c=cur(p,3);return`<div class="fld"><div class="fl"><span>${LAD[p][0]}</span></div><div class="${c.ex.step?'swr':''}"><select data-p2="${p}">${avail(p).map(x=>`<option value="${x.i}"${x.e.n==c.ex.n?' selected':''}>${x.e.n}</option>`).join('')}</select>${c.ex.step?`<input type="number" inputmode="decimal" step="0.5" data-sw="${esc(c.ex.n)}" placeholder="${c.first?c.w:'kg'}" value="${U.sw[c.ex.n]??''}" aria-label="Starting weight for ${esc(c.ex.n)}">`:''}</div></div>`}).join('')}<p class="m">Weights are in kg. Leave a box empty to use the estimate from your bodyweight.</p></div>`)}
+ shell(`<h1 style="margin-bottom:18px">Plan</h1><div class="card"><div class="eyebrow">Goal</div>${goalCard()}</div><div class="card"><div class="eyebrow">Your week</div>${daysCard()}</div><div class="card"><div class="eyebrow">Training style</div>${styleCard()}</div>${calCard()}<div class="card"><div class="eyebrow">Cardio</div>${cardioCard()}</div><div class="card"><div class="eyebrow">Next two weeks</div>${up||'<p class="m">No sessions planned. Pick lifting days above.</p>'}</div><div class="card"><div class="eyebrow">Your gym</div>${eqCard()}</div>
+ <div class="card"><div class="eyebrow">Exercises and starting weights</div><p class="m" style="margin-top:0">Each movement is a ladder from bodyweight to heavy weights. Pick the step you want and, for loaded lifts, the weight you start at (any value, such as 11.5 kg dumbbells). After your first session the app sets reps for each session and tells you how much to add.</p>${swmsg?`<p class="warn">${swmsg}</p>`:''}${Object.keys(LAD).map(p=>{const c=cur(p,3);return`<div class="fld"><div class="fl"><span>${LAD[p][0]}</span></div><div class="${c.ex.step?'swr':''}"><select data-p2="${p}">${av(p).map(x=>`<option value="${x.i}"${x.e.n==c.ex.n?' selected':''}>${x.e.n}</option>`).join('')}</select>${c.ex.step?`<input type="number" inputmode="decimal" step="0.5" data-sw="${esc(c.ex.n)}" placeholder="${c.first?c.w:'kg'}" value="${U.sw[c.ex.n]??''}" aria-label="Starting weight for ${esc(c.ex.n)}">`:''}</div></div>`}).join('')}<p class="m">Weights are in kg. Leave a box empty to use the estimate from your bodyweight.</p></div>`)}
 
 // ---------- Progress ----------
 function chart(r,x1,P,lbl){const x0=P[0][0],W=700,H=220,q=30;x1=Math.max(x1,x0+7);const xs=[];for(let i=0;i<=24;i++)xs.push(x0+(x1-x0)*i/24);const pr=xs.map(x=>pred(r,x));
@@ -456,6 +466,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(D.tab){gdraft=null;tab=D.tab;sub=null;wmsg='';gmsg='';swmsg='';amsg='';es=null;wcarry=null;window.scrollTo(0,0);return render()}
  if(D.day){vd=D.day;tab='day';sub=null;rest=null;swapP=null;es=null;wcarry=null;return render()}
  if(D.st){const i=$('#'+D.st);i.value=Math.max(0,+((parseFloat(i.value)||0)+parseFloat(D.dl)).toFixed(2));return}
+ if(D.cp!=null){U.cal.pct=+D.cp;U.man={};save();return render()}
+ if(D.cx){if(U.cal.off[D.cx])delete U.cal.off[D.cx];else U.cal.off[D.cx]=1;save();return render()}
  if(D.gm){gdraft={w:nv('gw'),b:nv('gbf'),d:($('#gd')||{}).value};U.goalMode=D.gm;save();return render()}
  if(D.wi){const[n,v,t]=D.wi.split('|');U.winc=U.winc||{};U.winc[n]=+v;save();const wi=$('#'+t),ri=$('#'+(t=='iw'?'ir':'er'));wcarry={n,t,v:wi?wi.value:'',r:ri?ri.value:''};return wk()}
  if(D.mode){mode=D.mode;msg='';return render()}
@@ -496,6 +508,7 @@ function addDay(c){for(const i of [6,0,3,2,4,5,1]){c.days=[i];if(restFree())retu
 document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.p)document.querySelectorAll('[data-p="'+t.dataset.p+'"]').forEach(x=>{if(x!==t)x.value=t.value})});
 document.addEventListener('change',e=>{const t=e.target,d=t.dataset,i=t.id,v=parseFloat(t.value);
  if(d.lift){lift=t.value;render()}
+ else if(d.cal){U.cal.pct=isNaN(v)?0:Math.max(0,Math.min(100,Math.round(v)));U.man={};save();render()}
  else if(d.s){U.set[d.s]=isNaN(v)?DS[d.s]:v;save()}
  else if(d.b){if(d.b=='s2k')U.base.s2k=t.value.trim();else U.base[d.b]=isNaN(v)?null:v;save();const el=$('#bst');if(el)el.innerHTML=bstats()}
  else if(d.f=='sleep'){sd(vd,{sleep:isNaN(v)?null:v});refreshDay()}
@@ -504,7 +517,7 @@ document.addEventListener('change',e=>{const t=e.target,d=t.dataset,i=t.id,v=par
   if(isNaN(v)||v<=0){delete U.sw[nm]}else if(ex){const mx=Math.max(ex.step*4,(ex.ratio||.3)*bw()*2.5),val=Math.min(v,mx);if(v>mx){swmsg=`${nm}: ${v} kg is more than a realistic start, so it was set to ${rnd(mx,.5)} kg. You can raise it as you progress.`}U.sw[nm]=rnd(val,.5)}
   save();render()}
  else if(i=='atype'){readForm();formV()}
- else if(d.p2){U.lvl[d.p2]=+t.value;swapP=null;save();render()}
+ else if(d.p2){U.lvl[d.p2]=+t.value;U.man[d.p2]=1;swapP=null;save();render()}
  else if(i=='start'&&t.value){U.start=t.value;if(U.ready){save();render()}}});
 document.addEventListener('keydown',e=>{if(e.key=='Enter'&&(e.target.id=='un'||e.target.id=='pw'||e.target.id=='dn'))auth()});
 render();

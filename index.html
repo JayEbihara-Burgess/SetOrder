@@ -18,7 +18,8 @@ body{margin:0;color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"I
 .signout-top:active{transform:scale(.97)}
 .view-stage{position:relative;overflow-x:clip;min-height:60vh}
 .view-pane{width:100%;background:var(--bg);will-change:transform;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.view-pane.out{position:absolute;top:0;left:0;right:0;pointer-events:none}
+.view-pane.out{position:absolute;left:0;right:0;pointer-events:none}
+.view-pane.anim{transition:transform .52s cubic-bezier(.22,1,.36,1)}
 .view-pane.top-shadow{box-shadow:-14px 0 34px rgba(0,0,0,.10)}
 @media (prefers-color-scheme:dark){.view-pane.top-shadow{box-shadow:-14px 0 34px rgba(0,0,0,.45)}}
 h1{font-size:2.7rem;font-weight:800;letter-spacing:-.045em;line-height:1;margin:0}
@@ -322,14 +323,13 @@ function goalTable(){const gp=U.goal?goalPlan():null;if(!gp)return'';
  if(!gp.ok)return`<p class="warn">This goal no longer fits your timeline. Earliest realistic date is ${fdate(gp.earliest,{day:'numeric',month:'short',year:'numeric'})}. Save the goal again to move it.</p>`;
  return`<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Stage</th><th>Days</th><th>kcal/day vs maintenance</th><th>Ends at</th></tr></thead><tbody>${gp.phases.map(p=>`<tr><td>${cap(p.t)}<br><span class="m">${Math.round(p.wk)} weeks</span></td><td>${p.s+1} to ${p.e}<br><span class="m">${fdate(fromN(dn(U.start)+p.s),{day:'numeric',month:'short'})}</span></td><td>${p.kcal>0?'+':''}${Math.round(p.kcal)}</td><td>${f(p.w1)} kg<br><span class="m">${f(p.bf1,0)}% fat</span></td></tr>`).join('')}</tbody></table></div>`}
 
-// ---------- UI pieces, unhurried Apple slide & interactive hold-and-drag pill ----------
+// ---------- UI pieces, unhurried iOS slide & hold-and-drag tab scrubbing ----------
 const opts=(a,s)=>a.map(x=>`<option${x==s?' selected':''}>${esc(x)}</option>`).join('');
 const sl=(id,l,min,max,st,v,u,o={})=>{const at=(o.k?` data-s="${o.k}"`:'')+(o.f?` data-f="${o.f}"`:'')+(o.b?` data-b="${o.b}"`:'');
  return`<div class="fld"><div class="fl"><span>${l}</span>${u?`<em>${u}</em>`:''}</div><div class="sl"><input type="range" data-p="${id}"${at} min="${min}" max="${max}" step="${st}" value="${v??o.d??min}" aria-label="${l}"><input type="number" inputmode="decimal" id="${id}" data-p="${id}"${at} step="${st}" value="${v??''}"></div></div>`};
 const stp=(id,v,s)=>`<div class="step"><button data-st="${id}" data-dl="${-s}" aria-label="less">${I.minus}</button><input id="${id}" type="number" inputmode="decimal" step="${s}" value="${v??''}"><button data-st="${id}" data-dl="${s}" aria-label="more">${I.plus}</button></div>`;
 const days7=()=>{const x=dn(vd),off=(pd(vd).getDay()+6)%7;return Array.from({length:7},(_,i)=>fromN(x-off+i))};
 
-// Elastic capsule morph (solid accent pill, no liquid glass, unhurried 500ms settle)
 function morphPill(pill,fromPos,toIdx,startSx=1,startSy=1){
  if(!pill)return;
  if(pillAnim){try{pillAnim.cancel()}catch(e){}pillAnim=null}
@@ -358,7 +358,7 @@ function morphPill(pill,fromPos,toIdx,startSx=1,startSy=1){
  pillAnim.onfinish=()=>{pillAnim=null};
 }
 
-let scrub={active:false,dragging:false,pid:null,startX:0,startY:0,pos:0,sx:1,sy:1,lastX:0,lastT:0,holdTimer:null};
+let scrub={active:false,dragging:false,pid:null,startX:0,startY:0,pos:0,sx:1,sy:1,lastX:0,lastT:0,lastHover:-1,holdTimer:null,dwellTimer:null};
 let suppressClickUntil=0;
 
 function bindTabScrub(){
@@ -389,17 +389,17 @@ function bindTabScrub(){
   return hoverIdx;
  };
 
- const engageDrag=(clientX)=>{
+ const engageDrag=()=>{
   if(scrub.dragging)return;
   scrub.dragging=true;
   nav.classList.add('scrubbing');
   const curIdx=Math.max(0,TABS.indexOf(tab));
   scrub.pos=curIdx;
-  scrub.sx=1.06;
-  scrub.sy=1.06;
+  scrub.sx=1.07;
+  scrub.sy=1.07;
+  scrub.lastHover=curIdx;
   applyVisual(scrub.pos,scrub.sx,scrub.sy);
   try{navigator.vibrate&&navigator.vibrate(10)}catch(e){}
-  if(clientX!=null)updateDrag(clientX);
  };
 
  const updateDrag=(clientX)=>{
@@ -410,23 +410,31 @@ function bindTabScrub(){
   scrub.lastX=clientX;
   scrub.lastT=now;
 
-  const targetPos=posFromX(clientX);
-  scrub.pos=targetPos;
+  scrub.pos=posFromX(clientX);
   const stretch=Math.min(.26,Math.abs(vx)*.028);
-  scrub.sx=1.06+stretch;
-  scrub.sy=1.06-stretch*.42;
+  scrub.sx=1.07+stretch;
+  scrub.sy=1.07-stretch*.42;
 
   const hoverIdx=applyVisual(scrub.pos,scrub.sx,scrub.sy);
-  const targetTab=TABS[hoverIdx];
-  if(targetTab&&targetTab!==tab){
+  if(hoverIdx!==scrub.lastHover){
+   scrub.lastHover=hoverIdx;
    try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
-   switchTab(targetTab,true);
+   clearTimeout(scrub.dwellTimer);
+   const dwellTab=TABS[hoverIdx];
+   if(dwellTab&&dwellTab!==tab){
+    scrub.dwellTimer=setTimeout(()=>{
+     if(scrub.dragging&&TABS[scrub.lastHover]===dwellTab&&dwellTab!==tab){
+      switchTab(dwellTab,true);
+     }
+    },260);
+   }
   }
  };
 
  nav.addEventListener('pointerdown',e=>{
   if(e.button!==0&&e.pointerType==='mouse')return;
   clearTimeout(scrub.holdTimer);
+  clearTimeout(scrub.dwellTimer);
   const curIdx=Math.max(0,TABS.indexOf(tab));
   scrub={
    active:true,
@@ -439,10 +447,11 @@ function bindTabScrub(){
    sy:1,
    lastX:e.clientX,
    lastT:performance.now(),
-   holdTimer:setTimeout(()=>engageDrag(e.clientX),130)
+   lastHover:curIdx,
+   holdTimer:setTimeout(()=>engageDrag(),220),
+   dwellTimer:null
   };
   try{nav.setPointerCapture(e.pointerId)}catch(err){}
-  // Subtle immediate press feedback
   const pill=$('.tab-pill');
   if(pill&&!pillAnim){
    pill.style.transform=`translate3d(${curIdx*100}%,0,0) scale3d(0.95,0.95,1)`;
@@ -452,9 +461,10 @@ function bindTabScrub(){
  nav.addEventListener('pointermove',e=>{
   if(!scrub.active||e.pointerId!==scrub.pid)return;
   if(!scrub.dragging){
-   if(Math.hypot(e.clientX-scrub.startX,e.clientY-scrub.startY)>7){
+   if(Math.hypot(e.clientX-scrub.startX,e.clientY-scrub.startY)>8){
     clearTimeout(scrub.holdTimer);
-    engageDrag(e.clientX);
+    engageDrag();
+    updateDrag(e.clientX);
    }
    return;
   }
@@ -465,6 +475,7 @@ function bindTabScrub(){
  const finishScrub=e=>{
   if(!scrub.active||(e&&e.pointerId!==scrub.pid))return;
   clearTimeout(scrub.holdTimer);
+  clearTimeout(scrub.dwellTimer);
   try{nav.releasePointerCapture(scrub.pid)}catch(err){}
   const wasDragging=scrub.dragging;
   const fromPos=scrub.pos;
@@ -478,10 +489,16 @@ function bindTabScrub(){
    suppressClickUntil=Date.now()+350;
    const finalIdx=Math.max(0,Math.min(3,Math.round(fromPos)));
    const finalTab=TABS[finalIdx];
-   if(finalTab!==tab){
+   morphPill($('.tab-pill'),fromPos,finalIdx,fromSx,fromSy);
+   if(finalTab&&finalTab!==tab){
     switchTab(finalTab,true);
    }
-   morphPill($('.tab-pill'),fromPos,finalIdx,fromSx,fromSy);
+  }else{
+   const curIdx=Math.max(0,TABS.indexOf(tab));
+   const pill=$('.tab-pill');
+   if(pill&&!pillAnim){
+    pill.style.transform=`translate3d(${curIdx*100}%,0,0) scale3d(1,1,1)`;
+   }
   }
  };
 
@@ -500,7 +517,6 @@ function switchTab(nextTab,fromScrub=false){
  }
  tab=nextTab;
  sub=null;wmsg='';gmsg='';swmsg='';amsg='';es=null;wcarry=null;
- window.scrollTo(0,0);
  render(fromScrub);
 }
 
@@ -530,6 +546,7 @@ function shell(h,fromScrub=false){
  if(slideCleanup){slideCleanup();slideCleanup=null}
  stage.querySelectorAll('.view-pane.out').forEach(el=>el.remove());
 
+ const prevScroll=window.scrollY||document.documentElement.scrollTop||0;
  const oldPane=stage.querySelector('.view-pane');
  const newPane=document.createElement('div');
  newPane.className='view-pane';
@@ -539,54 +556,54 @@ function shell(h,fromScrub=false){
   const dir=idx>oldIdx?1:-1;
   oldPane.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
   oldPane.classList.add('out');
-  oldPane.style.opacity='1';
-  newPane.style.opacity='1';
+  oldPane.style.top=(-prevScroll)+'px';
+  window.scrollTo(0,0);
 
   if(dir>0){
    oldPane.style.zIndex='1';
+   oldPane.style.transform='translate3d(0,0,0)';
    newPane.style.zIndex='2';
    newPane.classList.add('top-shadow');
    newPane.style.transform='translate3d(100%,0,0)';
-   oldPane.style.transform='translate3d(0,0,0)';
   }else{
    oldPane.style.zIndex='2';
    oldPane.classList.add('top-shadow');
-   newPane.style.zIndex='1';
-   newPane.style.transform='translate3d(-26%,0,0)';
    oldPane.style.transform='translate3d(0,0,0)';
+   newPane.style.zIndex='1';
+   newPane.style.transform='translate3d(-28%,0,0)';
   }
 
   stage.appendChild(newPane);
+  void newPane.offsetWidth;
 
-  const ease='cubic-bezier(0.22, 1, 0.36, 1)';
-  const dur=520;
-  let a1=null,a2=null;
-
-  if(newPane.animate&&oldPane.animate){
-   a1=newPane.animate([
-    {transform:dir>0?'translate3d(100%,0,0)':'translate3d(-26%,0,0)'},
-    {transform:'translate3d(0,0,0)'}
-   ],{duration:dur,easing:ease,fill:'forwards'});
-   a2=oldPane.animate([
-    {transform:'translate3d(0,0,0)'},
-    {transform:dir>0?'translate3d(-26%,0,0)':'translate3d(100%,0,0)'}
-   ],{duration:dur,easing:ease,fill:'forwards'});
-  }
-
+  let done=false;
   const finish=()=>{
-   if(a1){try{a1.cancel()}catch(e){}}
-   if(a2){try{a2.cancel()}catch(e){}}
+   if(done)return;
+   done=true;
    oldPane.remove();
-   newPane.classList.remove('top-shadow');
+   newPane.classList.remove('anim','top-shadow');
    newPane.style.transform='';
-   newPane.style.opacity='';
    newPane.style.zIndex='';
    slideCleanup=null;
   };
 
-  const tid=setTimeout(finish,dur+20);
+  const tid=setTimeout(finish,560);
   slideCleanup=()=>{clearTimeout(tid);finish()};
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+   if(done)return;
+   oldPane.classList.add('anim');
+   newPane.classList.add('anim');
+   if(dir>0){
+    newPane.style.transform='translate3d(0,0,0)';
+    oldPane.style.transform='translate3d(-28%,0,0)';
+   }else{
+    newPane.style.transform='translate3d(0,0,0)';
+    oldPane.style.transform='translate3d(100%,0,0)';
+   }
+  }));
  }else{
+  window.scrollTo(0,0);
   stage.innerHTML='';
   stage.appendChild(newPane);
  }

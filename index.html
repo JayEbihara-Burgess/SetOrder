@@ -314,7 +314,11 @@ function goalPlan(g){g=g||U.goal;if(!g)return null;
  const x=U.base.exp||1,w0=g.w0,L0=w0*(1-g.bf0/100),F0=w0-L0,L1=g.w1*(1-g.bf1/100),F1=g.w1-L1,dL=L1-L0,dF=F1-F0;
  const lr=w0*(x<.9?.010:x<1.1?.006:.003)*12/52,fr=.0075*w0;
  let B=(.85*dL-.15*dF)/(.75*lr),C=(.667*dL-dF)/(.75*fr);
- if(B<0){B=0;C=Math.max(0,-dF/(.85*fr))}else if(C<0){C=0;B=Math.max(0,dL/lr)}
+ // A bulk normally adds 0.667 kg fat per kg lean, and a cut loses 15% lean. When the goal can only be met by a
+ // single stage, that stage's mix is set from the goal itself, so the plan ends on the goal weight and body fat.
+ let fl=.667,ls=.15;
+ if(B<0){B=0;const loss=-(dL+dF);if(loss>0&&dF<0){C=loss/fr;ls=Math.max(0,-dL/loss)}else C=Math.max(0,-dF/(.85*fr))}
+ else if(C<0){C=0;B=Math.max(0,dL/lr);if(dL>0)fl=dF/dL}
  const N=B+C,Tu=(dn(g.date)-dn(U.start))/7,earliest=fromN(dn(U.start)+Math.max(14,Math.ceil(N*BUF*7))),tight=N>=.5&&Tu<N*BUF;
  // A date that is too soon is kept as the user's choice. The plan runs at the safe pace instead and reports the realistic date.
  const T=tight?(dn(earliest)-dn(U.start))/7:Math.max(2,Tu);
@@ -324,8 +328,8 @@ function goalPlan(g){g=g||U.goal;if(!g)return null;
  (cutFirst?[cu,bu]:[bu,cu]).forEach(p=>p&&seq.push(p));
  let Lc=L0,Fc=F0,cur_=0;
  seq.forEach(p=>{p.w0=Lc+Fc;
-  if(p.t=='bulk'){Lc+=lr*s*p.wk;Fc+=lr*s*.667*p.wk;p.kcal=(lr*s*KL+lr*s*.667*KF)/7}
-  else{const loss=fr*s*p.wk;Fc-=.85*loss;Lc-=.15*loss;p.kcal=-(fr*s*(.85*KF+.15*KL))/7}
+  if(p.t=='bulk'){Lc+=lr*s*p.wk;Fc+=lr*s*fl*p.wk;p.kcal=(lr*s*KL+lr*s*fl*KF)/7}
+  else{const loss=fr*s*p.wk;Fc-=(1-ls)*loss;Lc-=ls*loss;p.kcal=-(fr*s*((1-ls)*KF+ls*KL))/7}
   p.w1=Lc+Fc;p.bf1=Fc/(Lc+Fc)*100;p.s=cur_;cur_+=Math.round(p.wk*7);p.e=cur_});
  seq[seq.length-1].e=Math.round(T*7);
  return{ok:true,tight,earliest,N,T,w0,phases:seq,wEnd:Lc+Fc,bfEnd:Fc/(Lc+Fc)*100}}

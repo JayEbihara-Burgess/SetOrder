@@ -37,11 +37,11 @@ h3{margin:0;font-size:1.1rem;font-weight:700}
 .ib{width:42px;height:42px;border-radius:14px;background:var(--card);border:0;color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:var(--sh);flex:none}
 .ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .date-swipe{touch-action:pan-y}
-.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:18px 0 16px;touch-action:pan-y;will-change:transform}
+.strip-vp{overflow:hidden;margin:12px -18px 4px;padding:6px 0;touch-action:pan-y}.strip-track{display:flex;will-change:transform;transform:translate3d(-100%,0,0)}.strip-track.anim{transition:transform .32s cubic-bezier(.22,1,.36,1)}.strip{flex:0 0 100%;display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:0 18px}.wklbl{font-size:.72rem;font-weight:700;color:var(--mute);text-align:center;margin-bottom:12px;letter-spacing:.04em}
 .dc{border:0;background:var(--card);border-radius:16px;padding:9px 0 9px;font-family:inherit;color:var(--mute);font-size:.7rem;font-weight:600;cursor:pointer;box-shadow:var(--sh)}
 .dc b{display:block;font-size:1.05rem;color:var(--ink);margin:2px 0 5px;font-weight:700}
 .dc i{display:block;width:5px;height:5px;border-radius:50%;margin:0 auto}.dc i.w{background:var(--mute);opacity:.5}.dc i.d{background:var(--acc);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
-.dc.sel{background:var(--ink);color:var(--bg)}.dc.sel b{color:var(--bg)}
+.dc.sel{background:var(--ink);color:var(--bg)}.dc.sel b{color:var(--bg)}.dc.tdy:not(.sel){box-shadow:inset 0 0 0 2px var(--acc),var(--sh)}
 .btn{display:flex;align-items:center;justify-content:center;width:100%;background:var(--acc);color:var(--on);border:0;border-radius:18px;padding:15px;font-family:inherit;font-weight:700;font-size:1rem;cursor:pointer;margin-top:14px}
 .btn:active{transform:scale(.985)}.btn.dark{background:var(--ink);color:var(--bg)}.btn.ghost{background:var(--soft);color:var(--ink)}.btn.danger{background:#d2481f;color:#fff}
 .tx{background:none;border:0;color:var(--mute);font-family:inherit;font-weight:600;font-size:.85rem;padding:6px 0;cursor:pointer}
@@ -102,7 +102,7 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{padding:9px 4px
 .auth .seg{margin:20px 0 14px}.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.2rem;letter-spacing:-.02em;margin-bottom:26px}
 .logo i{width:22px;height:22px;border-radius:7px;background:var(--acc);box-shadow:inset 0 0 0 4px var(--ink)}
 .av{width:42px;height:42px;border-radius:50%;background:var(--acc);color:var(--on);display:grid;place-items:center;font-weight:800;text-transform:uppercase}
-.swr{display:grid;grid-template-columns:1fr 104px;gap:10px;align-items:end}
+.swr{display:grid;grid-template-columns:1fr 104px;gap:10px;align-items:end}.wl{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.wl:last-child{border-bottom:0}.wl>div:first-child{flex:1;min-width:0}.cnt{display:flex;align-items:center;gap:2px;background:var(--soft);border-radius:12px;padding:3px;flex:none}.cnt button{width:30px;height:30px;border:0;background:var(--card);color:var(--ink);border-radius:9px;cursor:pointer;display:grid;place-items:center}.cnt .ic{width:16px;height:16px}.cnt b{min-width:22px;text-align:center;font-size:.9rem}.rowbtns{display:flex;gap:8px;flex-wrap:wrap}.rowbtns .btn{flex:1 1 150px;width:auto;margin-top:10px}.acts{display:flex;gap:14px}
 </style>
 </head>
 <body>
@@ -114,7 +114,7 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{padding:9px 4px
 document.addEventListener('touchmove',e=>{if(e.touches&&e.touches.length>1)e.preventDefault()},{passive:false});
 let lastTouchEnd=0;
 document.addEventListener('touchend',e=>{
- if(e.target&&/INPUT|TEXTAREA|SELECT|BUTTON/.test(e.target.tagName))return;
+ if(e.target&&e.target.closest&&e.target.closest('input,textarea,select,button,label'))return;
  const now=Date.now();
  if(now-lastTouchEnd<=300)e.preventDefault();
  lastTouchEnd=now;
@@ -149,18 +149,19 @@ const SES={
 'Lower B':[['uni',3],['glute',3],['quad',3],['ham',2],['core',2]]};
 const SPLIT=Object.keys(SES),LOWER=new Set(['squat','hinge','glute','uni','quad','ham','calf']);
 const EQ={db:'Dumbbells',bb:'Barbell and squat rack',sm:'Smith machine',cb:'Cable machine',mc:'Chest, shoulder and row machines',lp:'Leg press',lm:'Leg curl and extension machines',bar:'Pull-up bar',dip:'Dip station',lat:'Lat pulldown'};
-const CARDIO=['Rowing erg','Running','Cycling','Swimming','Ski erg','Incline walk','Elliptical'];
-const CMET={'Rowing erg':7,'Running':9.8,'Cycling':7.5,'Swimming':8,'Ski erg':8,'Incline walk':5,'Elliptical':5};
+const CARDIO=['Rowing erg','Rowing (on water)','Running','Cycling','Indoor cycling','Swimming','Ski erg','Incline walk','Elliptical','Stair climber','Jump rope','Hiking'];
+const SPORTS=[['Rowing erg',7],['Rowing (on water)',7.5],['Running',9.8],['Trail running',9],['Cycling',7.5],['Indoor cycling',8.5],['Mountain biking',8.5],['Swimming',8],['Open-water swimming',9],['Ski erg',8],['Incline walk',5],['Walking',3.5],['Hiking',6],['Elliptical',5],['Stair climber',9],['Jump rope',11],['Football',7],['Rugby',8.3],['Basketball',6.5],['Netball',6],['Hockey',7.8],['Ice hockey',8],['Volleyball',4],['Beach volleyball',8],['Ultimate',8],['Tennis',7],['Squash',7.3],['Badminton',5.5],['Padel',6],['Table tennis',4],['Cricket',4.8],['Baseball or softball',5],['Golf',4.8],['Boxing',9],['Kickboxing',10],['Martial arts',10],['Brazilian jiu-jitsu',8],['Wrestling',6],['Climbing',8],['Bouldering',7.5],['Yoga',2.5],['Pilates',3],['Dance',5],['CrossFit',8],['Circuit training',8],['Kayaking',5],['Canoeing',5],['Stand-up paddleboarding',6],['Surfing',3],['Skiing',7],['Snowboarding',5.3],['Cross-country skiing',9],['Ice skating',7],['Skateboarding',5],['Horse riding',5.5],['Other',5]];
+const CMET=Object.fromEntries(SPORTS),isRow=t=>/^Rowing/.test(t||'');
 const NM=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],ORD=[1,2,3,4,5,6,0],DL='SMTWTFS';
 const TABS=['day','plan','prog','me'];
-const DS={pal:1.6,sc:2,fc:2,setAU:20,actAdd:.5,rest:1,sports:'Rowing erg, 7\nRunning, 9.8\nCycling, 7.5\nSwimming, 8\nSki erg, 8\nIncline walk, 5\nElliptical, 5\nUltimate, 8\nTennis, 7\nOther, 5'};
-const lad=p=>LAD[p].slice(1).map(s=>{const[n,eq,lo,hi,step,rest,ratio]=s.split('|');return{n,eq,lo:+lo,hi:+hi,step:+step,rest:+rest,ratio:+ratio}});
+const DS={pal:1.6,sc:2,fc:2,setAU:20,actAdd:.5,rest:1,spv:2,sports:SPORTS.map(x=>x[0]+', '+x[1]).join('\n')};
+const lad=p=>LAD[p].slice(1).map(s=>{const[n,eq,lo,hi,step,rest,ratio]=s.split('|');return{n,eq,lo:+lo,hi:+hi,step:+step,rest:+rest,ratio:+ratio}}).concat(((U&&U.cx)||[]).filter(c=>c.p==p));
 
 // ---------- Helpers ----------
 const $=s=>document.querySelector(s),z=n=>String(n).padStart(2,'0');
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ymd=d=>d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate()),pd=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
-const dn=s=>Math.round(pd(s)/864e5),fromN=n=>ymd(new Date(n*864e5+12*36e5)),TODAY=ymd(new Date());
+const dn=s=>Math.round(pd(s)/864e5),fromN=n=>ymd(new Date(n*864e5+12*36e5));let TODAY=ymd(new Date());
 const f=(n,k=1)=>n==null||isNaN(n)?'–':n.toFixed(k),avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null,rnd=(x,s)=>Math.round(x/s)*s,cap=s=>s[0].toUpperCase()+s.slice(1);
 const nv=id=>{const v=parseFloat(($('#'+id)||{}).value);return isNaN(v)?null:v};
 const ps=x=>{const[a,b]=String(x).trim().split(':');return b!=null?(+a)*60+(+b):+a};
@@ -168,14 +169,16 @@ const mmss=s=>{if(s==null)return'–';const r=Math.round(s);return Math.floor(r/
 const fdate=(d,o)=>pd(d).toLocaleDateString('en-GB',o);
 const IC=p=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
 const I={today:IC('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),plan:IC('<rect x="4" y="5" width="16" height="15" rx="3.5"/><path d="M4 10h16M9 3v4M15 3v4"/>'),prog:IC('<path d="M4 18l5-6 4 3 7-9"/><path d="M15 6h5v5"/>'),me:IC('<circle cx="12" cy="9" r="4"/><path d="M4.5 20c1.5-4 5-5 7.5-5s6 1 7.5 5"/>'),left:IC('<path d="M15 5l-7 7 7 7"/>'),right:IC('<path d="M9 5l7 7-7 7"/>'),minus:IC('<path d="M6 12h12"/>'),plus:IC('<path d="M12 6v12M6 12h12"/>'),down:IC('<path d="M6 9l6 6 6-6"/>')};
-let U=null,user=null,tab='day',renderedTab=null,pillAnim=null,slideCleanup=null,vd=TODAY,stripAnimDir=0,sub=null,editId=null,swapP=null,mode='login',msg='',un='',rest=null,AC=null,fa=null,draft=null,wmsg='',gmsg='',gok=false,swmsg='',es=null,wcarry=null,lift=null,amsg='',aok=false,booting=true,bootErr='',dname='',email='',pendingName='',msgok=false,dirty=false,pt=null,syncMsg='',folds={cal:false,wt:false};
+let U=null,user=null,tab='day',renderedTab=null,pillAnim=null,slideCleanup=null,vd=TODAY,stripAnimDir=0,sub=null,editId=null,swapP=null,mode='login',msg='',un='',rest=null,AC=null,fa=null,draft=null,wmsg='',gmsg='',gok=false,swmsg='',es=null,wcarry=null,lift=null,amsg='',aok=false,booting=true,bootErr='',dname='',email='',pendingName='',msgok=false,dirty=false,pt=null,syncMsg='',folds={cal:false,wt:false,ses:false},rmP=null,addOpen=false,custOpen=false,axn=3,axp=null,cdraft={},cmsg='',wsel=null,smsg='';
 
 // ---------- Accounts (Firebase Auth + Firestore cloud save) ----------
 const lsg=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},lss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-const newU=()=>({v:2,ready:0,base:{exp:1},wd:[0,1,1,0,1,1,0],cardio:[],goal:null,cal:{pct:0,off:{}},wtoff:{},man:{},sw:{},winc:{},start:TODAY,eq:{db:1,bb:1,sm:1,cb:1,mc:1,lp:1,lm:1,bar:1,dip:1,lat:1},lvl:{},ov:{},sets:[],days:{},acts:[],set:Object.assign({},DS),date:fromN(dn(TODAY)+182)});
+const newU=()=>({v:2,ready:0,base:{exp:1},wd:[0,1,1,0,1,1,0],cardio:[],goal:null,cal:{pct:0,off:{}},wtoff:{},man:{},sw:{},winc:{},start:TODAY,eq:{db:1,bb:1,sm:1,cb:1,mc:1,lp:1,lm:1,bar:1,dip:1,lat:1},lvl:{},ov:{},sets:[],days:{},acts:[],ses:{},dex:{},cx:[],set:Object.assign({},DS),date:fromN(dn(TODAY)+182)});
 function norm(u){u=u||newU();const d=newU();
  if(!u.v){u.eq=d.eq;u.set=Object.assign({},u.set,{sports:DS.sports});delete u.ergDay;u.cardio=[];u.v=2}
- for(const k in d)if(u[k]==null)u[k]=d[k];u.set=Object.assign({},DS,u.set);u.eq=Object.assign({},d.eq,u.eq);
+ for(const k in d)if(u[k]==null)u[k]=d[k];const spv=(u.set&&u.set.spv)||0;u.set=Object.assign({},DS,u.set);
+ if(spv<2&&u.set.sports!==DS.sports){const have=new Set(u.set.sports.split('\n').map(l=>l.split(',')[0].trim().toLowerCase())),add=SPORTS.filter(x=>!have.has(x[0].toLowerCase())).map(x=>x[0]+', '+x[1]),L=u.set.sports.split('\n').filter(l=>l.trim()),oi=L.findIndex(l=>/^other\s*,/i.test(l));if(oi>=0)L.splice(oi,0,...add.filter(l=>!/^Other,/.test(l)));else L.push(...add);u.set.sports=L.join('\n')}
+ u.set.spv=2;u.eq=Object.assign({},d.eq,u.eq);
  u.cal=Object.assign({pct:0,off:{}},u.cal);u.cal.off=u.cal.off||{};u.wtoff=u.wtoff||{};u.man=u.man||{};return u}
 const save=()=>{if(!user||!U)return;U.t=Date.now();lss('setorder-d-'+user,U);push()};
 function push(){dirty=true;clearTimeout(pt);pt=setTimeout(flush,600);updSync()}
@@ -230,6 +233,7 @@ async function onUser(u){
  booting=false;bootErr='';if(first&&!local){tab=U.ready?'day':'plan';vd=TODAY}
  if(first||sub!='form')render()}
 document.addEventListener('visibilitychange',async()=>{if(document.hidden){if(dirty)flush();return}
+ const nt=ymd(new Date());if(nt!=TODAY){if(vd==TODAY)vd=nt;TODAY=nt;if(U&&sub!='form')render()}
  if(!user||!U||dirty||!window.FB)return;
  try{const sn=await FB.getDoc(FB.doc(FB.db,'users',user));if(sn.exists()){const cu=JSON.parse(sn.data().d);
   if(!dirty&&(cu.t||0)>(U.t||0)){U=norm(cu);lss('setorder-d-'+user,U);const ae=document.activeElement;if(sub!='form'&&!(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))render()}}}catch(e){}});
@@ -239,7 +243,7 @@ const gd=d=>U.days[d]||{},sd=(d,o)=>{U.days[d]=Object.assign(U.days[d]||{},o);sa
 const isW=d=>U.ov[d]?U.ov[d]=='work':!!U.wd[pd(d).getDay()];
 const cdue=d=>d<U.start?[]:U.cardio.filter(c=>c.days.includes(pd(d).getDay()));
 function plan(d){if(d<U.start||!isW(d))return null;let k=0;for(let x=dn(U.start);x<dn(d);x++)if(isW(fromN(x)))k++;return SPLIT[k%SPLIT.length]}
-const avail=p=>{const a=lad(p).map((e,i)=>({e,i})),r=a.filter(x=>x.e.eq=='bw'||U.eq[x.e.eq]);return r.length?r:a};
+const avail=p=>{const a=lad(p).map((e,i)=>({e,i})),r=a.filter(x=>x.e.eq=='bw'||x.e.eq=='cu'||U.eq[x.e.eq]);return r.length?r:a};
 // Training style: calisthenics exercises have no per-kg start ratio (bodyweight, or weighted dips and pull-ups).
 // U.cal.pct is the share of movements done with bodyweight. The movements best suited to calisthenics switch first.
 const isCal=e=>!e.ratio,CORD=['push_h','pull_v','dips','push_v','core','pull_h','uni','squat','push_i','tri','bi','glute','hinge','calf','ham','quad','traps','rear','side'];
@@ -249,10 +253,10 @@ function bwSet(){const c=CORD.filter(p=>avail(p).some(x=>isCal(x.e)&&!U.cal.off[
 function pool(p){const A=av(p),W=A.filter(x=>!isCal(x.e)),B=A.filter(x=>isCal(x.e));if(bwSet().has(p)&&B.length)return B;return W.length?W:(B.length?B:A)}
 const bw=()=>U.base.w||(wpts().slice(-1)[0]||[0,70])[1];
 function hist(n,d){const ds=[...new Set(U.sets.filter(s=>s.ex==n&&s.d<d).map(s=>s.d))].sort();return ds.length?U.sets.filter(s=>s.ex==n&&s.d==ds[ds.length-1]):null}
-function cur(p,ns){const L=lad(p),P=pool(p),Q=U.man[p]?av(p):P,x=U.base.exp||1,n=P.length;let i=U.lvl[p];
- if(i==null||!L[i]||!Q.some(a=>a.i==i))i=P[x<.9?0:x>=1.1?Math.min(n-1,Math.floor(n*.7)):Math.floor((n-1)/2)].i;
+function cur(p,ns){const L=lad(p),P=pool(p),Q=U.man[p]?av(p):P,x=U.base.exp||1,P0=P.filter(a=>!a.e.cu),PP=P0.length?P0:P,n=PP.length;let i=U.lvl[p];
+ if(i==null||!L[i]||!Q.some(a=>a.i==i))i=PP[x<.9?0:x>=1.1?Math.min(n-1,Math.floor(n*.7)):Math.floor((n-1)/2)].i;
  let ex=L[i],note='';const H=hist(ex.n,vd);
- if(!ex.step&&H&&H.length>=ns&&H.every(s=>s.r>=ex.hi)){const j=Q.find(a=>a.i>i);if(j){i=j.i;ex=j.e;note='You topped the last one, so you moved up a step.'}}
+ if(!ex.step&&H&&H.length>=ns&&H.every(s=>s.r>=ex.hi)){const j=Q.find(a=>a.i>i&&!a.e.cu);if(j){i=j.i;ex=j.e;note='You topped the last one, so you moved up a step.'}}
  if(vd>=TODAY&&U.lvl[p]!==i){U.lvl[p]=i;save()}
  const H2=hist(ex.n,vd),pct=LOWER.has(p)?.05:.025,inc=w=>Math.max(ex.step,rnd(w*pct,ex.step||1));let w=ex.step?null:0,r=ex.lo,last='';
  if(H2){const mw=Math.max(...H2.map(s=>s.w)),at=H2.filter(s=>s.w==mw);last=H2.map(s=>(s.w?s.w+'×':'')+s.r).join(', ');
@@ -279,7 +283,7 @@ function am(a){const arr=(a.splits||'').split(/[,\s]+/).filter(Boolean).map(ps).
  const m=sports().find(x=>x.n==a.type),rpe=a.rpe||6,kcal=w?w*a.min*60/4184/.24:(m?m.met:6)*bw()*(a.min/60)*(rpe/6);let drift=null;
  if(arr.length>=4){const h=Math.floor(arr.length/2);drift=avg(arr.slice(h))-avg(arr.slice(0,h))}return{sp,w,kcal,drift}}
 const dayActs=()=>U.acts.filter(a=>a.d==vd);
-function loads(){const au=d=>U.sets.filter(s=>s.d==d).length*U.set.setAU+U.acts.filter(a=>a.d==d).reduce((t,a)=>t+a.min*(a.rpe||6),0),t=dn(TODAY);let ac=0,ch=0;for(let i=0;i<28;i++){const v=au(fromN(t-i));if(i<7)ac+=v;ch+=v}ch/=4;return{ac,ch,r:ch>0?ac/ch:null}}
+function loads(){const au=d=>U.sets.filter(s=>s.d==d).length*U.set.setAU+U.acts.filter(a=>a.d==d).reduce((t,a)=>t+a.min*(a.rpe||6),0),t=dn(TODAY);let ac=0,ch=0;for(let i=0;i<28;i++){const v=au(fromN(t-i));if(i<7)ac+=v;ch+=v}const prior=ch-ac;ch/=4;return{ac,ch,r:ch>0&&prior>0?ac/ch:null}}
 
 // ---------- Cardio prescription ----------
 function ergBase(){const ests=[];U.acts.filter(a=>a.type=='Rowing erg').sort((p,q)=>p.d<q.d?-1:1).slice(-3).forEach(a=>{const m=am(a);if(m.w)ests.push(m.w/(.35+.065*(a.rpe||6)))});
@@ -295,11 +299,11 @@ function cardioRx(c,d){let k=0;for(let x=dn(U.start);x<dn(d);x++)if(c.days.inclu
  const last=U.acts.filter(a=>a.type==c.type&&a.rx&&a.d<d).sort((p,q)=>p.d<q.d?-1:1).pop();
  if(last){const df=(last.rpe||6)-last.rx;if(df>=1.5){x.pct-=.03;why='Last session felt harder than planned, so this one is 3% easier.'}else if(df<=-1.5){x.pct+=.03;why='Last session felt easier than planned, so this one is 3% harder.'}}
  if((D.sleep!=null&&D.sleep<6)||(L.r&&L.r>1.4)){x={n:'Easy steady state',kind:'t',min:20,pct:.58,rpe:4,spm:'16-18',d:'A recovery session. Keep it light.'};why=D.sleep!=null&&D.sleep<6?'Short sleep, so today is light.':'Training load is spiking, so today is light.'}
- if(!erg&&c.type!='Ski erg')x.spm='';
+ if(!isRow(c.type)&&c.type!='Ski erg')x.spm='';
  const w=W?W*x.pct:null,sp=w?500*Math.cbrt(2.8/w):null;let min=x.min,wm=x.min;
  if(x.kind=='i'){wm=x.reps*x.on;min=wm+(x.reps-1)*x.off}
  if(x.kind=='r'){wm=sp?x.reps*x.len*sp/500/60:x.reps*2.2;min=wm+(x.reps-1)*x.off}
- return Object.assign(x,{sp,w,min:Math.round(min),kcal:w?w*wm*60/4184/.24:(CMET[c.type]||6)*bw()*(wm/60)*(x.rpe/6),why})}
+ return Object.assign(x,{sp,w,min:Math.round(min),kcal:w?w*wm*60/4184/.24:(CMET[c.type]||(sports().find(s=>s.n==c.type)||{}).met||6)*bw()*(wm/60)*(x.rpe/6),why})}
 function rxText(x){const p=x.sp?`${mmss(x.sp)}/500m (${Math.round(x.w)} W)`:`RPE ${x.rpe}`;
  return x.kind=='t'?`${x.min} min at ${p}`:x.kind=='i'?`${x.reps} × ${x.on} min at ${p}, ${x.off} min easy between`:`${x.reps} × ${x.len} m at ${p}, ${x.off} min rest between`}
 const cardioBurn=d=>cdue(d).reduce((t,c)=>t+cardioRx(c,d).kcal,0);
@@ -311,9 +315,10 @@ function goalPlan(g){g=g||U.goal;if(!g)return null;
  const lr=w0*(x<.9?.010:x<1.1?.006:.003)*12/52,fr=.0075*w0;
  let B=(.85*dL-.15*dF)/(.75*lr),C=(.667*dL-dF)/(.75*fr);
  if(B<0){B=0;C=Math.max(0,-dF/(.85*fr))}else if(C<0){C=0;B=Math.max(0,dL/lr)}
- const N=B+C,T=(dn(g.date)-dn(U.start))/7,earliest=fromN(dn(U.start)+Math.max(14,Math.ceil(N*BUF*7)));
- if(N>=.5&&T<N*BUF)return{ok:false,earliest,N,T};
- if(N<.5)return{ok:true,N,T,w0,phases:[{t:'maintain',wk:T,s:0,e:Math.round(T*7),kcal:0,w0,w1:w0,bf1:g.bf0}],wEnd:w0,bfEnd:g.bf0};
+ const N=B+C,Tu=(dn(g.date)-dn(U.start))/7,earliest=fromN(dn(U.start)+Math.max(14,Math.ceil(N*BUF*7))),tight=N>=.5&&Tu<N*BUF;
+ // A date that is too soon is kept as the user's choice. The plan runs at the safe pace instead and reports the realistic date.
+ const T=tight?(dn(earliest)-dn(U.start))/7:Math.max(2,Tu);
+ if(N<.5)return{ok:true,tight,earliest,N,T,w0,phases:[{t:'maintain',wk:T,s:0,e:Math.round(T*7),kcal:0,w0,w1:w0,bf1:g.bf0}],wEnd:w0,bfEnd:g.bf0};
  const s=N/T,seq=[];const cutFirst=g.bf0>=18;
  const bu=B>0?{t:'bulk',wk:B/s}:null,cu=C>0?{t:'cut',wk:C/s}:null;
  (cutFirst?[cu,bu]:[bu,cu]).forEach(p=>p&&seq.push(p));
@@ -323,7 +328,7 @@ function goalPlan(g){g=g||U.goal;if(!g)return null;
   else{const loss=fr*s*p.wk;Fc-=.85*loss;Lc-=.15*loss;p.kcal=-(fr*s*(.85*KF+.15*KL))/7}
   p.w1=Lc+Fc;p.bf1=Fc/(Lc+Fc)*100;p.s=cur_;cur_+=Math.round(p.wk*7);p.e=cur_});
  seq[seq.length-1].e=Math.round(T*7);
- return{ok:true,N,T,w0,phases:seq,wEnd:Lc+Fc,bfEnd:Fc/(Lc+Fc)*100}}
+ return{ok:true,tight,earliest,N,T,w0,phases:seq,wEnd:Lc+Fc,bfEnd:Fc/(Lc+Fc)*100}}
 const phaseAt=d=>{const gp=U.goal?goalPlan():null;if(!gp||!gp.ok)return null;const n=dn(d)-dn(U.start);return gp.phases.find(p=>n>=p.s&&n<p.e)||null};
 function planW(gp,n){if(n<=0)return gp.w0;for(const p of gp.phases)if(n<p.e)return p.w0+(p.w1-p.w0)*Math.max(0,n-p.s)/((p.e-p.s)||1);return gp.phases[gp.phases.length-1].w1}
 function saveGoal(){const B=U.base,w1=nv('gw'),bf1=nv('gbf');gok=false;
@@ -332,20 +337,32 @@ function saveGoal(){const B=U.base,w1=nv('gw'),bf1=nv('gbf');gok=false;
  if(w1<40||w1>160||bf1<6||bf1>35){gmsg='Goal weight must be 40 to 160 kg and body fat 6 to 35%.';return}
  const bf0=B.bf??15,L0=B.w*(1-bf0/100),L1=w1*(1-bf1/100);
  if(L1<L0*.95){gmsg='That goal needs you to lose more than 5% of your lean mass. Raise the goal weight or body fat.';return}
- let date=$('#gd').value||fromN(dn(U.start)+182);if(dn(date)<dn(U.start)+14)date=fromN(dn(U.start)+14);
- const g={w0:B.w,bf0,w1,bf1,date};let gp=goalPlan(g);let note='';
- if(!gp.ok){g.date=gp.earliest;gp=goalPlan(g);note=`That date is too tight to be realistic. Moved to ${fdate(g.date,{day:'numeric',month:'short',year:'numeric'})}, the earliest date with a 15% safety buffer. `}
- U.goal=g;U.date=g.date;save();gok=true;gmsg=note+`Plan ends at about ${f(gp.wEnd)} kg and ${f(gp.bfEnd,0)}% body fat.`}
+ const date=($('#gd')||{}).value||fromN(dn(U.start)+182);
+ if(dn(date)<=dn(U.start)){gmsg='Pick a date after Day 1.';return}
+ const g={w0:B.w,bf0,w1,bf1,date},gp=goalPlan(g);
+ U.goal=g;U.date=date;save();gok=true;
+ gmsg=gp.tight?'Goal saved with your date. See the advice below.':`Goal saved. Plan ends at about ${f(gp.wEnd)} kg and ${f(gp.bfEnd,0)}% body fat.`}
+const FD={day:'numeric',month:'short',year:'numeric'};
+function goalHint(){const el=$('#ghint');if(!el)return;const B=U.base,w1=nv('gw'),bf1=nv('gbf'),date=($('#gd')||{}).value,g0=U.goal;
+ if(!B.w||w1==null||bf1==null||!date||dn(date)<=dn(U.start)||(g0&&g0.w1==w1&&g0.bf1==bf1&&g0.date==date)){el.innerHTML='';return}
+ const gp=goalPlan({w0:B.w,bf0:B.bf??15,w1,bf1,date});
+ el.innerHTML=gp.tight?`<p class="warn">${fdate(date,FD)} is too soon to get there safely. The earliest realistic date is ${fdate(gp.earliest,FD)}, which includes a 15% buffer.</p><button class="tx" data-a="gdset" data-v="${gp.earliest}">Use ${fdate(gp.earliest,FD)} instead</button>`:`<p class="good">That date is realistic. The earliest safe date would be ${fdate(gp.earliest,FD)}.</p>`}
 function goalTable(){const gp=U.goal?goalPlan():null;if(!gp)return'';
- if(!gp.ok)return`<p class="warn">This goal no longer fits your timeline. Earliest realistic date is ${fdate(gp.earliest,{day:'numeric',month:'short',year:'numeric'})}. Save the goal again to move it.</p>`;
- return`<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Stage</th><th>Days</th><th>kcal/day vs maintenance</th><th>Ends at</th></tr></thead><tbody>${gp.phases.map(p=>`<tr><td>${cap(p.t)}<br><span class="m">${Math.round(p.wk)} weeks</span></td><td>${p.s+1} to ${p.e}<br><span class="m">${fdate(fromN(dn(U.start)+p.s),{day:'numeric',month:'short'})}</span></td><td>${p.kcal>0?'+':''}${Math.round(p.kcal)}</td><td>${f(p.w1)} kg<br><span class="m">${f(p.bf1,0)}% fat</span></td></tr>`).join('')}</tbody></table></div>`}
+ const adv=gp.tight?`<p class="warn">Your date, ${fdate(U.goal.date,FD)}, is too soon to reach this goal safely. At a safe pace you get there around ${fdate(gp.earliest,FD)} (this includes a 15% buffer), so the stages and calories below follow that pace.</p><button class="tx" data-a="usegd">Change my date to ${fdate(gp.earliest,FD)}</button>`:'';
+ return adv+`<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Stage</th><th>Days</th><th>kcal/day vs maintenance</th><th>Ends at</th></tr></thead><tbody>${gp.phases.map(p=>`<tr><td>${cap(p.t)}<br><span class="m">${Math.round(p.wk)} weeks</span></td><td>${p.s+1} to ${p.e}<br><span class="m">${fdate(fromN(dn(U.start)+p.s),{day:'numeric',month:'short'})}</span></td><td>${p.kcal>0?'+':''}${Math.round(p.kcal)}</td><td>${f(p.w1)} kg<br><span class="m">${f(p.bf1,0)}% fat</span></td></tr>`).join('')}</tbody></table></div>`}
 
 // ---------- UI pieces, full-width side-by-side carousel slide & live tab scrubbing ----------
 const opts=(a,s)=>a.map(x=>`<option${x==s?' selected':''}>${esc(x)}</option>`).join('');
 const sl=(id,l,min,max,st,v,u,o={})=>{const at=(o.k?` data-s="${o.k}"`:'')+(o.f?` data-f="${o.f}"`:'')+(o.b?` data-b="${o.b}"`:'')+(o.cal?' data-cal="1"':'');
  return`<div class="fld"><div class="fl"><span>${l}</span>${u?`<em>${u}</em>`:''}</div><div class="sl"><input type="range" data-p="${id}"${at} min="${min}" max="${max}" step="${st}" value="${v??o.d??min}" aria-label="${l}"><input type="number" inputmode="decimal" id="${id}" data-p="${id}"${at} step="${st}" value="${v??''}"></div></div>`};
 const stp=(id,v,s)=>`<div class="step"><button data-st="${id}" data-dl="${-s}" aria-label="less">${I.minus}</button><input id="${id}" type="number" inputmode="decimal" step="${s}" value="${v??''}"><button data-st="${id}" data-dl="${s}" aria-label="more">${I.plus}</button></div>`;
-const days7=()=>{const x=dn(vd),off=(pd(vd).getDay()+6)%7;return Array.from({length:7},(_,i)=>fromN(x-off+i))};
+const wkDays=o=>{const x=dn(vd)+o*7,off=(pd(vd).getDay()+6)%7;return Array.from({length:7},(_,i)=>fromN(x-off+i))};
+const monN=d=>dn(d)-(pd(d).getDay()+6)%7;
+// Each workout type can be customised (U.ses), and a single day can add or remove movements (U.dex).
+const sesT=t=>(U.ses&&U.ses[t])||SES[t];
+function dayList(d){const t=plan(d),x=(U.dex&&U.dex[d])||{},rm=new Set(x.rm||[]),L=t?sesT(t).filter(e=>!rm.has(e[0])).map(e=>e.slice()):[];(x.add||[]).forEach(a=>{if(!L.some(e=>e[0]==a[0]))L.push(a.slice())});return L}
+const dex=d=>{U.dex=U.dex||{};return U.dex[d]=U.dex[d]||{add:[],rm:[]}};
+function weekLbl(){const m=monN(vd),t=monN(TODAY),k=Math.round((m-t)/7);return k==0?'This week':k==1?'Next week':k==-1?'Last week':'Week of '+fdate(fromN(m),{day:'numeric',month:'short'})}
 
 function morphPill(pill,fromPos,toIdx,startSx=1,startSy=1){
  if(!pill)return;
@@ -508,6 +525,11 @@ function bindTabScrub(){
    if(pill&&!pillAnim){
     pill.style.transform=`translate3d(${curIdx*100}%,0,0) scale3d(1,1,1)`;
    }
+   // With pointer capture on the bar, browsers send the click to the bar rather than the button, so handle the tap here.
+   if(e&&e.type==='pointerup'){
+    const hit=document.elementFromPoint(e.clientX,e.clientY),btn=hit&&hit.closest&&hit.closest('.tabs button');
+    if(btn&&btn.dataset.tab)switchTab(btn.dataset.tab,false);
+   }
   }
  };
 
@@ -624,98 +646,132 @@ function fuelH(){const g=target(),n=dn(vd)-dn(U.start);
 function cardioH(){return cdue(vd).map(c=>{const x=cardioRx(c,vd);return`<div class="card"><div class="eyebrow">${esc(c.type)}</div><h3>${x.n}</h3><p class="rx">${rxText(x)}</p><div class="tags">${x.spm?`<span>Rate ${x.spm}</span>`:''}<span>RPE ${x.rpe}</span><span>about ${Math.round(x.kcal)} kcal</span></div><p class="m">${x.d}${x.why?' '+x.why:''}</p>${c.type=='Rowing erg'&&!x.sp?'<p class="m">There is no pace on record yet. Row by feel and log your splits, and paces appear from next week. A rough 2k split in Plan sets them now.</p>':''}<button class="btn" data-a="rxlog" data-c="${esc(c.type)}">Log this session</button></div>`}).join('')}
 function refreshDay(){const a=$('#fuel'),b=$('#cardio');if(a)a.innerHTML=fuelH();if(b)b.innerHTML=cardioH();wk()}
 function actCard(a){const m=am(a);return`<div class="card"><div class="row"><h3>${esc(a.type)}</h3><span class="m" style="margin:0">${a.min} min</span></div><div class="tags">${a.dist?`<span>${a.dist} m</span>`:''}${m.sp?`<span>${mmss(m.sp)} /500m</span>`:''}${m.w?`<span>${Math.round(m.w)} W</span>`:''}${a.spm?`<span>${a.spm} spm</span>`:''}${a.hr?`<span>${a.hr} bpm</span>`:''}<span>RPE ${a.rpe||6}</span><span>${a.fed?'fed':'fasted'}</span><span>about ${Math.round(m.kcal)} kcal</span></div>${m.drift!=null?`<p class="m">Splits ${m.drift>0?'slowed':'sped up'} by ${f(Math.abs(m.drift))} s across the session.</p>`:''}${a.note?`<p class="m">${esc(a.note)}</p>`:''}<div class="row"><button class="tx" data-a="edit" data-i="${a.id}">Edit</button><button class="tx" data-a="del" data-i="${a.id}">Delete</button></div></div>`}
-function dayV(fromScrub=false){const N=dn(vd)-dn(U.start)+1,t=plan(vd),D=gd(vd),G=days7(),tot=t?SES[t].reduce((s,x)=>s+x[1],0):0,done=t?U.sets.filter(s=>s.d==vd).length:0,cd=cdue(vd).length;
+function dayV(fromScrub=false){const N=dn(vd)-dn(U.start)+1,t=plan(vd),D=gd(vd),L=dayList(vd),tot=L.reduce((s,x)=>s+x[1],0),done=U.sets.filter(s=>s.d==vd).length,cd=cdue(vd).length;
  let h=`<div class="date-swipe" id="date-swipe"><div class="top"><div><div class="eyebrow">${fdate(vd,{weekday:'long',day:'numeric',month:'long'})}</div><h1>${N>0?'Day '+N:'Soon'}</h1></div><div class="nav2"><button class="ib" data-day="${fromN(dn(vd)-1)}" aria-label="Previous day">${I.left}</button><button class="ib" data-day="${fromN(dn(vd)+1)}" aria-label="Next day">${I.right}</button></div></div>
- <div class="strip" id="date-strip">${G.map(d=>`<button class="dc${d==vd?' sel':''}" data-day="${d}">${DL[pd(d).getDay()]}<b>${pd(d).getDate()}</b><i class="${U.sets.some(s=>s.d==d)||U.acts.some(a=>a.d==d)?'d':(isW(d)||cdue(d).length)&&d>=U.start?'w':''}"></i></button>`).join('')}</div></div>`;
+ <div class="strip-vp" id="date-vp"><div class="strip-track" id="date-track">${[-1,0,1].map(o=>{const tg=fromN(dn(vd)+o*7);return`<div class="strip">${wkDays(o).map(d=>`<button class="dc${d==tg?' sel':''}${d==TODAY?' tdy':''}" data-day="${d}">${DL[pd(d).getDay()]}<b>${pd(d).getDate()}</b><i class="${U.sets.some(s=>s.d==d)||U.acts.some(a=>a.d==d)?'d':(isW(d)||cdue(d).length)&&d>=U.start?'w':''}"></i></button>`).join('')}</div>`}).join('')}</div></div><div class="wklbl">${weekLbl()} · swipe for other weeks</div></div>`;
  if(vd!=TODAY)h+=`<button class="tx" data-day="${TODAY}">Back to today</button>`;
  if(N<1)h+=`<div class="card hero"><div class="eyebrow">Not started</div><h2>Day 1 is ${fdate(U.start,{weekday:'long',day:'numeric',month:'long'})}</h2><button class="tx" data-day="${U.start}">Jump to Day 1</button></div>`;
- else{h+=t?`<div class="card hero"><div class="eyebrow">Workout</div><h2>${t}</h2><p class="m"><span id="hc">${done}</span> of ${tot} sets · ${SES[t].length} exercises</p><div class="bar"><i id="hb" style="width:${tot?Math.round(done/tot*100):0}%"></i></div><button class="tx" data-a="toggle">Make this a rest day</button></div>`
+ else{h+=t?`<div class="card hero"><div class="eyebrow">Workout</div><h2>${t}</h2><p class="m"><span id="hc">${done}</span> of ${tot} sets · ${L.length} exercise${L.length==1?'':'s'}</p><div class="bar"><i id="hb" style="width:${tot?Math.round(done/tot*100):0}%"></i></div><button class="tx" data-a="toggle">Make this a rest day</button></div>`
   :`<div class="card hero"><div class="eyebrow">${cd?'Cardio day':'Recovery'}</div><h2>${cd?'No lifting today':'Rest day'}</h2><p class="m">${cd?'Your cardio is below.':'Rest is when you grow. Eat well and sleep.'}</p><button class="tx" data-a="toggle">Add a workout today</button></div>`;
+  if(!t&&L.length)h+=`<div class="card"><div class="eyebrow">Extra exercises</div><p class="m" style="margin-top:0"><span id="hc">${done}</span> of ${tot} sets · ${L.length} exercise${L.length==1?'':'s'}</p><div class="bar"><i id="hb" style="width:0%"></i></div></div>`;
+  if(t&&!L.length)h+=`<p class="m">You removed every exercise from today. Add one below, or make it a rest day.</p>`;
   h+=`<div class="card" id="fuel">${fuelH()}</div>`;
-  if(t||cd)h+=`<div class="card"><div class="eyebrow">Readiness</div>${sl('slp','Sleep last night',3,12,.5,D.sleep,'hours',{f:'sleep',d:7.5})}<button class="rowsw" data-a="fed" style="margin-top:6px"><span>Eaten beforehand?</span><i class="tg${D.fed?' on':''}"></i></button><p class="m" id="rd"></p></div>`;
-  if(t)h+='<div id="wk"></div>';
-  h+=`<div id="cardio">${cardioH()}</div>`+dayActs().map(actCard).join('')+`<button class="btn ghost" data-a="newact">Log a cardio or sport session</button>
+  if(L.length||cd)h+=`<div class="card"><div class="eyebrow">Readiness</div>${sl('slp','Sleep last night',3,12,.5,D.sleep,'hours',{f:'sleep',d:7.5})}<button class="rowsw" data-a="fed" style="margin-top:6px"><span>Eaten beforehand?</span><i class="tg${D.fed?' on':''}"></i></button><p class="m" id="rd"></p></div>`;
+  if(L.length)h+='<div id="wk"></div>';
+  h+=`<div id="cardio">${cardioH()}</div>`+dayActs().map(actCard).join('')+`<div id="addex">${addOpen?addPanel():''}</div><div class="rowbtns" style="margin-top:-10px"><button class="btn ghost" data-a="addex">Add an exercise</button><button class="btn ghost" data-a="newact">Log cardio or a sport</button></div>
   <div class="card" style="margin-top:14px"><div class="eyebrow">Body and food</div><div class="two"><div><div class="fl"><span>Weight (kg)</span></div>${stp('lw',D.w??null,.1)}</div><div><div class="fl"><span>Calories</span></div>${stp('lk',D.kcal??null,50)}</div></div><div class="fld"><div class="fl"><span>Protein (g)</span></div>${stp('lp_',D.p??null,5)}</div><button class="btn dark" data-a="body">Save</button></div>`}
  shell(h,fromScrub);wk();initDateSwipe()}
 
+function moveWeek(dir,anim){vd=fromN(dn(vd)+dir*7);swapP=null;es=null;wcarry=null;rmP=null;stripAnimDir=anim?dir:0;render()}
 function initDateSwipe(){
- const zone=$('#date-swipe'),strip=$('#date-strip');
- if(!zone||!strip)return;
- if(stripAnimDir!==0&&strip.animate){
-  const dir=stripAnimDir;
-  stripAnimDir=0;
-  strip.animate([
-   {transform:`translate3d(${dir*42}px,0,0)`,opacity:.35},
-   {transform:'translate3d(0,0,0)',opacity:1}
-  ],{duration:240,easing:'cubic-bezier(.22,1,.36,1)'});
- }
+ const zone=$('#date-swipe'),vp=$('#date-vp'),tr=$('#date-track');
+ if(!zone||!tr)return;
+ if(stripAnimDir&&tr.animate)tr.animate([{transform:`translate3d(${-100+stripAnimDir*100}%,0,0)`},{transform:'translate3d(-100%,0,0)'}],{duration:320,easing:'cubic-bezier(.22,1,.36,1)'});
+ stripAnimDir=0;
  if(zone.dataset.swiped)return;
  zone.dataset.swiped='1';
- let pid=null,startX=0,startY=0,dragging=false,lastDx=0;
+ let pid=null,sx=0,sy=0,drag=false,dx=0,lx=0,lt=0,v=0,busy=false,acc=0,accT=null;
+ const go=dir=>{
+  if(busy)return;busy=true;
+  tr.classList.add('anim');
+  tr.style.transform=`translate3d(${-100-dir*100}%,0,0)`;
+  let done=false;
+  const fin=()=>{if(done)return;done=true;tr.removeEventListener('transitionend',te);moveWeek(dir,false)};
+  const te=e=>{if(e.target===tr)fin()};
+  tr.addEventListener('transitionend',te);
+  setTimeout(fin,420);
+ };
  zone.addEventListener('pointerdown',e=>{
-  if(e.button!==0&&e.pointerType==='mouse')return;
-  pid=e.pointerId;
-  startX=e.clientX;
-  startY=e.clientY;
-  dragging=false;
-  lastDx=0;
+  if(busy||(e.button!==0&&e.pointerType==='mouse'))return;
+  pid=e.pointerId;sx=lx=e.clientX;sy=e.clientY;lt=performance.now();drag=false;dx=0;v=0;
  });
  zone.addEventListener('pointermove',e=>{
   if(pid===null||e.pointerId!==pid)return;
-  const dx=e.clientX-startX,dy=e.clientY-startY;
-  if(!dragging){
-   if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)){
-    dragging=true;
-    try{zone.setPointerCapture(pid)}catch(err){}
-   }else return;
+  dx=e.clientX-sx;const dy=e.clientY-sy;
+  if(!drag){
+   if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)){drag=true;tr.classList.remove('anim');try{zone.setPointerCapture(pid)}catch(err){}}
+   else{if(Math.abs(dy)>10)pid=null;return}
   }
   e.preventDefault();
-  lastDx=dx;
-  const clamped=Math.max(-64,Math.min(64,dx*0.45));
-  strip.style.transform=`translate3d(${clamped.toFixed(1)}px,0,0)`;
+  const now=performance.now();v=(e.clientX-lx)/Math.max(1,now-lt);lx=e.clientX;lt=now;
+  tr.style.transform=`translate3d(calc(-100% + ${dx.toFixed(1)}px),0,0)`;
  });
  const finish=e=>{
   if(pid===null||(e&&e.pointerId!==pid))return;
-  if(dragging){
+  if(drag){
    try{zone.releasePointerCapture(pid)}catch(err){}
    suppressClickUntil=Date.now()+300;
-   strip.style.transform='';
-   if(Math.abs(lastDx)>38){
-    const dir=lastDx<0?1:-1;
-    stripAnimDir=dir;
-    vd=fromN(dn(vd)+dir*7);
-    rest=null;swapP=null;es=null;wcarry=null;
-    render();
-   }
+   const w=(vp&&vp.getBoundingClientRect().width)||300;
+   const dir=(dx<-w*.22||(dx<-20&&v<-.45))?1:(dx>w*.22||(dx>20&&v>.45))?-1:0;
+   if(dir)go(dir);else{tr.classList.add('anim');tr.style.transform=''}
   }
-  pid=null;
-  dragging=false;
-  lastDx=0;
+  pid=null;drag=false;dx=0;
  };
  zone.addEventListener('pointerup',finish);
  zone.addEventListener('pointercancel',finish);
+ // Trackpads and mice with horizontal scroll
+ zone.addEventListener('wheel',e=>{
+  if(Math.abs(e.deltaX)<=Math.abs(e.deltaY))return;
+  e.preventDefault();if(busy)return;
+  acc+=e.deltaX;clearTimeout(accT);accT=setTimeout(()=>acc=0,250);
+  if(Math.abs(acc)>70){const d=acc>0?1:-1;acc=0;go(d)}
+ },{passive:false});
 }
 
 const stepFor=ex=>(U.winc&&U.winc[ex.n])||ex.step;
 const cv=(n,t,k,def)=>wcarry&&wcarry.n==n&&wcarry.t==t?wcarry[k]:def;
 const wchips=(ex,t)=>{const s=stepFor(ex);return`<div class="fl" style="margin-top:10px"><span>Weight step</span><em>kg per tap, or type any weight</em></div><div class="seg">${[.5,1,2,2.5,5].map(v=>`<button data-wi="${esc(ex.n)}|${v}|${t}" class="${s==v?'on':''}">${v}</button>`).join('')}</div>`};
-function wk(){const t=plan(vd),el=$('#wk');if(!t||!el)return;const m=mod(vd),rd=$('#rd');if(rd)rd.textContent=m<0?`Readiness ${f(m*100)}%: loaded targets are lowered to match.`:'Fully ready, so no adjustment.';
+function wk(){const t=plan(vd),el=$('#wk'),LS=dayList(vd);if(!LS.length||!el)return;const m=mod(vd),rd=$('#rd');if(rd)rd.textContent=m<0?`Readiness ${f(m*100)}%: loaded targets are lowered to match.`:'Fully ready, so no adjustment.';
  let act=false,total=0,count=0;
- el.innerHTML=SES[t].map(([p,ns])=>{const c=cur(p,ns),ex=c.ex,doneI=U.sets.map((s,i)=>({s,i})).filter(o=>o.s.d==vd&&o.s.ex==ex.n),done=doneI.map(o=>o.s),comp=done.length>=ns,isA=!act&&!comp;if(isA)act=true;total+=ns;count+=Math.min(ns,done.length);
+ el.innerHTML=LS.map(([p,ns])=>{const c=cur(p,ns),ex=c.ex,doneI=U.sets.map((s,i)=>({s,i})).filter(o=>o.s.d==vd&&o.s.ex==ex.n),done=doneI.map(o=>o.s),comp=done.length>=ns,isA=!act&&!comp;if(isA)act=true;total+=ns;count+=Math.min(ns,done.length);
   const aw=ex.step&&c.w!=null?Math.max(ex.step,rnd(c.w*(1+m),ex.step)):c.w;
   const tgt=c.first?(ex.step?`First time: ${c.own?'your starting weight is':'start at'} ${aw} kg for ${ex.lo} reps, with about 3 reps spare. `:`First time: ${ns} sets of ${ex.lo}, stopping 2 reps short of failure. `)+progL(Object.assign({},c,{sess:ex.hi-ex.lo})):`Aim for ${ex.step?aw+' kg × ':''}${c.r} on every set. Last time: ${c.last}. ${progL(c)}`;
   const l=done[done.length-1],form=isA?`<div class="two" style="margin-top:12px">${ex.step?`<div><div class="fl"><span>kg</span></div>${stp('iw',cv(ex.n,'iw','v',l?l.w:aw),stepFor(ex))}</div>`:'<div></div>'}<div><div class="fl"><span>Reps</span></div>${stp('ir',cv(ex.n,'iw','r',c.r),1)}</div></div>${ex.step?wchips(ex,'iw'):''}<button class="btn" data-a="log" data-p="${p}" data-ns="${ns}">Log set ${done.length+1} of ${ns}</button>`:'';
-  const sw=swapP==p?`<div class="fld"><select data-p2="${p}" aria-label="Swap exercise">${av(p).map(x=>`<option value="${x.i}"${x.e.n==ex.n?' selected':''}>${x.e.n}</option>`).join('')}</select></div>`:'';
+  const sw=swapP==p?`<div class="fld"><select data-p2="${p}" aria-label="Swap exercise">${av(p).map(x=>`<option value="${x.i}"${x.e.n==ex.n?' selected':''}>${esc(x.e.n)}</option>`).join('')}</select></div>`:'';
+  const inT=t&&sesT(t).some(e=>e[0]==p),rmx=rmP==p?`<div class="edit"><div class="eyebrow">Remove ${esc(ex.n)}</div><p class="m" style="margin-top:0">${done.length?'Sets you already logged stay in your history. ':''}${inT?`Drop it just for today, or from every ${t} from now on.`:'It was added just for today.'}</p><div class="rowbtns"><button class="btn ghost" data-a="rmday" data-p="${p}">Remove today only</button>${inT?`<button class="btn danger" data-a="rmall" data-p="${p}">Remove from every ${t}</button>`:''}</div><button class="tx" data-a="rmcancel">Cancel</button></div>`:'';
   const pills=Array.from({length:Math.max(ns,doneI.length)},(_,i)=>doneI[i]?`<button class="sp${es==doneI[i].i?' ed':''}" data-a="editset" data-si="${doneI[i].i}" aria-label="Edit set ${i+1}">${doneI[i].s.w?doneI[i].s.w+'×':''}${doneI[i].s.r}</button>`:`<span class="sp o">${i+1}</span>`).join('');
   const eo=doneI.find(o=>o.i==es),edit=eo?`<div class="edit"><div class="eyebrow">Edit set ${doneI.indexOf(eo)+1}</div><div class="two">${ex.step?`<div><div class="fl"><span>kg</span></div>${stp('ew',cv(ex.n,'ew','v',eo.s.w),stepFor(ex))}</div>`:'<div></div>'}<div><div class="fl"><span>Reps</span></div>${stp('er',cv(ex.n,'ew','r',eo.s.r),1)}</div></div>${ex.step?wchips(ex,'ew'):''}<button class="btn" data-a="saveset">Save changes</button><div class="row"><button class="tx" data-a="delset">Delete set</button><button class="tx" data-a="cancelset">Cancel</button></div></div>`:'';
-  return`<div class="ex${isA?' act':''}${comp?' done':''}"><div class="row"><div><h3>${ex.n}</h3><div class="m" style="margin:2px 0 0">${LAD[p][0]} · ${ns} × ${ex.lo}-${ex.hi}${ex.step?'':' · bodyweight'}</div></div><button class="tx" data-a="swap" data-p="${p}">Swap</button></div>${sw}<p class="m">${c.note?c.note+' ':''}${tgt}</p><div class="sets">${pills}</div>${done.length?'<p class="m" style="font-size:.78rem">Tap a logged set to edit it.</p>':''}${edit}${form}</div>`}).join('')
+  return`<div class="ex${isA?' act':''}${comp?' done':''}"><div class="row"><div><h3>${esc(ex.n)}</h3><div class="m" style="margin:2px 0 0">${LAD[p][0]} · ${ns} × ${ex.lo}-${ex.hi}${ex.step?'':' · bodyweight'}</div></div><div class="acts"><button class="tx" data-a="swap" data-p="${p}">Swap</button><button class="tx" data-a="rmex" data-p="${p}">Remove</button></div></div>${sw}${rmx}<p class="m">${c.note?c.note+' ':''}${tgt}</p><div class="sets">${pills}</div>${done.length?'<p class="m" style="font-size:.78rem">Tap a logged set to edit it.</p>':''}${edit}${form}</div>`}).join('')
   +(act?'':'<div class="card"><h3>Session complete</h3><p class="m">Targets for next time are set.</p></div>')+(U.sets.some(s=>s.d==vd)?'<button class="tx" data-a="undo">Undo last set</button>':'');
  const hb=$('#hb'),hc=$('#hc');if(hb)hb.style.width=(total?Math.round(count/total*100):0)+'%';if(hc)hc.textContent=count}
-function logSet(p,ns){const t=plan(vd),k=SES[t].findIndex(x=>x[0]==p),c=cur(p,ns),ex=c.ex,w=ex.step?parseFloat($('#iw').value):0,r=parseInt($('#ir').value);if(isNaN(w)||isNaN(r)||r<1)return;
- try{AC=AC||new(window.AudioContext||window.webkitAudioContext)()}catch(e){}U.sets.push({d:vd,ex:ex.n,w,r});save();es=null;wcarry=null;const n=U.sets.filter(s=>s.d==vd&&s.ex==ex.n).length,nx=SES[t][k+1];
+function logSet(p,ns){const LS=dayList(vd),k=LS.findIndex(x=>x[0]==p),c=cur(p,ns),ex=c.ex,w=ex.step?parseFloat($('#iw').value):0,r=parseInt($('#ir').value);if(isNaN(w)||isNaN(r)||r<1)return;
+ try{AC=AC||new(window.AudioContext||window.webkitAudioContext)()}catch(e){}U.sets.push({d:vd,ex:ex.n,w,r});save();es=null;wcarry=null;const n=U.sets.filter(s=>s.d==vd&&s.ex==ex.n).length,nx=LS[k+1];
  const nm=n<ns?`${ex.n}, set ${n+1}`:(nx?cur(nx[0],nx[1]).ex.n+', set 1':'');rest=nm?{end:Date.now()+ex.rest*U.set.rest*1000,nm,b:0}:null;wk()}
 function saveSet(){const s=U.sets[es];if(s){const ex=Object.keys(LAD).flatMap(lad).find(x=>x.n==s.ex),st=ex&&ex.step,w=$('#ew')?parseFloat($('#ew').value):0,r=parseInt($('#er').value);
  if(!isNaN(r)&&r>=1&&(!st||(!isNaN(w)&&w>0))){s.w=st?w:0;s.r=r;save()}}es=null;wcarry=null;wk()}
+function addPanel(){const t=plan(vd),have=new Set(dayList(vd).map(e=>e[0])),ps=Object.keys(LAD).filter(p=>!have.has(p));
+ if(custOpen){const c=cdraft;return`<div class="card"><div class="eyebrow">Create your own exercise</div><div class="fl"><span>Name</span></div><input type="text" id="cxn" maxlength="40" value="${esc(c.n||'')}" placeholder="e.g. Landmine press">
+ <div class="fld"><div class="fl"><span>Movement</span><em>it joins this ladder</em></div><select id="cxp">${Object.keys(LAD).map(p=>`<option value="${p}"${c.p==p?' selected':''}>${LAD[p][0]}</option>`).join('')}</select></div>
+ <div class="fld"><div class="fl"><span>Type</span></div><div class="seg"><button data-cxt="w" class="${c.b?'':'on'}">Weights</button><button data-cxt="b" class="${c.b?'on':''}">Bodyweight</button></div></div>
+ <div class="fld two"><div><div class="fl"><span>Fewest reps</span></div><input type="number" id="cxlo" inputmode="numeric" value="${c.lo??8}"></div><div><div class="fl"><span>Most reps</span></div><input type="number" id="cxhi" inputmode="numeric" value="${c.hi??12}"></div></div>
+ ${cmsg?`<p class="warn">${esc(cmsg)}</p>`:''}<button class="btn" data-a="custsave">Save and add to today</button><div class="row"><button class="tx" data-a="custback">Back</button><button class="tx" data-a="addclose">Close</button></div></div>`}
+ return`<div class="card"><div class="eyebrow">Add an exercise</div>${ps.length?`<div class="fl"><span>Movement</span></div><select id="axp">${ps.map(p=>`<option value="${p}"${axp==p?' selected':''}>${LAD[p][0]} · ${esc(cur(p,3).ex.n)}</option>`).join('')}</select>
+ <div class="fld"><div class="fl"><span>Sets</span></div><div class="seg">${[1,2,3,4,5].map(n=>`<button data-axn="${n}" class="${axn==n?'on':''}">${n}</button>`).join('')}</div></div>
+ <div class="rowbtns"><button class="btn" data-a="addday">Add today only</button>${t?`<button class="btn dark" data-a="addall">Add to every ${t}</button>`:''}</div><p class="m">Once it is added you can swap it for any exercise on its ladder.</p>`:'<p class="m" style="margin-top:0">Every movement is already in today’s workout.</p>'}
+ <div class="row"><button class="tx" data-a="custnew">Create your own exercise</button><button class="tx" data-a="addclose">Close</button></div></div>`}
+function renderAdd(){const el=$('#addex');if(el)el.innerHTML=addOpen?addPanel():''}
+function readCust(){cdraft=Object.assign({},cdraft,{n:($('#cxn')||{}).value||'',p:($('#cxp')||{}).value,lo:parseInt(($('#cxlo')||{}).value),hi:parseInt(($('#cxhi')||{}).value)})}
+const allEx=()=>Object.keys(LAD).flatMap(lad);
+function saveCust(){readCust();const c=cdraft,n=(c.n||'').replace(/[<>"&|]/g,'').replace(/\s+/g,' ').trim(),lo=c.lo,hi=c.hi;cmsg='';
+ if(!n)cmsg='Give it a name.';else if(allEx().some(e=>e.n.toLowerCase()==n.toLowerCase()))cmsg='An exercise with that name already exists.';
+ else if(isNaN(lo)||isNaN(hi)||lo<1||hi>50||lo>hi)cmsg='Reps must be between 1 and 50, with the fewest no more than the most.';
+ if(cmsg)return renderAdd();
+ const p=c.p||Object.keys(LAD)[0],e={p,n,eq:'cu',lo,hi,step:c.b?0:2.5,rest:c.b?60:90,ratio:c.b?0:.2,cu:1};
+ U.cx=U.cx||[];U.cx.push(e);U.lvl[p]=lad(p).findIndex(x=>x.n==n);U.man[p]=1;
+ if(!dayList(vd).some(x=>x[0]==p)){const x=dex(vd);x.rm=x.rm.filter(q=>q!=p);if(!dayList(vd).some(y=>y[0]==p))x.add.push([p,axn])}
+ save();custOpen=false;addOpen=false;cdraft={};render()}
+function delCustom(n){const k=(U.cx||[]).findIndex(c=>c.n==n);if(k<0)return;const c=U.cx[k],idx=lad(c.p).findIndex(e=>e.n==n);
+ U.cx.splice(k,1);if(U.lvl[c.p]==idx){delete U.lvl[c.p];delete U.man[c.p]}else if(U.lvl[c.p]>idx)U.lvl[c.p]--;delete U.sw[n];save()}
+function sesCard(){const t=wsel&&SPLIT.includes(wsel)?wsel:SPLIT[0],L=sesT(t),have=new Set(L.map(e=>e[0])),ps=Object.keys(LAD).filter(p=>!have.has(p)),open=!!folds.ses,cx=U.cx||[];
+ return`<div class="card"><button class="fold-hd" data-fold="ses" aria-expanded="${open}"><div><div class="eyebrow">Workouts</div><div class="m" style="margin-top:2px">Add, remove and set the sets in each session</div></div><span class="fold-meta">${open?'Hide':'Show'}${I.down.replace('class="ic"','class="ic'+(open?' open':'')+'"')}</span></button>${open?`<div class="fold-body">
+ <div class="seg">${SPLIT.map(x=>`<button data-ws="${x}" class="${x==t?'on':''}">${x}</button>`).join('')}</div>
+ <div style="margin-top:8px">${L.map(([p,ns])=>`<div class="wl"><div><b>${LAD[p][0]}</b><div class="m" style="margin:0">${esc(cur(p,ns).ex.n)}</div></div><div class="cnt"><button data-sn="${t}|${p}|-1" aria-label="Fewer sets">${I.minus}</button><b>${ns}</b><button data-sn="${t}|${p}|1" aria-label="More sets">${I.plus}</button></div><button class="tx" data-sdel="${t}|${p}">Delete</button></div>`).join('')}</div>
+ ${smsg?`<p class="warn">${esc(smsg)}</p>`:''}
+ ${ps.length?`<div class="fld"><div class="fl"><span>Add a movement to ${t}</span></div><div class="swr"><select id="sap">${ps.map(p=>`<option value="${p}">${LAD[p][0]}</option>`).join('')}</select><button class="btn dark" data-a="sadd" style="margin:0;padding:12px">Add</button></div></div>`:''}
+ ${U.ses&&U.ses[t]?`<button class="tx" data-a="sreset" data-t="${t}">Reset ${t} to the default</button>`:''}
+ <p class="m">Changes apply to every ${t} from now on. To change a single day, use Add and Remove on Today.</p>
+ ${cx.length?`<div class="fld"><div class="fl"><span>Your own exercises</span></div>${cx.map(c=>`<div class="wl"><div><b>${esc(c.n)}</b><div class="m" style="margin:0">${LAD[c.p][0]} · ${c.lo}-${c.hi} reps · ${c.step?'weights':'bodyweight'}</div></div><button class="tx" data-cxdel="${esc(c.n)}">Delete</button></div>`).join('')}</div>`:''}
+ </div>`:''}</div>`}
 function beep(){try{[0,.25,.5].forEach(t=>{const o=AC.createOscillator();o.frequency.value=880;o.connect(AC.destination);o.start(AC.currentTime+t);o.stop(AC.currentTime+t+.15)});navigator.vibrate&&navigator.vibrate(300)}catch(e){}}
 setInterval(()=>{const el=$('#rest');if(!rest){el.hidden=true;return}el.hidden=false;const l=Math.ceil((rest.end-Date.now())/1000);
  if(l>0){$('#rt').textContent=Math.floor(l/60)+':'+z(l%60);$('#rn').textContent='Rest. Next: '+rest.nm}else{$('#rt').textContent='Go';$('#rn').textContent='Next: '+rest.nm;if(!rest.b){rest.b=1;beep()}}},250);
@@ -726,7 +782,7 @@ function formV(){renderedTab=null;const a=fa||{type:'Running',min:30,rpe:6};
  $('#app').innerHTML=`<div class="wrap"><div class="top" style="margin-bottom:20px;align-items:center"><div><div class="eyebrow">${fdate(vd,{weekday:'long',day:'numeric',month:'long'})}</div><h1 style="font-size:2.2rem">${editId?'Edit session':'New session'}</h1></div><button class="ib" data-a="cancel" aria-label="Back">${I.left}</button></div>
  <div class="card"><div class="fl"><span>What was it?</span></div><select id="atype">${opts(sports().map(x=>x.n),a.type)}</select>
  ${sl('amin','Duration',0,180,5,a.min,'min')}${sl('adist','Distance (optional)',0,42000,100,a.dist??null,'m')}${sl('ahr','Average heart rate (optional)',60,200,1,a.hr??null,'bpm')}${sl('arpe','Effort, RPE (10 is all out)',1,10,.5,a.rpe,'')}</div>
- ${a.type=='Rowing erg'?`<div class="card"><div class="two"><div><div class="fl"><span>Average split /500m</span></div><input type="text" id="asplit" placeholder="2:05" value="${esc(a.split||'')}"></div><div><div class="fl"><span>Stroke rate</span></div><input type="number" id="aspm" inputmode="numeric" value="${a.spm??''}"></div></div>
+ ${isRow(a.type)?`<div class="card"><div class="two"><div><div class="fl"><span>Average split /500m</span></div><input type="text" id="asplit" placeholder="2:05" value="${esc(a.split||'')}"></div><div><div class="fl"><span>Stroke rate</span></div><input type="number" id="aspm" inputmode="numeric" value="${a.spm??''}"></div></div>
  <div class="fld"><div class="fl"><span>Individual splits</span><em>comma separated, overrides the average</em></div><textarea id="asplits" rows="2" placeholder="2:08, 2:06, 2:05, 2:07">${esc(a.splits||'')}</textarea></div></div>`:''}
  <div class="card"><button class="rowsw" data-a="afed"><span>Eaten beforehand?</span><i class="tg${a.fed?' on':''}" id="afedtg"></i></button>
  <div class="fld"><div class="fl"><span>Notes</span><em>intervals, rest, how it felt</em></div><textarea id="anote" rows="2">${esc(a.note||'')}</textarea></div></div>
@@ -737,14 +793,14 @@ const restFree=()=>[0,1,2,3,4,5,6].some(i=>!U.wd[i]&&!U.cardio.some(c=>c.days.in
 function daysCard(){return`<div class="fl"><span>Lifting days</span><em>keep at least one full rest day</em></div><div class="chips7">${ORD.map(i=>`<button class="dchip${U.wd[i]?' on':''}" data-wd="${i}">${NM[i]}</button>`).join('')}</div>
  <p class="m">Sessions rotate through ${SPLIT.join(', ')} on these days. You can still add or skip a single day from Today.</p>${wmsg?`<p class="warn">${wmsg}</p>`:''}
  <div class="fld"><div class="fl"><span>Day 1 is</span></div><input type="date" id="start" value="${U.start}"></div>`}
-function cardioCard(){return`<p class="m" style="margin-top:0">Optional. Switch on what you do, then choose sessions per week and which days. Intensity is set for you.</p><div>${CARDIO.map(t=>`<button class="rowsw" data-cd="${t}"><span>${t}</span><i class="tg${U.cardio.some(c=>c.type==t)?' on':''}"></i></button>`).join('')}</div>
+function cardioCard(){return`<p class="m" style="margin-top:0">Optional. Every sport can be logged from Today; these are the ones the app can plan sessions for. Switch on what you do, then choose sessions per week and which days. Intensity is set for you.</p><div>${CARDIO.map(t=>`<button class="rowsw" data-cd="${t}"><span>${t}</span><i class="tg${U.cardio.some(c=>c.type==t)?' on':''}"></i></button>`).join('')}</div>
  ${U.cardio.map(c=>`<div class="fld"><div class="fl"><span>${c.type}: sessions per week</span><em>${c.days.length} of ${c.n} days chosen</em></div><div class="seg">${[1,2,3,4,5].map(n=>`<button data-cn="${c.type}|${n}" class="${c.n==n?'on':''}">${n}</button>`).join('')}</div><div class="chips7" style="margin-top:8px">${ORD.map(i=>`<button class="dchip${c.days.includes(i)?' on':''}" data-cday="${c.type}|${i}">${NM[i]}</button>`).join('')}</div></div>`).join('')}
  ${U.cardio.some(c=>c.type=='Rowing erg')?`<div class="fld"><div class="fl"><span>Rough 2k erg split</span><em>optional, like 2:05</em></div><input type="text" data-b="s2k" placeholder="2:05" value="${esc(U.base.s2k||'')}"></div>`:''}`}
 function eqCard(){return`<div>${Object.keys(EQ).map(k=>`<button class="rowsw" data-eq="${k}"><span>${EQ[k]}</span><i class="tg${U.eq[k]?' on':''}"></i></button>`).join('')}</div><p class="m">Everything starts on. Switch off what your gym lacks and the ladders skip it. Bodyweight exercises are always available.</p>`}
 function baseCard(){const b=U.base;return`<p class="m" style="margin-top:0">Take height and weight from your NHS BMI check. Body fat can be a rough guess.</p>${sl('bh','Height',140,210,1,b.h??null,'cm',{b:'h',d:175})}${sl('bwt','Weight',40,120,.1,b.w??null,'kg',{b:'w',d:70})}${sl('bbf','Body fat',5,35,.5,b.bf??null,'%',{b:'bf',d:15})}
  <div class="fld"><div class="fl"><span>Lifting experience</span></div><div class="seg">${[['Beginner',.8],['Some',1],['Experienced',1.2]].map(([l,v])=>`<button data-exp="${v}" class="${(b.exp||1)==v?'on':''}">${l}</button>`).join('')}</div></div>`}
-function goalCard(){const g=U.goal,b=U.base;return`<p class="m" style="margin-top:0">Where do you want to end up? The plan splits the time into bulk and cut stages and keeps a 15% time buffer, so nothing unrealistic gets through.</p>${sl('gw','Goal weight',40,150,.5,g?g.w1:null,'kg',{d:b.w||70})}${sl('gbf','Goal body fat',6,35,.5,g?g.bf1:null,'%',{d:15})}
- <div class="fld"><div class="fl"><span>Reach it by</span></div><input type="date" id="gd" value="${g?g.date:fromN(dn(U.start)+182)}"></div>${gmsg?`<p class="${gok?'good':'warn'}">${gmsg}</p>`:''}<button class="btn dark" data-a="savegoal">Save goal</button>${goalTable()}`}
+function goalCard(){const g=U.goal,b=U.base;return`<p class="m" style="margin-top:0">Where do you want to end up? The plan splits the time into bulk and cut stages. If your date is too soon, it tells you the earliest realistic date (with a 15% buffer) and leaves the choice to you.</p>${sl('gw','Goal weight',40,150,.5,g?g.w1:null,'kg',{d:b.w||70})}${sl('gbf','Goal body fat',6,35,.5,g?g.bf1:null,'%',{d:15})}
+ <div class="fld"><div class="fl"><span>Reach it by</span></div><input type="date" id="gd" value="${g?g.date:fromN(dn(U.start)+182)}"></div><div id="ghint"></div>${gmsg?`<p class="${gok?'good':'warn'}">${gmsg}</p>`:''}<button class="btn dark" data-a="savegoal">Save goal</button>${goalTable()}`}
 function styleCard(){const pct=U.cal.pct||0,bs=[...bwSet()].map(p=>LAD[p][0]);
  return`<p class="m" style="margin-top:0">How much of your training is bodyweight. 0% is all weights. At 100% every movement that has a bodyweight option uses one. In between, the movements best suited to calisthenics switch first.</p><div class="seg">${[['Weights',0],['Mixed',50],['Calisthenics',100]].map(([l,v])=>`<button data-cp="${v}" class="${pct==v?'on':''}">${l}</button>`).join('')}</div>${sl('cpct','Bodyweight share',0,100,5,pct,'%',{cal:1})}<p class="m">${bs.length?'Bodyweight: '+bs.join(', ')+'.':'Every movement uses weights where it can.'}</p>`}
 function calCard(){
@@ -758,10 +814,10 @@ function wtCard(){
  const onCount=all.filter(x=>!U.wtoff[x.e.n]).length,open=!!folds.wt;
  return`<div class="card"><button class="fold-hd" data-fold="wt" aria-expanded="${open}"><div><div class="eyebrow">Weights exercises</div><div class="m" style="margin-top:2px">${onCount} of ${all.length} enabled</div></div><span class="fold-meta">${open?'Hide':'Show'}${I.down.replace('class="ic"','class="ic'+(open?' open':'')+'"')}</span></button>${open?`<div class="fold-body"><p class="m" style="margin-top:0">Switch off any you do not want. They will not be picked or offered as swaps.</p>${Object.keys(LAD).map(p=>{const xs=avail(p).filter(x=>!isCal(x.e));if(!xs.length)return'';return`<div class="fld"><div class="fl"><span>${LAD[p][0]}</span></div>${xs.map(x=>`<button class="rowsw" data-wx="${esc(x.e.n)}"><span>${x.e.n}</span><i class="tg${U.wtoff[x.e.n]?'':' on'}"></i></button>`).join('')}</div>`}).join('')}</div>`:''}</div>`}
 function setupV(){const y=window.scrollY||0;renderedTab=null;$('#app').innerHTML=`<div class="wrap" style="padding-bottom:40px"><div class="brand"><i></i>SetOrder<button class="signout-top" data-a="out" type="button" style="margin-left:auto">Sign out</button></div><h1>Let's set you up</h1><p class="m" style="margin-bottom:18px">A minute now, then Day 1 appears with your workout and calories.</p>
- <div class="card"><div class="eyebrow">About you</div>${baseCard()}</div><div class="card"><div class="eyebrow">Your goal (optional)</div>${goalCard()}</div><div class="card"><div class="eyebrow">Your week</div>${daysCard()}</div><div class="card"><div class="eyebrow">Training style</div>${styleCard()}</div>${calCard()}${wtCard()}<div class="card"><div class="eyebrow">Cardio (optional)</div>${cardioCard()}</div><div class="card"><div class="eyebrow">Your gym</div>${eqCard()}</div><button class="btn" data-a="ready">Start Day 1</button></div>`;window.scrollTo(0,y)}
+ <div class="card"><div class="eyebrow">About you</div>${baseCard()}</div><div class="card"><div class="eyebrow">Your goal (optional)</div>${goalCard()}</div><div class="card"><div class="eyebrow">Your week</div>${daysCard()}</div><div class="card"><div class="eyebrow">Training style</div>${styleCard()}</div>${calCard()}${wtCard()}<div class="card"><div class="eyebrow">Cardio (optional)</div>${cardioCard()}</div><div class="card"><div class="eyebrow">Your gym</div>${eqCard()}</div><button class="btn" data-a="ready">Start Day 1</button></div>`;window.scrollTo(0,y);goalHint()}
 function planV(fromScrub=false){const up=Array.from({length:14},(_,i)=>{const d=fromN(Math.max(dn(TODAY),dn(U.start))+i),t=plan(d),cs=cdue(d);if(!t&&!cs.length)return'';return`<button class="rowsw" data-day="${d}"><span><b>Day ${dn(d)-dn(U.start)+1}</b> · ${fdate(d,{weekday:'short',day:'numeric',month:'short'})}</span><span class="m" style="margin:0;text-align:right">${[t,...cs.map(c=>c.type+': '+cardioRx(c,d).n)].filter(Boolean).join(' + ')}</span></button>`}).join('');
- shell(`<h1 style="margin-bottom:18px">Plan</h1><div class="card"><div class="eyebrow">Goal</div>${goalCard()}</div><div class="card"><div class="eyebrow">Your week</div>${daysCard()}</div><div class="card"><div class="eyebrow">Training style</div>${styleCard()}</div>${calCard()}${wtCard()}<div class="card"><div class="eyebrow">Cardio</div>${cardioCard()}</div><div class="card"><div class="eyebrow">Next two weeks</div>${up||'<p class="m">No sessions planned. Pick lifting days above.</p>'}</div><div class="card"><div class="eyebrow">Your gym</div>${eqCard()}</div>
- <div class="card"><div class="eyebrow">Exercises and starting weights</div><p class="m" style="margin-top:0">Each movement is a ladder from bodyweight to heavy weights. Pick the step you want and, for loaded lifts, the weight you start at (any value, such as 11.5 kg dumbbells). After your first session the app sets reps for each session and tells you how much to add.</p>${swmsg?`<p class="warn">${swmsg}</p>`:''}${Object.keys(LAD).map(p=>{const c=cur(p,3);return`<div class="fld"><div class="fl"><span>${LAD[p][0]}</span></div><div class="${c.ex.step?'swr':''}"><select data-p2="${p}">${av(p).map(x=>`<option value="${x.i}"${x.e.n==c.ex.n?' selected':''}>${x.e.n}</option>`).join('')}</select>${c.ex.step?`<input type="number" inputmode="decimal" step="0.5" data-sw="${esc(c.ex.n)}" placeholder="${c.first?c.w:'kg'}" value="${U.sw[c.ex.n]??''}" aria-label="Starting weight for ${esc(c.ex.n)}">`:''}</div></div>`}).join('')}<p class="m">Weights are in kg. Leave a box empty to use the estimate from your bodyweight.</p></div>`,fromScrub)}
+ shell(`<h1 style="margin-bottom:18px">Plan</h1><div class="card"><div class="eyebrow">Goal</div>${goalCard()}</div><div class="card"><div class="eyebrow">Your week</div>${daysCard()}</div><div class="card"><div class="eyebrow">Training style</div>${styleCard()}</div>${calCard()}${wtCard()}<div class="card"><div class="eyebrow">Cardio</div>${cardioCard()}</div>${sesCard()}<div class="card"><div class="eyebrow">Next two weeks</div>${up||'<p class="m">No sessions planned. Pick lifting days above.</p>'}</div><div class="card"><div class="eyebrow">Your gym</div>${eqCard()}</div>
+ <div class="card"><div class="eyebrow">Exercises and starting weights</div><p class="m" style="margin-top:0">Each movement is a ladder from bodyweight to heavy weights. Pick the step you want and, for loaded lifts, the weight you start at (any value, such as 11.5 kg dumbbells). After your first session the app sets reps for each session and tells you how much to add.</p>${swmsg?`<p class="warn">${swmsg}</p>`:''}${Object.keys(LAD).map(p=>{const c=cur(p,3);return`<div class="fld"><div class="fl"><span>${LAD[p][0]}</span></div><div class="${c.ex.step?'swr':''}"><select data-p2="${p}">${av(p).map(x=>`<option value="${x.i}"${x.e.n==c.ex.n?' selected':''}>${esc(x.e.n)}</option>`).join('')}</select>${c.ex.step?`<input type="number" inputmode="decimal" step="0.5" data-sw="${esc(c.ex.n)}" placeholder="${c.first?c.w:'kg'}" value="${U.sw[c.ex.n]??''}" aria-label="Starting weight for ${esc(c.ex.n)}">`:''}</div></div>`}).join('')}<p class="m">Weights are in kg. Leave a box empty to use the estimate from your bodyweight.</p></div>`,fromScrub);goalHint()}
 
 // ---------- Progress ----------
 function chart(r,x1,P,lbl){const x0=P[0][0],W=700,H=220,q=30;x1=Math.max(x1,x0+7);const xs=[];for(let i=0;i<=24;i++)xs.push(x0+(x1-x0)*i/24);const pr=xs.map(x=>pred(r,x));
@@ -778,8 +834,7 @@ function strengthCard(names){if(!names.length)return'';if(!names.includes(lift))
  return`<div class="card"><div class="eyebrow">Strength trend</div><select data-lift="1" aria-label="Exercise">${names.map(n=>`<option${n==lift?' selected':''}>${esc(n)}</option>`).join('')}</select><div style="height:12px"></div>${b}</div>`}
 function progV(fromScrub=false){const c=calc(),x1=dn(U.goal?U.goal.date:U.date),r=c.r,L=loads(),gp=U.goal?goalPlan():null;let h='<h1 style="margin-bottom:18px">Progress</h1>';
  if(gp&&gp.ok){const n=dn(TODAY)-dn(U.start),pw=planW(gp,n),aw=r?r.a+r.b*dn(TODAY):(wpts().slice(-1)[0]||[0,null])[1],df=aw==null?null:aw-pw;
-  h+=`<div class="card"><div class="eyebrow">Goal plan</div><h3>${f(gp.wEnd)} kg at ${f(gp.bfEnd,0)}% body fat by ${fdate(U.goal.date,{day:'numeric',month:'short',year:'numeric'})}</h3><p class="m">Planned weight today ${f(pw)} kg.${df==null?' Log your weight to compare.':Math.abs(df)<.5?' You are on plan.':` You are ${f(Math.abs(df))} kg ${df>0?'above':'below'} plan, so ${(df>0)==(((phaseAt(TODAY)||{}).t)!='cut')?'hold your calories steady for the next week and check again':'adjust intake by about 100 kcal a day and check again in two weeks'}.`}</p>${goalTable()}</div>`}
- else if(U.goal)h+=`<div class="card"><div class="eyebrow">Goal plan</div>${goalTable()}</div>`;
+  h+=`<div class="card"><div class="eyebrow">Goal plan</div><h3>${f(gp.wEnd)} kg at ${f(gp.bfEnd,0)}% body fat by ${fdate(gp.tight?gp.earliest:U.goal.date,FD)}</h3><p class="m">Planned weight today ${f(pw)} kg.${df==null?' Log your weight to compare.':Math.abs(df)<.5?' You are on plan.':` You are ${f(Math.abs(df))} kg ${df>0?'above':'below'} plan, so eat about 100 kcal a day ${df>0?'less':'more'} and check again in two weeks.`}</p>${goalTable()}</div>`}
  h+='<div class="card"><div class="eyebrow">Weight</div>';
  if(!r)h+='<p class="m" style="margin-top:0">Log your weight on 6 or more days across at least a week. The forecast is a regression line, so it needs data to fit.</p>';
  else{const w=r.b*7,ci=tq(r.n-2)*r.seb*7,p=pred(r,x1);h+=chart(r,x1,wpts())+`<h3 style="margin-top:10px">${f(p[0])} kg on ${fdate(fromN(x1),{day:'numeric',month:'short'})} if the trend holds</h3><p class="m">95% range ${f(p[1])} to ${f(p[2])} kg. Trend ${w>=0?'+':''}${f(w,2)} ± ${f(ci,2)} kg a week from ${r.n} weigh-ins.</p>`}
@@ -789,7 +844,7 @@ function progV(fromScrub=false){const c=calc(),x1=dn(U.goal?U.goal.date:U.date),
  h+=strengthCard(names);
  h+='<div class="card"><div class="eyebrow">Lifts</div><div class="scroll"><table><thead><tr><th>Exercise</th><th>Start</th><th>Now</th><th>Growth</th><th>Target date</th></tr></thead><tbody>'+names.map(n=>{const m=e1map(n),ds=Object.keys(m).sort(),rr=reg(ds.map(d=>[dn(d),Math.log(m[d])]),3);let g='needs 3 sessions',pj='–';
   if(rr){const w=(Math.exp(rr.b*7)-1)*100,q=pred(rr,x1);g=(w>=0?'+':'')+f(w)+'%/wk';pj=f(Math.exp(q[0]),0)+' ('+f(Math.exp(q[1]),0)+' to '+f(Math.exp(q[2]),0)+')'}
-  return`<tr><td>${n}</td><td>${f(m[ds[0]],0)}</td><td>${f(m[ds[ds.length-1]],0)}</td><td>${g}</td><td>${pj}</td></tr>`}).join('')||'<tr><td colspan="5" class="m">Weighted exercises appear here. Bodyweight ones progress by reps and steps.</td></tr>';
+  return`<tr><td>${esc(n)}</td><td>${f(m[ds[0]],0)}</td><td>${f(m[ds[ds.length-1]],0)}</td><td>${g}</td><td>${pj}</td></tr>`}).join('')||'<tr><td colspan="5" class="m">Weighted exercises appear here. Bodyweight ones progress by reps and steps.</td></tr>';
  shell(h+'</tbody></table></div><p class="m">Values are estimated 1-rep max (Epley: kg × (1 + reps/30)) on your best set each session. Growth is a log-linear regression, so long-range lines flatter you.</p></div>',fromScrub)}
 
 // ---------- Me ----------
@@ -813,7 +868,13 @@ function render(fromScrub=false){if(booting)return loadV();if(bootErr)return err
 function addCardio(t){const days=[6,0,3,2,4,5,1];for(const i of days){const c={type:t,n:1,days:[i]};U.cardio.push(c);if(restFree())return true;U.cardio.pop()}return false}
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(Date.now()<suppressClickUntil)return;const D=b.dataset;
  if(D.tab){switchTab(D.tab,false);return}
- if(D.day){vd=D.day;tab='day';sub=null;rest=null;swapP=null;es=null;wcarry=null;return render()}
+ if(D.day){const old=vd;vd=D.day;stripAnimDir=tab=='day'?Math.sign(monN(vd)-monN(old)):0;tab='day';sub=null;swapP=null;es=null;wcarry=null;rmP=null;return render()}
+ if(D.axn){axn=+D.axn;const sel=$('#axp');if(sel)axp=sel.value;return renderAdd()}
+ if(D.cxt){readCust();cdraft.b=D.cxt=='b';return renderAdd()}
+ if(D.ws){wsel=D.ws;smsg='';return render()}
+ if(D.sn){const[t,p,d]=D.sn.split('|');U.ses[t]=sesT(t).map(e=>e.slice());const e2=U.ses[t].find(e=>e[0]==p);if(e2)e2[1]=Math.max(1,Math.min(6,e2[1]+(+d)));smsg='';save();return render()}
+ if(D.sdel){const[t,p]=D.sdel.split('|'),L=sesT(t);smsg='';if(L.length<=1){smsg='A workout needs at least one exercise.';return render()}U.ses[t]=L.filter(e=>e[0]!=p).map(e=>e.slice());save();return render()}
+ if(D.cxdel){if(confirm(`Delete ${D.cxdel}? Sets you logged with it stay in your history.`)){delCustom(D.cxdel);render()}return}
  if(D.st){const i=$('#'+D.st);i.value=Math.max(0,+((parseFloat(i.value)||0)+parseFloat(D.dl)).toFixed(2));return}
  if(D.fold){folds[D.fold]=!folds[D.fold];return render()}
  if(D.cp!=null){U.cal.pct=+D.cp;U.man={};save();return render()}
@@ -829,7 +890,24 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(D.exp){U.base.exp=+D.exp;if(!U.sets.length)U.lvl={};save();return render()}
  const a=D.a;
  if(a=='auth')auth();else if(a=='forgot')forgot();else if(a=='retry')location.reload();
- else if(a=='log')logSet(D.p,+D.ns);else if(a=='swap'){swapP=swapP==D.p?null:D.p;wk()}
+ else if(a=='log')logSet(D.p,+D.ns);else if(a=='swap'){swapP=swapP==D.p?null:D.p;rmP=null;wk()}
+ else if(a=='rmex'){rmP=rmP==D.p?null:D.p;swapP=null;wk()}
+ else if(a=='rmcancel'){rmP=null;wk()}
+ else if(a=='rmday'){const x=dex(vd);x.add=x.add.filter(e=>e[0]!=D.p);if(!x.rm.includes(D.p))x.rm.push(D.p);rmP=null;save();render()}
+ else if(a=='rmall'){const t=plan(vd);if(t){U.ses[t]=sesT(t).filter(e=>e[0]!=D.p).map(e=>e.slice())}const x=dex(vd);x.add=x.add.filter(e=>e[0]!=D.p);rmP=null;save();render()}
+ else if(a=='addex'){addOpen=!addOpen;custOpen=false;cmsg='';renderAdd();if(addOpen){const el=$('#addex');if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'nearest'})}}
+ else if(a=='addclose'){addOpen=false;custOpen=false;cmsg='';renderAdd()}
+ else if(a=='custnew'){custOpen=true;cmsg='';cdraft={p:($('#axp')||{}).value||cdraft.p};renderAdd()}
+ else if(a=='custback'){custOpen=false;cmsg='';renderAdd()}
+ else if(a=='custsave')saveCust();
+ else if(a=='addday'||a=='addall'){const p=($('#axp')||{}).value;if(!p)return;const t=plan(vd),x=dex(vd);
+  if(a=='addall'&&t){U.ses[t]=sesT(t).map(e=>e.slice());if(!U.ses[t].some(e=>e[0]==p))U.ses[t].push([p,axn]);x.rm=x.rm.filter(q=>q!=p)}
+  else{x.rm=x.rm.filter(q=>q!=p);if(!dayList(vd).some(e=>e[0]==p))x.add.push([p,axn])}
+  addOpen=false;axp=null;save();render()}
+ else if(a=='sadd'){const t=wsel&&SPLIT.includes(wsel)?wsel:SPLIT[0],p=($('#sap')||{}).value;if(p){U.ses[t]=sesT(t).map(e=>e.slice());if(!U.ses[t].some(e=>e[0]==p))U.ses[t].push([p,3]);smsg='';save()}render()}
+ else if(a=='sreset'){delete U.ses[D.t];smsg='';save();render()}
+ else if(a=='gdset'){const g=$('#gd');if(g){g.value=D.v;goalHint()}}
+ else if(a=='usegd'){const gp=U.goal&&goalPlan();if(gp&&gp.tight){U.goal.date=gp.earliest;U.date=gp.earliest;save();gok=true;gmsg='Date changed to '+fdate(gp.earliest,FD)+'.'}render()}
  else if(a=='editset'){es=es==+D.si?null:+D.si;wcarry=null;wk()}
  else if(a=='saveset')saveSet();
  else if(a=='cancelset'){es=null;wcarry=null;wk()}
@@ -838,7 +916,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  else if(a=='skip')rest=null;else if(a=='add30'&&rest){rest.end=Math.max(rest.end,Date.now())+30000;rest.b=0}
  else if(a=='fed'){sd(vd,{fed:!gd(vd).fed});b.querySelector('.tg').classList.toggle('on',!!gd(vd).fed);refreshDay()}
  else if(a=='afed'){fa=Object.assign({},fa);fa.fed=!fa.fed;$('#afedtg').classList.toggle('on',!!fa.fed)}
- else if(a=='toggle'){U.ov[vd]=isW(vd)?'rest':'work';save();render()}
+ else if(a=='toggle'){U.ov[vd]=isW(vd)?'rest':'work';rmP=null;save();render()}
  else if(a=='body'){sd(vd,{w:nv('lw'),kcal:nv('lk'),p:nv('lp_')});render()}
  else if(a=='savegoal'){saveGoal();render()}
  else if(a=='ready'){U.start=$('#start').value||TODAY;U.date=fromN(dn(U.start)+182);if(nv('gw')!=null&&nv('gbf')!=null&&!U.goal)saveGoal();U.ready=1;save();vd=U.start>TODAY?U.start:TODAY;tab='day';gmsg='';render()}
@@ -853,7 +931,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  else if(a=='chpw')chPw();
  else if(a=='delacct')delAcct();
  else if(a=='out')logout();
- else if(a=='reset'&&confirm('Erase all your logged data? Your account stays.')){U=newU();save();tab='plan';render()}});
+ else if(a=='reset'&&confirm('Erase all your logged data? Your account stays.')){U=newU();save();tab='plan';vd=TODAY;addOpen=false;rmP=null;render()}});
 function addDay(c){for(const i of [6,0,3,2,4,5,1]){c.days=[i];if(restFree())return true}c.days=[];return false}
 document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.p)document.querySelectorAll('[data-p="'+t.dataset.p+'"]').forEach(x=>{if(x!==t)x.value=t.value})});
 document.addEventListener('change',e=>{const t=e.target,d=t.dataset,i=t.id,v=parseFloat(t.value);
@@ -867,6 +945,8 @@ document.addEventListener('change',e=>{const t=e.target,d=t.dataset,i=t.id,v=par
   if(isNaN(v)||v<=0){delete U.sw[nm]}else if(ex){const mx=Math.max(ex.step*4,(ex.ratio||.3)*bw()*2.5),val=Math.min(v,mx);if(v>mx){swmsg=`${nm}: ${v} kg is more than a realistic start, so it was set to ${rnd(mx,.5)} kg. You can raise it as you progress.`}U.sw[nm]=rnd(val,.5)}
   save();render()}
  else if(i=='atype'){readForm();formV()}
+ else if(i=='axp'){axp=t.value}
+ else if(['gw','gbf','gd'].includes(i||d.p)){goalHint()}
  else if(d.p2){U.lvl[d.p2]=+t.value;U.man[d.p2]=1;swapP=null;save();render()}
  else if(i=='start'&&t.value){U.start=t.value;if(U.ready){save();render()}}});
 document.addEventListener('keydown',e=>{if(e.key=='Enter'&&(e.target.id=='un'||e.target.id=='pw'||e.target.id=='dn'))auth()});

@@ -865,20 +865,47 @@ function offItem(p){const n=p.nutriments||{};let k=n['energy-kcal_100g'];if(k==n
  const sv=parseFloat(p.serving_quantity)||0;
  return{n:name.slice(0,80),b:String(p.brands||'').split(',')[0].trim().slice(0,40),c:p.code,k:r1(k),p:r1(n.proteins_100g),cb:r1(n.carbohydrates_100g),f:r1(n.fat_100g),sv:sv>0&&sv<3000?r1(sv):0,svl:sv>0?String(p.serving_size||'').slice(0,30):'',liq:/\d\s*(ml|cl|l|pt|pints?)\b/i.test(p.quantity||''),sh:shopNames(p.stores_tags)}}
 const OFF='https://world.openfoodfacts.org',OFF_F='code,product_name,brands,stores_tags,serving_quantity,serving_size,quantity,nutriments';
-async function offGet(u){let r=await fetch(u);if(r.status==503||r.status==429){await new Promise(z=>setTimeout(z,3000));r=await fetch(u)}if(r.status==503||r.status==429)throw new Error('busy');if(!r.ok)throw new Error('http '+r.status);return r.json()}
-async function foodSearch(){const inp=$('#fq');if(inp)fq=inp.value.trim();if(!fq)return;const tk=++ftok;fbusy=true;ferr='';fres=null;fresUpd();
+// Open Food Facts often turns requests away when it is busy, and those refusals reach the browser as a failed request.
+// So every request is retried with growing waits, and finished searches are kept on the phone for a day.
+const sleep=ms=>new Promise(z=>setTimeout(z,ms));
+async function offGet(u,onWait){const waits=[0,1200,3000,6000];let last=new Error('busy');
+ for(let i=0;i<waits.length;i++){if(waits[i]){onWait&&onWait(i);await sleep(waits[i])}
+  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),12000);let r=null;
+  try{r=await fetch(u,{signal:ac.signal})}catch(e){r=null}clearTimeout(to);
+  if(r&&r.ok){try{return await r.json()}catch(e){}}
+  if(r&&r.status==404)throw new Error('http 404');
+  last=new Error(navigator.onLine===false?'offline':'busy')}
+ throw last}
+const FC_KEY='setorder-fc',FC_MS=864e5;
+function fcGet(k){try{const c=JSON.parse(localStorage.getItem(FC_KEY))||{},e=c[k];return e&&Date.now()-e.t<FC_MS?e.items:null}catch(e){return null}}
+function fcSet(k,items){try{const c=JSON.parse(localStorage.getItem(FC_KEY))||{};c[k]={t:Date.now(),items};const ks=Object.keys(c).sort((x,y)=>c[y].t-c[x].t);ks.slice(40).forEach(x=>delete c[x]);localStorage.setItem(FC_KEY,JSON.stringify(c))}catch(e){}}
+const failMsg=e=>e&&e.message=='offline'?'You are offline. Your recent and basic foods still work, or use Quick add.':'Open Food Facts is not answering right now, even after a few tries. Try again in a minute. Meanwhile your recent and basic foods still work, or use Quick add.';
+const shopMatch=(it,k)=>!k||(it.sh||[]).includes(SHOPN[k])||shopNames([it.b]).includes(SHOPN[k]);
+let fall=null,fwait='',fshopDone={};
+function applyShop(){fres=fall?fall.filter(it=>it.gen?!fshop:shopMatch(it,fshop)):null}
+async function offSearch(q,shop){const key=q.toLowerCase()+'|'+shop,c=fcGet(key);if(c)return c;
+ const u=`${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=50&sort_by=unique_scans_n&fields=${OFF_F}&tagtype_0=countries&tag_contains_0=contains&tag_0=united-kingdom`+(shop?`&tagtype_1=stores&tag_contains_1=contains&tag_1=${shop}`:'');
+ const d=await offGet(u,()=>{fwait='Open Food Facts is busy. Trying again…';fresUpd()}),items=(d.products||[]).map(offItem).filter(Boolean);fcSet(key,items);return items}
+async function foodSearch(shopOnly){const inp=$('#fq');if(inp)fq=inp.value.trim();if(!fq)return;const tk=++ftok;fbusy=true;fwait='';ferr='';fresUpd();
  const ws=fq.toLowerCase().split(/\s+/).filter(Boolean),basics=BASICS.filter(b=>ws.every(w=>b.n.toLowerCase().includes(w)));
- const u=`${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(fq)}&search_simple=1&action=process&json=1&page_size=30&sort_by=unique_scans_n&fields=${OFF_F}&tagtype_0=countries&tag_contains_0=contains&tag_0=united-kingdom`+(fshop?`&tagtype_1=stores&tag_contains_1=contains&tag_1=${fshop}`:'');
- let items=[];try{const d=await offGet(u);items=(d.products||[]).map(offItem).filter(Boolean)}catch(e){ferr=e.message=='busy'?'The food database is busy. Wait a few seconds and search again.':'Could not reach the food database. Check your connection and try again.'}
- if(tk!=ftok)return;fbusy=false;fres=(fshop?[]:basics).concat(items);fresUpd()}
-async function foodBarcode(){const code=(($('#fbc')||{}).value||'').replace(/\D/g,'');if(code.length<6){ferr='Type the numbers under the barcode.';return fresUpd()}const tk=++ftok;fbusy=true;ferr='';fres=null;fresUpd();
- try{const d=await offGet(`${OFF}/api/v2/product/${code}?fields=${OFF_F}`),it=d&&d.product&&offItem(Object.assign({code},d.product));if(tk!=ftok)return;fbusy=false;if(it){fres=[it];return pickFood(it)}ferr='No nutrition found for that barcode. Try searching by name.'}catch(e){ferr=e.message=='busy'?'The food database is busy. Wait a few seconds and try again.':'Could not reach the food database. Check your connection and try again.'}
- if(tk!=ftok)return;fbusy=false;fresUpd()}
+ if(!shopOnly){fall=null;fshopDone={}}
+ try{const items=await offSearch(fq,shopOnly?fshop:'');if(tk!=ftok)return;
+  if(shopOnly){fshopDone[fshop]=1;const have=new Set((fall||[]).map(x=>x.c||x.n));fall=(fall||basics).concat(items.filter(x=>!have.has(x.c||x.n)))}else fall=basics.concat(items)}
+ catch(e){if(tk!=ftok)return;ferr=failMsg(e);if(!fall)fall=basics}
+ fbusy=false;fwait='';applyShop();fresUpd()}
+async function foodBarcode(){const code=(($('#fbc')||{}).value||'').replace(/\D/g,'');if(code.length<6){ferr='Type the numbers under the barcode.';return fresUpd()}const tk=++ftok;fbusy=true;fwait='';ferr='';fresUpd();
+ const ck='#'+code;let it=null;const c=fcGet(ck);
+ try{if(c)it=c[0];else{const d=await offGet(`${OFF}/api/v2/product/${code}?fields=${OFF_F}`,()=>{fwait='Open Food Facts is busy. Trying again…';fresUpd()});it=d&&d.product&&offItem(Object.assign({code},d.product));if(it)fcSet(ck,[it])}
+  if(tk!=ftok)return;fbusy=false;fwait='';if(it)return pickFood(it);ferr='That barcode is not in Open Food Facts yet, or has no nutrition. Try searching by name, or use Quick add.'}
+ catch(e){if(tk!=ftok)return;ferr=e.message=='http 404'?'That barcode is not in Open Food Facts yet. Try searching by name, or use Quick add.':failMsg(e)}
+ fbusy=false;fwait='';fresUpd()}
 const itemRow=(it,i,src)=>{const row=`<button class="rowsw" data-fpick="${src}|${i}"><span style="min-width:0"><b style="font-weight:600">${esc(it.n)}</b><br><span class="m" style="margin:0;font-size:.8rem">${[it.gen?'Basic food, typical values':esc(it.b),...shopsBut(it).map(esc)].filter(Boolean).join(' · ')}</span></span><span class="m" style="margin:0;text-align:right;flex:none;font-size:.8rem"><b style="color:var(--ink)">${Math.round(it.k)}</b> kcal<br>${r1(it.p)} g protein<br>per 100 ${it.liq?'ml':'g'}</span></button>`;return src=='c'&&it.lu&&unitsFor(it).includes(it.lu)?`<div class="frow">${row}<button class="dchip fplus" data-frq="${i}" aria-label="Add ${esc(it.n)} again">+ ${esc(amtL({u:it.lu,q:it.lq||1,liq:it.liq,qa:it.qa,sv:it.sv,svl:it.svl,gen:it.gen}).replace(/ \(.*\)$/,''))}</button></div>`:row};
-function fresH(){if(fbusy)return'<p class="m">Searching…</p>';let h=ferr?`<p class="warn">${esc(ferr)}</p>`:'';
- if(fres)h+=fres.length?`<div class="eyebrow" style="margin-top:14px">Results</div>${fres.map((it,i)=>itemRow(it,i,'r')).join('')}<p class="m">Shop names come from shoppers who added the product, so some products show none. Not finding it? Try fewer words, another shop, or the barcode.</p>`:'<p class="m">Nothing found. Try fewer or different words, or another shop.</p>';
+function fresH(){if(fbusy)return`<p class="m">${fwait||'Searching…'}</p>`;let h=ferr?`<p class="warn">${esc(ferr)}</p>`:'';
+ if(fres&&ferr&&!fres.length)fres=null;
+ if(fres)h+=fres.length?`<div class="eyebrow" style="margin-top:14px">Results</div>${fres.map((it,i)=>itemRow(it,i,'r')).join('')}${moreShop()}<p class="m">Shop names come from shoppers who added the product, so some products show none. Not finding it? Try fewer words, another shop, or the barcode.</p>`:(fshop?moreShop()||`<p class="m">Nothing found at ${esc(SHOPN[fshop])}. Try All UK.</p>`:'<p class="m">Nothing found. Try fewer or different words.</p>');
  else if((U.frec||[]).length)h+=`<div class="eyebrow" style="margin-top:14px">Recent</div><p class="m" style="margin-top:0">Tap + to add the same amount again.</p>${U.frec.map((it,i)=>itemRow(it,i,'c')).join('')}`;
  return h}
+const moreShop=()=>fshop&&fq&&!fshopDone[fshop]&&(fres||[]).length<8?`<button class="btn ghost" data-a="fshopq">Search more at ${esc(SHOPN[fshop])}</button>`:'';
 function fresUpd(){const el=$('#fres');if(el)el.innerHTML=fresH()}
 function pickFood(it){fsel=Object.assign({},it);fedit=null;[fu,famt]=defUnit(it);sub='famt';render()}
 function fmSeg(){return`<div class="seg">${MEALS.map(([k,l])=>`<button data-fm="${k}" class="${fmeal==k?'on':''}">${l}</button>`).join('')}</div>`}
@@ -1039,7 +1066,7 @@ document.addEventListener('click',e=>{if(e.target.id=='scrim'){sub=null;fsel=nul
  if(D.fday){vd=D.fday;return render()}
  if(D.fadd){fmeal=D.fadd;sub='fadd';fres=null;ferr='';fq='';qmsg='';return render()}
  if(D.fm){fmeal=D.fm;document.querySelectorAll('[data-fm]').forEach(x=>x.classList.toggle('on',x.dataset.fm==fmeal));const qb=document.querySelector('[data-a=fqsave]');if(qb)qb.textContent='Add to '+MEALS.find(m=>m[0]==fmeal)[1];return}
- if(D.fshop!=null){fshop=D.fshop;document.querySelectorAll('[data-fshop]').forEach(x=>x.classList.toggle('on',x.dataset.fshop==fshop));const q=$('#fq');if(q&&q.value.trim())foodSearch();return}
+ if(D.fshop!=null){fshop=D.fshop;document.querySelectorAll('[data-fshop]').forEach(x=>x.classList.toggle('on',x.dataset.fshop==fshop));const q=$('#fq'),qv=q?q.value.trim():'';if(fall&&qv&&qv==fq){applyShop();fresUpd()}else if(qv)foodSearch();return}
  if(D.fq){const v=+D.fq,i=$('#famt');if(i)i.value=v;famt=v;famtUpd();return}
  if(D.frq){const it=(U.frec||[])[+D.frq];if(it){fsel=Object.assign({},it);fu=it.lu;fedit=null;saveFood(it.lq||1)}return}
  if(D.fpick){const[src,i]=D.fpick.split('|'),it=(src=='r'?fres:U.frec||[])[+i];if(it)pickFood(it);return}
@@ -1072,6 +1099,7 @@ document.addEventListener('click',e=>{if(e.target.id=='scrim'){sub=null;fsel=nul
  else if(a=='fpback'){sub='fadd';render()}
  else if(a=='fclose'){sub=null;fedit=null;fsel=null;render()}
  else if(a=='fsearch')foodSearch();
+ else if(a=='fshopq')foodSearch(true);
  else if(a=='fscan')startScan();
  else if(a=='fscanstop'){stopScan();const fb=$('#fscan');if(fb)fb.innerHTML=''}
  else if(a=='fbar')foodBarcode();

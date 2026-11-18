@@ -303,11 +303,7 @@ function cardioRx(c,d){let k=0;for(let x=dn(U.start);x<dn(d);x++)if(c.days.inclu
  if((D.sleep!=null&&D.sleep<6)||(L.r&&L.r>1.4)){x={n:'Easy steady state',kind:'t',min:20,pct:.58,rpe:4,spm:'16-18',d:'A recovery session. Keep it light.'};why=D.sleep!=null&&D.sleep<6?'Short sleep, so today is light.':'Training load is spiking, so today is light.'}
  if(!isRow(c.type)&&c.type!='Ski erg')x.spm='';
  const w=W?W*x.pct:null,sp=w?500*Math.cbrt(2.8/w):null;
- const LL=d>=U.start?dayList(d):[];
- if(LL.length){const bud=Math.max(CMIN,Math.floor((HOUR-liftMin(LL))/(cdue(d).length||1))),full=x.kind=='t'?x.min:x.kind=='i'?x.reps*(x.on+x.off)-x.off:x.reps*((sp?x.len*sp/500/60:2.2)+x.off)-x.off;
-  if(full>bud){if(x.kind=='t')x.min=bud;else{const per=x.kind=='i'?x.on+x.off:(sp?x.len*sp/500/60:2.2)+x.off,r=Math.floor((bud+x.off)/per);if(r>=2)x.reps=Math.min(x.reps,r);else x=Object.assign(x,{kind:'t',n:'Short steady state',min:bud,pct:.64,rpe:5})}
-   why=(why?why+' ':'')+`Shortened to about ${bud} min so lifting and cardio fit in an hour.`}
-  x.d+=' Do it after your lifting.'}
+ if(d>=U.start&&dayList(d).length)x.d+=' Do it after your lifting.';
  let min=x.min,wm=x.min;
  if(x.kind=='i'){wm=x.reps*x.on;min=wm+(x.reps-1)*x.off}
  if(x.kind=='r'){wm=sp?x.reps*x.len*sp/500/60:x.reps*2.2;min=wm+(x.reps-1)*x.off}
@@ -372,12 +368,6 @@ const wkDays=o=>{const x=dn(vd)+o*7,off=(pd(vd).getDay()+6)%7;return Array.from(
 const monN=d=>dn(d)-(pd(d).getDay()+6)%7;
 // Each workout type can be customised (U.ses), and a single day can add or remove movements (U.dex).
 const sesT=t=>(U.ses&&U.ses[t])||((U.cal&&U.cal.pct>=100)?SES[t].map(e=>[e[0]=='bench'?'push_h':e[0]=='bsq'?'squat':e[0],e[1]]):SES[t]);
-// ---------- Session length: lifting and same-day cardio share one hour ----------
-const HOUR=60,CMIN=10;
-function exRest(p){const L=lad(p),i=U.lvl[p],e=(i!=null&&L[i])||((pool(p)[0]||{}).e)||L[0];return e.rest*U.set.rest}
-// 5 min warm-up, 1 min to set up each exercise, 40 s per set, rest after every set except the very last.
-function liftMin(L){if(!L.length)return 0;let s=300,last=0;L.forEach(([p,ns])=>{const r=exRest(p);s+=60+ns*(40+r);last=r});return (s-last)/60}
-function dayMin(d){const L=dayList(d),lm=liftMin(L),cm=cdue(d).reduce((t,c)=>t+cardioRx(c,d).min,0);return{lm,cm,tot:lm+cm}}
 function dayList(d){const t=plan(d),x=(U.dex&&U.dex[d])||{},rm=new Set(x.rm||[]),L=t?sesT(t).filter(e=>!rm.has(e[0])).map(e=>e.slice()):[];(x.add||[]).forEach(a=>{if(!L.some(e=>e[0]==a[0]))L.push(a.slice())});return L}
 const dex=d=>{U.dex=U.dex||{};return U.dex[d]=U.dex[d]||{add:[],rm:[]}};
 function weekLbl(){const m=monN(vd),t=monN(TODAY),k=Math.round((m-t)/7);return k==0?'This week':k==1?'Next week':k==-1?'Last week':'Week of '+fdate(fromN(m),{day:'numeric',month:'short'})}
@@ -662,8 +652,13 @@ function fuelH(){const g=target(),n=dn(vd)-dn(U.start);
  const st=g.ph?`<span class="stage">${cap(g.ph.t)} stage · week ${Math.floor((n-g.ph.s)/7)+1} of ${Math.ceil((g.ph.e-g.ph.s)/7)}</span>`:'';
  return`${st}<div class="eyebrow">Eat today</div><div class="fuel"><b>${g.kc}</b><span>kcal</span></div><div class="macros"><div><b>${g.pr} g</b><span>Protein</span></div><div><b>${g.carb} g</b><span>Carbs</span></div><div><b>${g.fat} g</b><span>Fat</span></div></div><p class="m">Maintenance ${Math.round(g.maint)} (from ${g.src}) ${g.delta>=0?'+':'−'} ${Math.abs(Math.round(g.delta))} for ${g.ph?'your '+g.ph.t+' stage':U.goal?'holding your weight':'a lean gain of about 0.3 kg a week'}.${U.base.h?'':' Add your baseline in Me for a personal figure.'}</p>`}
 function cardioH(){return cdue(vd).map(c=>{const x=cardioRx(c,vd);return`<div class="card"><div class="eyebrow">${esc(c.type)}</div><h3>${x.n}</h3><p class="rx">${rxText(x)}</p><div class="tags">${x.spm?`<span>Rate ${x.spm}</span>`:''}<span>RPE ${x.rpe}</span><span>about ${Math.round(x.kcal)} kcal</span></div><p class="m">${x.d}${x.why?' '+x.why:''}</p>${c.type=='Rowing erg'&&!x.sp?'<p class="m">There is no pace on record yet. Row by feel and log your splits, and paces appear from next week. A rough 2k split in Plan sets them now.</p>':''}<button class="btn" data-a="rxlog" data-c="${esc(c.type)}">Log this session</button></div>`}).join('')}
-function timeH(){const T=dayMin(vd);if(!T.lm)return'';const over=T.tot>HOUR+.5;
- return`<p class="m" style="margin-top:2px">About ${Math.round(T.lm)} min of lifting${T.cm?` + ${Math.round(T.cm)} min of cardio`:''}${T.cm?` = ${Math.round(T.tot)} min`:''}.</p>${over?`<p class="warn" style="margin-top:4px">That is over an hour. Remove an exercise or a set to fit.</p>`:''}`}
+// ---------- Session clock: starts with the first set logged today and stops after the last one ----------
+function clkReset(){if(!U.sets.some(x=>x.d==vd)&&U.days[vd])delete U.days[vd].st}
+const hms=ms=>{const t=Math.max(0,Math.floor(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t/60)%60;return(h?h+':'+z(m):m)+':'+z(t%60)};
+function clkText(){const D=gd(vd);if(!D.st)return'';const ts=U.sets.filter(x=>x.d==vd&&x.t).map(x=>x.t),last=ts.length?Math.max(...ts):D.st,
+ done=!activeP(dayList(vd)),idle=Date.now()-last>90*60000,run=vd==TODAY&&!done&&!idle;
+ return run?'Session clock '+hms(Date.now()-D.st):'Session took '+hms(last-D.st)}
+const timeH=()=>`<p class="m" style="margin-top:2px;font-variant-numeric:tabular-nums" id="sclk">${clkText()}</p>`;
 function refreshDay(){const a=$('#fuel'),b=$('#cardio');if(a)a.innerHTML=fuelH();if(b)b.innerHTML=cardioH();wk()}
 function actCard(a){const m=am(a);return`<div class="card"><div class="row"><h3>${esc(a.type)}</h3><span class="m" style="margin:0">${a.min} min</span></div><div class="tags">${a.dist?`<span>${a.dist} m</span>`:''}${m.sp?`<span>${mmss(m.sp)} /500m</span>`:''}${m.w?`<span>${Math.round(m.w)} W</span>`:''}${a.spm?`<span>${a.spm} spm</span>`:''}${a.hr?`<span>${a.hr} bpm</span>`:''}<span>RPE ${a.rpe||6}</span><span>${a.fed?'fed':'fasted'}</span><span>about ${Math.round(m.kcal)} kcal</span></div>${m.drift!=null?`<p class="m">Splits ${m.drift>0?'slowed':'sped up'} by ${f(Math.abs(m.drift))} s across the session.</p>`:''}${a.note?`<p class="m">${esc(a.note)}</p>`:''}<div class="row"><button class="tx" data-a="edit" data-i="${a.id}">Edit</button><button class="tx" data-a="del" data-i="${a.id}">Delete</button></div></div>`}
 function dayV(fromScrub=false){const N=dn(vd)-dn(U.start)+1,t=plan(vd),D=gd(vd),L=dayList(vd),tot=L.reduce((s,x)=>s+x[1],0),done=U.sets.filter(s=>s.d==vd).length,cd=cdue(vd).length;
@@ -758,7 +753,7 @@ const setsDone=(p,ns)=>{const n=cur(p,ns).ex.n;return U.sets.filter(s=>s.d==vd&&
 // The exercise being done: the one picked with "Do now" if it still has sets left, otherwise the first unfinished one.
 function activeP(LS){const pk=pickP&&LS.find(e=>e[0]==pickP);if(pk&&setsDone(pk[0],pk[1])<pk[1])return pickP;const f=LS.find(e=>setsDone(e[0],e[1])<e[1]);return f?f[0]:null}
 function logSet(p,ns){const LS=dayList(vd),k=LS.findIndex(x=>x[0]==p),c=cur(p,ns),ex=c.ex,w=ex.step?parseFloat($('#iw').value):0,r=parseInt($('#ir').value);if(isNaN(w)||isNaN(r)||r<1)return;
- try{AC=AC||new(window.AudioContext||window.webkitAudioContext)()}catch(e){}U.sets.push({d:vd,ex:ex.n,w,r});save();es=null;wcarry=null;const n=U.sets.filter(s=>s.d==vd&&s.ex==ex.n).length;if(n>=ns&&pickP==p)pickP=null;const np=n<ns?null:activeP(LS),nx=np&&LS.find(e=>e[0]==np);
+ try{AC=AC||new(window.AudioContext||window.webkitAudioContext)()}catch(e){}if(vd==TODAY&&!gd(vd).st)U.days[vd]=Object.assign(gd(vd),{st:Date.now()});U.sets.push({d:vd,ex:ex.n,w,r,t:Date.now()});save();es=null;wcarry=null;const n=U.sets.filter(s=>s.d==vd&&s.ex==ex.n).length;if(n>=ns&&pickP==p)pickP=null;const np=n<ns?null:activeP(LS),nx=np&&LS.find(e=>e[0]==np);
  const nm=n<ns?`${ex.n}, set ${n+1}`:(nx?cur(nx[0],nx[1]).ex.n+', set '+(setsDone(nx[0],nx[1])+1):'');rest=nm?{end:Date.now()+ex.rest*U.set.rest*1000,nm,b:0}:null;wk()}
 function saveSet(){const s=U.sets[es];if(s){const ex=Object.keys(LAD).flatMap(lad).find(x=>x.n==s.ex),st=ex&&ex.step,w=$('#ew')?parseFloat($('#ew').value):0,r=parseInt($('#er').value);
  if(!isNaN(r)&&r>=1&&(!st||(!isNaN(w)&&w>0))){s.w=st?w:0;s.r=r;save()}}es=null;wcarry=null;wk()}
@@ -785,11 +780,10 @@ function saveCust(){readCust();const c=cdraft,n=(c.n||'').replace(/[<>"&|]/g,'')
  save();custOpen=false;addOpen=false;cdraft={};render()}
 function delCustom(n){const k=(U.cx||[]).findIndex(c=>c.n==n);if(k<0)return;const c=U.cx[k],idx=lad(c.p).findIndex(e=>e.n==n);
  U.cx.splice(k,1);if(U.lvl[c.p]==idx){delete U.lvl[c.p];delete U.man[c.p]}else if(U.lvl[c.p]>idx)U.lvl[c.p]--;delete U.sw[n];save()}
-const cdueT=t=>{for(let i=0;i<28;i++){const d=fromN(Math.max(dn(TODAY),dn(U.start))+i);if(plan(d)==t&&cdue(d).length)return true}return false};
 function sesCard(){const t=wsel&&SPLIT.includes(wsel)?wsel:SPLIT[0],L=sesT(t),have=new Set(L.map(e=>e[0])),ps=Object.keys(LAD).filter(p=>!have.has(p)),open=!!folds.ses,cx=U.cx||[];
  return`<div class="card"><button class="fold-hd" data-fold="ses" aria-expanded="${open}"><div><div class="eyebrow">Workouts</div><div class="m" style="margin-top:2px">Add, remove and set the sets in each session</div></div><span class="fold-meta">${open?'Hide':'Show'}${I.down.replace('class="ic"','class="ic'+(open?' open':'')+'"')}</span></button>${open?`<div class="fold-body">
  <div class="seg">${SPLIT.map(x=>`<button data-ws="${x}" class="${x==t?'on':''}">${x}</button>`).join('')}</div>
- <p class="m">About ${Math.round(liftMin(L))} min of lifting${cdueT(t)?', plus cardio fitted into the rest of the hour':''}.${liftMin(L)>HOUR-(cdueT(t)?CMIN:0)?' <span class="warn">That leaves no room in the hour. Remove an exercise or a set.</span>':''} Use the arrow to change the order.</p>
+ <p class="m">Use the arrow to change the order.</p>
  <div style="margin-top:8px">${L.map(([p,ns],k)=>`<div class="wl">${k?`<div class="cnt" style="flex:none"><button data-sup="${t}|${p}" aria-label="Move up">${I.up}</button></div>`:'<div style="width:36px;flex:none"></div>'}<div style="flex:1;min-width:0"><b>${LAD[p][0]}</b><div class="m" style="margin:0">${esc(cur(p,ns).ex.n)}</div></div><div class="cnt"><button data-sn="${t}|${p}|-1" aria-label="Fewer sets">${I.minus}</button><b>${ns}</b><button data-sn="${t}|${p}|1" aria-label="More sets">${I.plus}</button></div><button class="tx" data-sdel="${t}|${p}">Delete</button></div>`).join('')}</div>
  ${smsg?`<p class="warn">${esc(smsg)}</p>`:''}
  ${ps.length?`<div class="fld"><div class="fl"><span>Add a movement to ${t}</span></div><div class="swr"><select id="sap">${ps.map(p=>`<option value="${p}">${LAD[p][0]}</option>`).join('')}</select><button class="btn dark" data-a="sadd" style="margin:0;padding:12px">Add</button></div></div>`:''}
@@ -798,6 +792,7 @@ function sesCard(){const t=wsel&&SPLIT.includes(wsel)?wsel:SPLIT[0],L=sesT(t),ha
  ${cx.length?`<div class="fld"><div class="fl"><span>Your own exercises</span></div>${cx.map(c=>`<div class="wl"><div><b>${esc(c.n)}</b><div class="m" style="margin:0">${LAD[c.p][0]} · ${c.lo}-${c.hi} reps · ${c.step?'weights':'bodyweight'}</div></div><button class="tx" data-cxdel="${esc(c.n)}">Delete</button></div>`).join('')}</div>`:''}
  </div>`:''}</div>`}
 function beep(){try{[0,.25,.5].forEach(t=>{const o=AC.createOscillator();o.frequency.value=880;o.connect(AC.destination);o.start(AC.currentTime+t);o.stop(AC.currentTime+t+.15)});navigator.vibrate&&navigator.vibrate(300)}catch(e){}}
+setInterval(()=>{const c=$('#sclk');if(c){const v=clkText();if(c.textContent!=v)c.textContent=v}},1000);
 setInterval(()=>{const el=$('#rest');if(!rest){el.hidden=true;return}el.hidden=false;const l=Math.ceil((rest.end-Date.now())/1000);
  if(l>0){$('#rt').textContent=Math.floor(l/60)+':'+z(l%60);$('#rn').textContent='Rest. Next: '+rest.nm}else{$('#rt').textContent='Go';$('#rn').textContent='Next: '+rest.nm;if(!rest.b){rest.b=1;beep()}}},250);
 
@@ -938,8 +933,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  else if(a=='editset'){es=es==+D.si?null:+D.si;wcarry=null;wk()}
  else if(a=='saveset')saveSet();
  else if(a=='cancelset'){es=null;wcarry=null;wk()}
- else if(a=='delset'){if(es!=null&&U.sets[es]){U.sets.splice(es,1);save()}es=null;wcarry=null;rest=null;wk()}
- else if(a=='undo'){const k=U.sets.map(s=>s.d).lastIndexOf(vd);if(k>=0){U.sets.splice(k,1);save();rest=null;es=null;wk()}}
+ else if(a=='delset'){if(es!=null&&U.sets[es]){U.sets.splice(es,1);clkReset();save()}es=null;wcarry=null;rest=null;wk()}
+ else if(a=='undo'){const k=U.sets.map(s=>s.d).lastIndexOf(vd);if(k>=0){U.sets.splice(k,1);clkReset();save();rest=null;es=null;wk()}}
  else if(a=='skip')rest=null;else if(a=='add30'&&rest){rest.end=Math.max(rest.end,Date.now())+30000;rest.b=0}
  else if(a=='fed'){sd(vd,{fed:!gd(vd).fed});b.querySelector('.tg').classList.toggle('on',!!gd(vd).fed);refreshDay()}
  else if(a=='afed'){fa=Object.assign({},fa);fa.fed=!fa.fed;$('#afedtg').classList.toggle('on',!!fa.fed)}

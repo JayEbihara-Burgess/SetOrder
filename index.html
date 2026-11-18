@@ -102,6 +102,15 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{padding:9px 4px
 .auth .seg{margin:20px 0 14px}.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.2rem;letter-spacing:-.02em;margin-bottom:26px}
 .logo i{width:22px;height:22px;border-radius:7px;background:var(--acc);box-shadow:inset 0 0 0 4px var(--ink)}
 .av{width:42px;height:42px;border-radius:50%;background:var(--acc);color:var(--on);display:grid;place-items:center;font-weight:800;text-transform:uppercase}
+.sheet{position:fixed;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:8;background:var(--bg);border-radius:26px 26px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.25);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;transform:translate3d(0,105%,0);transition:transform .42s cubic-bezier(.22,1,.36,1)}
+.sheet.open{transform:none}.sheet .wrap{padding-top:18px;padding-bottom:40px}
+.scrim{position:fixed;inset:0;z-index:7;background:rgba(0,0,0,.4);opacity:0;transition:opacity .35s}.scrim.open{opacity:1}
+.sheet-in{animation:sIn .28s cubic-bezier(.22,1,.36,1)}@keyframes sIn{from{opacity:0;transform:translate3d(28px,0,0)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.sheet,.scrim{transition:none}.sheet-in{animation:none}}
+.mealc{cursor:pointer;transition:transform .15s ease}.mealc:active{transform:scale(.985)}
+.mplus{width:28px;height:28px;border-radius:50%;background:var(--acc);color:var(--on);display:grid;place-items:center}.mplus .ic{width:16px;height:16px}
+.frow{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}.frow .rowsw{flex:1;min-width:0;border-bottom:0}.fplus{flex:none;white-space:nowrap;padding:9px 12px!important;font-size:.8rem;background:var(--acc)!important;color:var(--on)!important}
+.scanbox{position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-top:10px}.scanbox video{width:100%;height:100%;object-fit:cover;display:block}.scanbox i{position:absolute;left:10%;right:10%;top:50%;height:2px;background:var(--acc);box-shadow:0 0 14px var(--acc)}
 .shops{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}.shops .dchip{flex:none;padding:10px 13px}.swr{display:grid;grid-template-columns:1fr 104px;gap:10px;align-items:end}.wl{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.wl:last-child{border-bottom:0}.wl>div:first-child{flex:1;min-width:0}.cnt{display:flex;align-items:center;gap:2px;background:var(--soft);border-radius:12px;padding:3px;flex:none}.cnt button{width:30px;height:30px;border:0;background:var(--card);color:var(--ink);border-radius:9px;cursor:pointer;display:grid;place-items:center}.cnt .ic{width:16px;height:16px}.cnt b{min-width:22px;text-align:center;font-size:.9rem}.rowbtns{display:flex;gap:8px;flex-wrap:wrap}.rowbtns .btn{flex:1 1 150px;width:auto;margin-top:10px}.acts{display:flex;gap:14px}
 </style>
 </head>
@@ -233,12 +242,12 @@ async function onUser(u){
  if(cu){if(!U||(cu.t||0)>(U.t||0)){U=norm(cu);lss('setorder-d-'+user,U)}else if((U.t||0)>(cu.t||0))push()}
  else{if(!U){const old=lsg('setorder-sess'),lg=old&&lsg('setorder-d-'+old);U=norm(lg&&lg.sets?lg:null);try{localStorage.removeItem('setorder-sess')}catch(e){}}save()}
  booting=false;bootErr='';if(first&&!local){tab=U.ready?'day':'plan';vd=TODAY}
- if(first||sub!='form')render()}
-document.addEventListener('visibilitychange',async()=>{if(document.hidden){if(dirty)flush();return}
- const nt=ymd(new Date());if(nt!=TODAY){if(vd==TODAY)vd=nt;TODAY=nt;if(U&&sub!='form')render()}
+ if(first||!sub)render()}
+document.addEventListener('visibilitychange',async()=>{if(document.hidden){stopScan();const fb=$('#fscan');if(fb)fb.innerHTML='';if(dirty)flush();return}
+ const nt=ymd(new Date());if(nt!=TODAY){if(vd==TODAY)vd=nt;TODAY=nt;if(U&&!sub)render()}
  if(!user||!U||dirty||!window.FB)return;
  try{const sn=await FB.getDoc(FB.doc(FB.db,'users',user));if(sn.exists()){const cu=JSON.parse(sn.data().d);
-  if(!dirty&&(cu.t||0)>(U.t||0)){U=norm(cu);lss('setorder-d-'+user,U);const ae=document.activeElement;if(sub!='form'&&!(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))render()}}}catch(e){}});
+  if(!dirty&&(cu.t||0)>(U.t||0)){U=norm(cu);lss('setorder-d-'+user,U);const ae=document.activeElement;if(!sub&&!(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))render()}}}catch(e){}});
 const gd=d=>U.days[d]||{},sd=(d,o)=>{U.days[d]=Object.assign(U.days[d]||{},o);save()};
 
 // ---------- Schedule and progression ----------
@@ -802,15 +811,15 @@ setInterval(()=>{const el=$('#rest');if(!rest){el.hidden=true;return}el.hidden=f
 
 // ---------- Cardio and sport form ----------
 function readForm(){fa=Object.assign({},fa,{type:$('#atype').value,min:nv('amin')||0,dist:nv('adist'),hr:nv('ahr'),rpe:nv('arpe')||6,split:($('#asplit')||{value:(fa&&fa.split)||''}).value,splits:($('#asplits')||{value:(fa&&fa.splits)||''}).value,spm:$('#aspm')?nv('aspm'):(fa&&fa.spm),note:$('#anote').value})}
-function formV(){renderedTab=null;const a=fa||{type:'Running',min:30,rpe:6};
- $('#app').innerHTML=`<div class="wrap"><div class="top" style="margin-bottom:20px;align-items:center"><div><div class="eyebrow">${fdate(vd,{weekday:'long',day:'numeric',month:'long'})}</div><h1 style="font-size:2.2rem">${editId?'Edit session':'New session'}</h1></div><button class="ib" data-a="cancel" aria-label="Back">${I.left}</button></div>
+function formV(){const a=fa||{type:'Running',min:30,rpe:6};
+ sheet(`<div class="wrap"><div class="top" style="margin-bottom:20px;align-items:center"><div><div class="eyebrow">${fdate(vd,{weekday:'long',day:'numeric',month:'long'})}</div><h1 style="font-size:2.2rem">${editId?'Edit session':'New session'}</h1></div><button class="ib" data-a="cancel" aria-label="Back">${I.left}</button></div>
  <div class="card"><div class="fl"><span>What was it?</span></div><select id="atype">${opts(sports().map(x=>x.n),a.type)}</select>
  ${sl('amin','Duration',0,180,5,a.min,'min')}${sl('adist','Distance (optional)',0,42000,100,a.dist??null,'m')}${sl('ahr','Average heart rate (optional)',60,200,1,a.hr??null,'bpm')}${sl('arpe','Effort, RPE (10 is all out)',1,10,.5,a.rpe,'')}</div>
  ${isRow(a.type)?`<div class="card"><div class="two"><div><div class="fl"><span>Average split /500m</span></div><input type="text" id="asplit" placeholder="2:05" value="${esc(a.split||'')}"></div><div><div class="fl"><span>Stroke rate</span></div><input type="number" id="aspm" inputmode="numeric" value="${a.spm??''}"></div></div>
  <div class="fld"><div class="fl"><span>Individual splits</span><em>comma separated, overrides the average</em></div><textarea id="asplits" rows="2" placeholder="2:08, 2:06, 2:05, 2:07">${esc(a.splits||'')}</textarea></div></div>`:''}
  <div class="card"><button class="rowsw" data-a="afed"><span>Eaten beforehand?</span><i class="tg${a.fed?' on':''}" id="afedtg"></i></button>
  <div class="fld"><div class="fl"><span>Notes</span><em>intervals, rest, how it felt</em></div><textarea id="anote" rows="2">${esc(a.note||'')}</textarea></div></div>
- <button class="btn" data-a="saveact">Save session</button></div>`}
+ <button class="btn" data-a="saveact">Save session</button></div>`,'form')}
 
 // ---------- Food: search UK supermarket products (Open Food Facts), log by meal, totals feed the day's calories ----------
 const MEALS=[['b','Breakfast'],['l','Lunch'],['d','Dinner'],['s','Snacks']];
@@ -827,13 +836,25 @@ const BASICS=[['Apple',52,.3,14,.2,150,'1 medium'],['Banana',89,1.1,23,.3,120,'1
  ['Peanut butter',597,25,13,50,15,'1 tablespoon'],['Almonds',579,21,22,50,30,'1 handful'],['Olive oil',884,0,0,100,14,'1 tablespoon'],['Butter',717,.9,.1,81,10,'1 portion'],['Honey',304,.3,82,0,15,'1 tablespoon'],['Whey protein powder',400,80,8,6,30,'1 scoop'],
  ['Baked beans',78,4.7,12.5,.2,200,'half a tin'],['Houmous',310,7,10,26,30,'1 portion'],['Crisps',530,6,53,32,25,'1 bag'],['Dark chocolate 70%',600,7.8,46,43,20,'2 squares'],['Wholewheat cereal biscuits',362,12,69,2,38,'2 biscuits'],['Cornflakes',378,7,84,.9,30,'1 bowl'],['Granola',450,10,60,18,45,'1 bowl'],['Margherita pizza',266,11,33,10,150,'half a pizza']]
  .map(([n,k,p,cb,f,sv,svl,liq])=>({n,k,p,cb,f,sv,svl,liq:!!liq,gen:1}));
-const UNITS={g:['g',1],ml:['ml',1],pt:['pint',568],oz:['oz',28.35]};
-let qmsg='',fq='',fshop='',fres=null,fbusy=false,ferr='',fmeal='b',fsel=null,fedit=null,famt=null,fu='g',ftok=0,fqa=false;
+// Units: [singular label, plural label, grams or ml each]. Liquids count 1 ml as 1 g.
+const UNITS={g:['g','g',1],'100g':['× 100 g','× 100 g',100],oz:['oz','oz',28.35],ml:['ml','ml',1],glass:['glass (250 ml)','glasses (250 ml)',250],can:['can (330 ml)','cans (330 ml)',330],bottle:['bottle (500 ml)','bottles (500 ml)',500],hpt:['half pint','half pints',284],pt:['pint','pints',568],tbsp:['tbsp (15 g)','tbsp (15 g)',15],tsp:['tsp (5 g)','tsp (5 g)',5],hand:['handful (30 g)','handfuls (30 g)',30],slice:['slice (40 g)','slices (40 g)',40],egg:['egg (50 g)','eggs (50 g)',50]};
+const UCHIP={g:'Grams','100g':'100 g',oz:'oz',ml:'ml',glass:'Glass',can:'Can',bottle:'Bottle',hpt:'½ pint',pt:'Pint',tbsp:'Tbsp',tsp:'Tsp',hand:'Handful',slice:'Slice',egg:'Egg'};
+const QCH={pc:[.5,1,1.5,2,3],g:[25,50,100,150,200,250],'100g':[.5,1,1.5,2,3],oz:[1,2,4,6,8],ml:[50,100,200,250,330,500],glass:[1,2,3],can:[1,2,3],bottle:[1,2],hpt:[1,2,3],pt:[.5,1,2,3,4],tbsp:[.5,1,2,3],tsp:[1,2,3],hand:[.5,1,2,3],slice:[1,2,3,4],egg:[1,2,3,4]};
+const amtL=e=>e.u=='100g'?`${r1(e.q*100)} ${e.liq?'ml':'g'}`:['g','ml','oz'].includes(e.u)?`${r1(e.q)} ${e.u}`:`${fmtQ(e.q)} ${unitL(e,e.u,e.q)}`;
+const fmtQ=v=>{const w=Math.floor(v),h=Math.abs(v-w-.5)<.01;return h?(w?w:'')+'½':String(r1(v))};
+let scanCtl=null,scanTok=0,ZXP=null,qmsg='',fq='',fshop='',fres=null,fbusy=false,ferr='',fmeal='b',fsel=null,fedit=null,famt=null,fu='g',ftok=0,fqa=false;
 const foodOf=d=>(U.food&&U.food[d])||[];
 const r1=x=>Math.round((+x||0)*10)/10;
-const unitG=(it,u)=>u=='pc'?(it.sv||100):(UNITS[u]||UNITS.g)[1];
-const unitL=(it,u,q)=>u=='pc'?(it.qa?(q==1?'serving':'servings'):'× '+(it.svl&&/\d/.test(it.svl)?it.svl:`${it.svl||'portion'} (${r1(it.sv)} ${it.liq?'ml':'g'})`)):u=='pt'?(q==1?'pint':'pints'):(UNITS[u]||UNITS.g)[0];
-const unitsFor=it=>it.qa?['pc']:[...(it.sv?['pc']:[]),...(it.liq?['ml','pt']:['g']),...(it.liq?['g']:['oz'])];
+const unitG=(it,u)=>u=='pc'?(it.sv||100):(UNITS[u]||UNITS.g)[2];
+const unitL=(it,u,q)=>u=='pc'?(it.qa?(q==1?'serving':'servings'):'× '+(it.svl&&/\d/.test(it.svl)?it.svl:`${it.svl||'portion'} (${r1(it.sv)} ${it.liq?'ml':'g'})`)):(UNITS[u]||UNITS.g)[q<=1?0:1];
+// Units offered depend on the kind of food, guessed from its name.
+function unitsFor(it){if(it.qa)return['pc'];const n=(it.n||'').toLowerCase(),u=[];if(it.sv)u.push('pc');
+ if(it.liq){if(/beer|lager|\bale\b|cider|stout|bitter|ipa\b/.test(n))u.push('pt','hpt');u.push('glass');if(/cola|pepsi|lemonade|fanta|sprite|tango|energy|irn|soda|tonic|red bull|monster|7up/.test(n))u.push('can');u.push('bottle','pt','ml')}
+ else{if(/\begg/.test(n))u.push('egg');if(/bread|toast|loaf|bagel|brioche|crumpet/.test(n))u.push('slice');if(/butter|oil|jam|honey|spread|sauce|mayo|ketchup|syrup|sugar|powder|whey|protein|nutella|marmite|dressing|pesto|houmous|hummus/.test(n))u.push('tbsp','tsp');if(/nut|almond|cashew|pistachio|berr|grape|raisin|seed|crisps|sweets|popcorn/.test(n))u.push('hand');u.push('100g','g','oz')}
+ const pc=u[0]=='pc'?pcChip(it).toLowerCase():'';return[...new Set(u)].filter(x=>x=='pc'||!pc||(UCHIP[x]||'').toLowerCase()!=pc)}
+const pcChip=it=>it.qa?'Serving':it.gen&&it.svl?cap(it.svl.replace(/^1 /,'')):'Portion';
+function defUnit(it){const us=unitsFor(it),n=(it.n||'').toLowerCase();if(it.lu&&us.includes(it.lu))return[it.lu,it.lq||1];
+ if(it.liq&&/beer|lager|\bale\b|cider|stout|bitter/.test(n))return['pt',1];if(us.includes('can'))return['can',1];if(it.sv)return['pc',1];if(it.liq)return['glass',1];return['100g',1]}
 const tot=(it,g)=>({k:it.k*g/100,p:it.p*g/100,cb:it.cb*g/100,f:it.f*g/100});
 function dayFood(d){return foodOf(d).reduce((a,e)=>{const t=tot(e,e.g);a.k+=t.k;a.p+=t.p;a.cb+=t.cb;a.f+=t.f;return a},{k:0,p:0,cb:0,f:0})}
 // The day's calorie and protein log (used by the energy and maintenance maths) follows the food diary.
@@ -844,49 +865,77 @@ function offItem(p){const n=p.nutriments||{};let k=n['energy-kcal_100g'];if(k==n
  const sv=parseFloat(p.serving_quantity)||0;
  return{n:name.slice(0,80),b:String(p.brands||'').split(',')[0].trim().slice(0,40),c:p.code,k:r1(k),p:r1(n.proteins_100g),cb:r1(n.carbohydrates_100g),f:r1(n.fat_100g),sv:sv>0&&sv<3000?r1(sv):0,svl:sv>0?String(p.serving_size||'').slice(0,30):'',liq:/\d\s*(ml|cl|l|pt|pints?)\b/i.test(p.quantity||''),sh:shopNames(p.stores_tags)}}
 const OFF='https://world.openfoodfacts.org',OFF_F='code,product_name,brands,stores_tags,serving_quantity,serving_size,quantity,nutriments';
-async function offGet(u){let r=await fetch(u);if(r.status==503||r.status==429){await new Promise(z=>setTimeout(z,3000));r=await fetch(u)}if(r.status==503||r.status==429)throw new Error('busy');if(!r.ok)throw new Error('http '+r.status);return r.json()}
-async function foodSearch(){const inp=$('#fq');if(inp)fq=inp.value.trim();if(!fq)return;const tk=++ftok;fbusy=true;ferr='';fres=null;fresUpd();
+// Open Food Facts often turns requests away when it is busy, and those refusals reach the browser as a failed request.
+// So every request is retried with growing waits, and finished searches are kept on the phone for a day.
+const sleep=ms=>new Promise(z=>setTimeout(z,ms));
+async function offGet(u,onWait){const waits=[0,1200,3000,6000];let last=new Error('busy');
+ for(let i=0;i<waits.length;i++){if(waits[i]){onWait&&onWait(i);await sleep(waits[i])}
+  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),12000);let r=null;
+  try{r=await fetch(u,{signal:ac.signal})}catch(e){r=null}clearTimeout(to);
+  if(r&&r.ok){try{return await r.json()}catch(e){}}
+  if(r&&r.status==404)throw new Error('http 404');
+  last=new Error(navigator.onLine===false?'offline':'busy')}
+ throw last}
+const FC_KEY='setorder-fc',FC_MS=864e5;
+function fcGet(k){try{const c=JSON.parse(localStorage.getItem(FC_KEY))||{},e=c[k];return e&&Date.now()-e.t<FC_MS?e.items:null}catch(e){return null}}
+function fcSet(k,items){try{const c=JSON.parse(localStorage.getItem(FC_KEY))||{};c[k]={t:Date.now(),items};const ks=Object.keys(c).sort((x,y)=>c[y].t-c[x].t);ks.slice(40).forEach(x=>delete c[x]);localStorage.setItem(FC_KEY,JSON.stringify(c))}catch(e){}}
+const failMsg=e=>e&&e.message=='offline'?'You are offline. Your recent and basic foods still work, or use Quick add.':'Open Food Facts is not answering right now, even after a few tries. Try again in a minute. Meanwhile your recent and basic foods still work, or use Quick add.';
+const shopMatch=(it,k)=>!k||(it.sh||[]).includes(SHOPN[k])||shopNames([it.b]).includes(SHOPN[k]);
+let fall=null,fwait='',fshopDone={};
+function applyShop(){fres=fall?fall.filter(it=>it.gen?!fshop:shopMatch(it,fshop)):null}
+async function offSearch(q,shop){const key=q.toLowerCase()+'|'+shop,c=fcGet(key);if(c)return c;
+ const u=`${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=50&sort_by=unique_scans_n&fields=${OFF_F}&tagtype_0=countries&tag_contains_0=contains&tag_0=united-kingdom`+(shop?`&tagtype_1=stores&tag_contains_1=contains&tag_1=${shop}`:'');
+ const d=await offGet(u,()=>{fwait='Open Food Facts is busy. Trying again…';fresUpd()}),items=(d.products||[]).map(offItem).filter(Boolean);fcSet(key,items);return items}
+async function foodSearch(shopOnly){const inp=$('#fq');if(inp)fq=inp.value.trim();if(!fq)return;const tk=++ftok;fbusy=true;fwait='';ferr='';fresUpd();
  const ws=fq.toLowerCase().split(/\s+/).filter(Boolean),basics=BASICS.filter(b=>ws.every(w=>b.n.toLowerCase().includes(w)));
- const u=`${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(fq)}&search_simple=1&action=process&json=1&page_size=30&sort_by=unique_scans_n&fields=${OFF_F}&tagtype_0=countries&tag_contains_0=contains&tag_0=united-kingdom`+(fshop?`&tagtype_1=stores&tag_contains_1=contains&tag_1=${fshop}`:'');
- let items=[];try{const d=await offGet(u);items=(d.products||[]).map(offItem).filter(Boolean)}catch(e){ferr=e.message=='busy'?'The food database is busy. Wait a few seconds and search again.':'Could not reach the food database. Check your connection and try again.'}
- if(tk!=ftok)return;fbusy=false;fres=(fshop?[]:basics).concat(items);fresUpd()}
-async function foodBarcode(){const code=(($('#fbc')||{}).value||'').replace(/\D/g,'');if(code.length<6){ferr='Type the numbers under the barcode.';return fresUpd()}const tk=++ftok;fbusy=true;ferr='';fres=null;fresUpd();
- try{const d=await offGet(`${OFF}/api/v2/product/${code}?fields=${OFF_F}`),it=d&&d.product&&offItem(Object.assign({code},d.product));if(tk!=ftok)return;fbusy=false;if(it){fres=[it];return pickFood(it)}ferr='No nutrition found for that barcode. Try searching by name.'}catch(e){ferr=e.message=='busy'?'The food database is busy. Wait a few seconds and try again.':'Could not reach the food database. Check your connection and try again.'}
- if(tk!=ftok)return;fbusy=false;fresUpd()}
-const itemRow=(it,i,src)=>`<button class="rowsw" data-fpick="${src}|${i}"><span style="min-width:0"><b style="font-weight:600">${esc(it.n)}</b><br><span class="m" style="margin:0;font-size:.8rem">${[it.gen?'Basic food, typical values':esc(it.b),...shopsBut(it).map(esc)].filter(Boolean).join(' · ')}</span></span><span class="m" style="margin:0;text-align:right;flex:none;font-size:.8rem"><b style="color:var(--ink)">${Math.round(it.k)}</b> kcal<br>${r1(it.p)} g protein<br>per 100 ${it.liq?'ml':'g'}</span></button>`;
-function fresH(){if(fbusy)return'<p class="m">Searching…</p>';let h=ferr?`<p class="warn">${esc(ferr)}</p>`:'';
- if(fres)h+=fres.length?`<div class="eyebrow" style="margin-top:14px">Results</div>${fres.map((it,i)=>itemRow(it,i,'r')).join('')}<p class="m">Shop names come from shoppers who added the product, so some products show none. Not finding it? Try fewer words, another shop, or the barcode.</p>`:'<p class="m">Nothing found. Try fewer or different words, or another shop.</p>';
- else if((U.frec||[]).length)h+=`<div class="eyebrow" style="margin-top:14px">Recent</div>${U.frec.map((it,i)=>itemRow(it,i,'c')).join('')}`;
+ if(!shopOnly){fall=null;fshopDone={}}
+ try{const items=await offSearch(fq,shopOnly?fshop:'');if(tk!=ftok)return;
+  if(shopOnly){fshopDone[fshop]=1;const have=new Set((fall||[]).map(x=>x.c||x.n));fall=(fall||basics).concat(items.filter(x=>!have.has(x.c||x.n)))}else fall=basics.concat(items)}
+ catch(e){if(tk!=ftok)return;ferr=failMsg(e);if(!fall)fall=basics}
+ fbusy=false;fwait='';applyShop();fresUpd()}
+async function foodBarcode(){const code=(($('#fbc')||{}).value||'').replace(/\D/g,'');if(code.length<6){ferr='Type the numbers under the barcode.';return fresUpd()}const tk=++ftok;fbusy=true;fwait='';ferr='';fresUpd();
+ const ck='#'+code;let it=null;const c=fcGet(ck);
+ try{if(c)it=c[0];else{const d=await offGet(`${OFF}/api/v2/product/${code}?fields=${OFF_F}`,()=>{fwait='Open Food Facts is busy. Trying again…';fresUpd()});it=d&&d.product&&offItem(Object.assign({code},d.product));if(it)fcSet(ck,[it])}
+  if(tk!=ftok)return;fbusy=false;fwait='';if(it)return pickFood(it);ferr='That barcode is not in Open Food Facts yet, or has no nutrition. Try searching by name, or use Quick add.'}
+ catch(e){if(tk!=ftok)return;ferr=e.message=='http 404'?'That barcode is not in Open Food Facts yet. Try searching by name, or use Quick add.':failMsg(e)}
+ fbusy=false;fwait='';fresUpd()}
+const itemRow=(it,i,src)=>{const row=`<button class="rowsw" data-fpick="${src}|${i}"><span style="min-width:0"><b style="font-weight:600">${esc(it.n)}</b><br><span class="m" style="margin:0;font-size:.8rem">${[it.gen?'Basic food, typical values':esc(it.b),...shopsBut(it).map(esc)].filter(Boolean).join(' · ')}</span></span><span class="m" style="margin:0;text-align:right;flex:none;font-size:.8rem"><b style="color:var(--ink)">${Math.round(it.k)}</b> kcal<br>${r1(it.p)} g protein<br>per 100 ${it.liq?'ml':'g'}</span></button>`;return src=='c'&&it.lu&&unitsFor(it).includes(it.lu)?`<div class="frow">${row}<button class="dchip fplus" data-frq="${i}" aria-label="Add ${esc(it.n)} again">+ ${esc(amtL({u:it.lu,q:it.lq||1,liq:it.liq,qa:it.qa,sv:it.sv,svl:it.svl,gen:it.gen}).replace(/ \(.*\)$/,''))}</button></div>`:row};
+function fresH(){if(fbusy)return`<p class="m">${fwait||'Searching…'}</p>`;let h=ferr?`<p class="warn">${esc(ferr)}</p>`:'';
+ if(fres&&ferr&&!fres.length)fres=null;
+ if(fres)h+=fres.length?`<div class="eyebrow" style="margin-top:14px">Results</div>${fres.map((it,i)=>itemRow(it,i,'r')).join('')}${moreShop()}<p class="m">Shop names come from shoppers who added the product, so some products show none. Not finding it? Try fewer words, another shop, or the barcode.</p>`:(fshop?moreShop()||`<p class="m">Nothing found at ${esc(SHOPN[fshop])}. Try All UK.</p>`:'<p class="m">Nothing found. Try fewer or different words.</p>');
+ else if((U.frec||[]).length)h+=`<div class="eyebrow" style="margin-top:14px">Recent</div><p class="m" style="margin-top:0">Tap + to add the same amount again.</p>${U.frec.map((it,i)=>itemRow(it,i,'c')).join('')}`;
  return h}
+const moreShop=()=>fshop&&fq&&!fshopDone[fshop]&&(fres||[]).length<8?`<button class="btn ghost" data-a="fshopq">Search more at ${esc(SHOPN[fshop])}</button>`:'';
 function fresUpd(){const el=$('#fres');if(el)el.innerHTML=fresH()}
-function pickFood(it){fsel=Object.assign({},it);fedit=null;fu=it.sv?'pc':it.liq?'ml':'g';famt=fu=='pc'?1:100;sub='famt';render()}
+function pickFood(it){fsel=Object.assign({},it);fedit=null;[fu,famt]=defUnit(it);sub='famt';render()}
 function fmSeg(){return`<div class="seg">${MEALS.map(([k,l])=>`<button data-fm="${k}" class="${fmeal==k?'on':''}">${l}</button>`).join('')}</div>`}
-function faddV(){renderedTab=null;
- $('#app').innerHTML=`<div class="wrap"><div class="top" style="margin-bottom:16px;align-items:center"><div><div class="eyebrow">${fdate(vd,{weekday:'long',day:'numeric',month:'long'})}</div><h1 style="font-size:2.2rem">Add food</h1></div><button class="ib" data-a="fback" aria-label="Back">${I.left}</button></div>
+function faddV(){
+ sheet(`<div class="wrap"><div class="top" style="margin-bottom:16px;align-items:center"><div><div class="eyebrow">${fdate(vd,{weekday:'long',day:'numeric',month:'long'})}</div><h1 style="font-size:2.2rem">Add food</h1></div><button class="ib" data-a="fback" aria-label="Back">${I.left}</button></div>
  <div class="card"><div class="fl"><span>Meal</span></div>${fmSeg()}
  <div class="fld"><div class="fl"><span>Search UK shops</span><em>brand and product name work best</em></div><div class="swr"><input type="text" id="fq" value="${esc(fq)}" placeholder="e.g. Tesco semi skimmed milk" enterkeyhint="search" autocomplete="off"><button class="btn" data-a="fsearch" style="margin:0;padding:12px">Search</button></div></div>
  <div class="fld"><div class="fl"><span>Shop</span></div><div class="shops"><button data-fshop="" class="dchip${fshop?'':' on'}">All UK</button>${SHOPS.map(([k,l])=>`<button data-fshop="${k}" class="dchip${fshop==k?' on':''}">${esc(l)}</button>`).join('')}</div></div>
- <div class="fld"><div class="fl"><span>Or type a barcode</span></div><div class="swr"><input type="text" id="fbc" inputmode="numeric" placeholder="5000000000000" autocomplete="off"><button class="btn dark" data-a="fbar" style="margin:0;padding:12px">Look up</button></div></div>
+ <div class="fld"><div class="fl"><span>Barcode</span></div><button class="btn dark" data-a="fscan" style="margin-top:0">Scan a barcode</button><div id="fscan"></div><div class="fl" style="margin-top:12px"><span class="m" style="margin:0">Or type the numbers</span></div><div class="swr"><input type="text" id="fbc" inputmode="numeric" placeholder="5000000000000" autocomplete="off"><button class="btn dark" data-a="fbar" style="margin:0;padding:12px">Look up</button></div></div>
  <div id="fres">${fresH()}</div></div>
  <div class="card"><button class="fold-hd" data-a="fqa" aria-expanded="${fqa}"><div><div class="eyebrow">Quick add</div><div class="m" style="margin-top:2px">Type the numbers yourself</div></div><span class="fold-meta">${fqa?'Hide':'Show'}${I.down.replace('class="ic"','class="ic'+(fqa?' open':'')+'"')}</span></button>${fqa?`<div class="fold-body">
  <div class="fl"><span>Name</span></div><input type="text" id="qn" maxlength="60" placeholder="e.g. Canteen lunch">
  <div class="two fld"><div><div class="fl"><span>Calories</span></div><input type="number" id="qk" inputmode="decimal"></div><div><div class="fl"><span>Protein (g)</span></div><input type="number" id="qp" inputmode="decimal"></div></div>
  <div class="two fld"><div><div class="fl"><span>Carbs (g)</span><em>optional</em></div><input type="number" id="qc" inputmode="decimal"></div><div><div class="fl"><span>Fat (g)</span><em>optional</em></div><input type="number" id="qf" inputmode="decimal"></div></div>
  ${qmsg?`<p class="warn">${esc(qmsg)}</p>`:''}<button class="btn" data-a="fqsave">Add to ${MEALS.find(m=>m[0]==fmeal)[1]}</button></div>`:''}</div>
- <p class="m">Product data comes from Open Food Facts, a free database filled in by shoppers. Check the label if a number looks wrong.</p></div>`}
-function famtV(){renderedTab=null;const it=fsel,us=unitsFor(it);if(!us.includes(fu))fu=us[0];
- $('#app').innerHTML=`<div class="wrap"><div class="top" style="margin-bottom:16px;align-items:center"><div><div class="eyebrow">${it.gen?'Basic food':esc(it.b||'Product')}${shopsBut(it).length?' · '+shopsBut(it).map(esc).join(', '):''}</div><h1 style="font-size:1.9rem;line-height:1.1">${esc(it.n)}</h1></div><button class="ib" data-a="${fedit?'fclose':'fpback'}" aria-label="Back">${I.left}</button></div>
- <div class="card"><div class="fl"><span>How much?</span></div>${us.length>1?`<div class="seg" style="margin-bottom:10px">${us.map(u=>`<button data-fu="${u}" class="${fu==u?'on':''}">${u=='pc'?(it.qa?'Servings':'Portions'):UNITS[u][0]=='pint'?'Pints':UNITS[u][0]}</button>`).join('')}</div>`:''}
- ${stp('famt',famt,fu=='pc'||fu=='pt'?.5:fu=='oz'?1:10)}<p class="m c" id="ful">${unitL(it,fu,famt)}</p>
+ <p class="m">Product data comes from Open Food Facts, a free database filled in by shoppers. Check the label if a number looks wrong.</p></div>`,'fadd')}
+function famtV(){const it=fsel,us=unitsFor(it);if(!us.includes(fu)){fu=us[0];famt=1}
+ sheet(`<div class="wrap"><div class="top" style="margin-bottom:16px;align-items:center"><div><div class="eyebrow">${it.gen?'Basic food':esc(it.b||'Product')}${shopsBut(it).length?' · '+shopsBut(it).map(esc).join(', '):''}</div><h1 style="font-size:1.9rem;line-height:1.1">${esc(it.n)}</h1></div><button class="ib" data-a="${fedit?'fclose':'fpback'}" aria-label="Back">${I.left}</button></div>
+ <div class="card"><div class="fl"><span>How much?</span></div>${us.length>1?`<div class="shops" style="margin-bottom:10px">${us.map(u=>`<button data-fu="${u}" class="dchip${fu==u?' on':''}">${u=='pc'?pcChip(it):UCHIP[u]}</button>`).join('')}</div>`:''}
+ <div class="shops" id="fqc" style="margin-bottom:10px">${QCH[fu].map(v=>`<button data-fq="${v}" class="dchip${famt==v?' on':''}">${fmtQ(v)}</button>`).join('')}</div>
+ ${stp('famt',famt,fu=='g'||fu=='ml'?10:fu=='oz'?1:.5)}<p class="m c" id="ful">${fu=='100g'?`× 100 g = ${r1(famt*100)} ${it.liq?'ml':'g'}`:unitL(it,fu,famt)}</p>
  <div class="fld"><div class="fl"><span>Meal</span></div>${fmSeg()}</div>
  <div class="macros" id="fprev">${fprevH()}</div>
  <p class="m">${it.qa?'Values per serving.':`${Math.round(it.k)} kcal, ${r1(it.p)} g protein per 100 ${it.liq?'ml':'g'}.${it.liq?' Drinks are counted as 1 ml = 1 g.':''}`}</p>
- <button class="btn" data-a="fsave">${fedit?'Save changes':'Add to diary'}</button>${fedit?'<div class="c"><button class="tx" data-a="fdel">Remove from diary</button></div>':''}</div></div>`}
+ <button class="btn" data-a="fsave">${fedit?'Save changes':'Add to diary'}</button>${fedit?'<div class="c"><button class="tx" data-a="fdel">Remove from diary</button></div>':''}</div></div>`,'famt')}
 function fprevH(){const q=parseFloat(($('#famt')||{}).value);const a=isNaN(q)?famt:q,t=tot(fsel,(a||0)*unitG(fsel,fu));return`<div><b>${Math.round(t.k)}</b><span>kcal</span></div><div><b>${r1(t.p)} g</b><span>Protein</span></div><div><b>${r1(t.cb)} g / ${r1(t.f)} g</b><span>Carbs / fat</span></div>`}
 function saveFood(qq){const q=qq!=null?qq:parseFloat($('#famt').value);if(isNaN(q)||q<=0)return;const it=fsel,g=q*unitG(it,fu);U.food=U.food||{};const L=U.food[vd]=U.food[vd]||[];
  const e={i:fedit||Date.now(),m:fmeal,n:it.n,b:it.b||'',c:it.c||'',k:it.k,p:it.p,cb:it.cb,f:it.f,sv:it.sv||0,svl:it.svl||'',liq:it.liq?1:0,qa:it.qa?1:0,gen:it.gen?1:0,sh:it.sh||[],q:r1(q),u:fu,g:r1(g)};
  const k=L.findIndex(x=>x.i==e.i);k>=0?L[k]=e:L.push(e);
- const key=x=>x.c||x.n,rec={n:e.n,b:e.b,c:e.c,k:e.k,p:e.p,cb:e.cb,f:e.f,sv:e.sv,svl:e.svl,liq:!!e.liq,qa:!!e.qa,gen:!!e.gen,sh:e.sh};
+ const key=x=>x.c||x.n,rec={lu:fu,lq:r1(q),n:e.n,b:e.b,c:e.c,k:e.k,p:e.p,cb:e.cb,f:e.f,sv:e.sv,svl:e.svl,liq:!!e.liq,qa:!!e.qa,gen:!!e.gen,sh:e.sh};
  U.frec=[rec,...(U.frec||[]).filter(x=>key(x)!=key(rec))].slice(0,25);
  syncFood(vd);save();sub=null;fsel=null;fedit=null;fres=null;fq='';render()}
 function foodV(fromScrub=false){const g=target(),t=dayFood(vd),L=foodOf(vd),D=gd(vd),left=g.kc-t.k,legacy=!L.length&&D.kcal!=null&&!D.fk;
@@ -897,9 +946,38 @@ function foodV(fromScrub=false){const g=target(),t=dayFood(vd),L=foodOf(vd),D=gd
  <div class="macros">${[['Protein',t.p,g.pr],['Carbs',t.cb,g.carb],['Fat',t.f,g.fat]].map(([l,a,b])=>`<div style="background:rgba(128,128,128,.18)"><b style="font-size:.92rem">${Math.round(a)} / ${b} g</b><span style="color:inherit;opacity:.65">${l}</span>${bar(a,b)}</div>`).join('')}</div></div>
  ${legacy?`<p class="m">Logged before the food diary: ${D.kcal} kcal${D.p!=null?`, ${D.p} g protein`:''}. Adding food here replaces it.</p>`:''}`;
  h+=MEALS.map(([k,l])=>{const es=L.filter(e=>e.m==k),mk=es.reduce((a,e)=>a+tot(e,e.g).k,0);
-  return`<div class="card"><div class="row"><h3>${l}</h3><span class="m" style="margin:0">${Math.round(mk)} kcal</span></div>${es.map(e=>{const x=tot(e,e.g);return`<button class="rowsw" data-fe="${e.i}"><span style="min-width:0">${esc(e.n)}<br><span class="m" style="margin:0;font-size:.8rem">${r1(e.q)} ${esc(unitL(e,e.u,e.q))}${e.b?' · '+esc(e.b):''}</span></span><span class="m" style="margin:0;text-align:right;flex:none"><b style="color:var(--ink)">${Math.round(x.k)}</b> kcal<br>${r1(x.p)} g protein</span></button>`}).join('')}<button class="tx" data-fadd="${k}" style="color:var(--ink)">+ Add food</button></div>`}).join('');
+  return`<div class="card mealc" data-fadd="${k}" role="button" aria-label="Add food to ${l}"><div class="row"><h3>${l}</h3><span class="m" style="margin:0;display:flex;align-items:center;gap:10px">${Math.round(mk)} kcal<i class="mplus">${I.plus}</i></span></div>${es.map(e=>{const x=tot(e,e.g);return`<button class="rowsw" data-fe="${e.i}"><span style="min-width:0">${esc(e.n)}<br><span class="m" style="margin:0;font-size:.8rem">${esc(amtL(e))}${e.b?' · '+esc(e.b):''}</span></span><span class="m" style="margin:0;text-align:right;flex:none"><b style="color:var(--ink)">${Math.round(x.k)}</b> kcal<br>${r1(x.p)} g protein</span></button>`}).join('')}${es.length?'':`<p class="m" style="margin:6px 0 0">Tap to add ${l.toLowerCase()}.</p>`}</div>`}).join('');
  shell(h,fromScrub)}
 
+
+// ---------- Sheets slide up over the current tab ----------
+function sheet(html,kind){let s=$('#sheet');stopScan();
+ if(!s){const sc=document.createElement('div');sc.className='scrim';sc.id='scrim';s=document.createElement('div');s.id='sheet';s.className='sheet';s.setAttribute('role','dialog');document.body.append(sc,s);document.body.style.overflow='hidden';
+  s.innerHTML=html;void s.offsetWidth;requestAnimationFrame(()=>{s.classList.add('open');sc.classList.add('open')})}
+ else if(s.dataset.k!==kind){s.innerHTML=html;s.scrollTop=0;const w=s.firstElementChild;if(w)w.classList.add('sheet-in')}
+ else{const st=s.scrollTop;s.innerHTML=html;s.scrollTop=st}
+ s.dataset.k=kind}
+function closeSheet(){stopScan();const s=$('#sheet'),sc=$('#scrim');if(!s)return;s.removeAttribute('id');if(sc)sc.removeAttribute('id');s.classList.remove('open');if(sc)sc.classList.remove('open');document.body.style.overflow='';
+ let gone=false;const rm=()=>{if(gone)return;gone=true;s.remove();if(sc)sc.remove()};s.addEventListener('transitionend',rm,{once:true});setTimeout(rm,500)}
+
+// ---------- Barcode scanner: the browser's own detector where it exists (Chrome on Android), otherwise ZXing (Safari) ----------
+const ZX_URL='https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js';
+function loadZX(){if(window.ZXingBrowser)return Promise.resolve();return ZXP=ZXP||new Promise((ok,no)=>{const sc=document.createElement('script');sc.src=ZX_URL;sc.onload=ok;sc.onerror=()=>{ZXP=null;no(new Error('load'))};document.head.appendChild(sc)})}
+function stopScan(){scanTok++;if(scanCtl){try{scanCtl.stop()}catch(e){}scanCtl=null}}
+async function startScan(){const box=$('#fscan');if(!box)return;stopScan();const tok=scanTok;
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){box.innerHTML='<p class="warn">This browser cannot use the camera here. Type the barcode instead.</p>';return}
+ box.innerHTML=`<div class="scanbox"><video id="fvid" playsinline muted autoplay></video><i></i></div><p class="m c" id="fscanmsg">Starting the camera…</p><div class="c"><button class="tx" data-a="fscanstop">Cancel</button></div>`;
+ const v=$('#fvid'),say=t=>{const m=$('#fscanmsg');if(m)m.textContent=t},cam={video:{facingMode:{ideal:'environment'}},audio:false};
+ const done=code=>{if(tok!=scanTok)return;stopScan();try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}const i=$('#fbc');if(i)i.value=code;box.innerHTML='';foodBarcode()};
+ try{
+  if(window.BarcodeDetector&&BarcodeDetector.getSupportedFormats){const fm=await BarcodeDetector.getSupportedFormats();
+   if(fm.includes('ean_13')){const st=await navigator.mediaDevices.getUserMedia(cam);if(tok!=scanTok){st.getTracks().forEach(t=>t.stop());return}
+    v.srcObject=st;await v.play();const det=new BarcodeDetector({formats:fm.filter(f=>/ean|upc/.test(f))});let alive=true;scanCtl={stop(){alive=false;st.getTracks().forEach(t=>t.stop())}};say('Point the camera at the barcode.');
+    const tick=async()=>{if(!alive)return;try{const r=await det.detect(v);if(r.length)return done(r[0].rawValue)}catch(e){}setTimeout(tick,150)};tick();return}}
+  say('Loading the scanner…');await loadZX();if(tok!=scanTok)return;
+  const rd=new ZXingBrowser.BrowserMultiFormatOneDReader(),c=await rd.decodeFromConstraints(cam,v,res=>{if(res)done(res.getText())});
+  if(tok!=scanTok){c.stop();return}scanCtl=c;say('Point the camera at the barcode. Hold it steady and fill the frame.')
+ }catch(e){if(tok!=scanTok)return;stopScan();box.innerHTML=`<p class="warn">${e&&e.name=='NotAllowedError'?'Camera access was blocked. In Safari, tap aA in the address bar, then Website Settings, and allow the camera. Or type the barcode below.':e&&e.message=='load'?'Could not load the scanner. Check your connection, or type the barcode below.':'Could not start the camera. Type the barcode below instead.'}</p>`}}
 // ---------- Plan ----------
 const restFree=()=>[0,1,2,3,4,5,6].some(i=>!U.wd[i]&&!U.cardio.some(c=>c.days.includes(i)));
 function daysCard(){return`<div class="fl"><span>Lifting days</span><em>keep at least one full rest day</em></div><div class="chips7">${ORD.map(i=>`<button class="dchip${U.wd[i]?' on':''}" data-wd="${i}">${NM[i]}</button>`).join('')}</div>
@@ -974,20 +1052,26 @@ function meV(fromScrub=false){const s=U.set;
  <div style="margin-top:10px"><button class="tx" data-a="reset">Erase my logged data</button></div>
  <div class="fld"><div class="fl"><span>Delete account</span><em>removes the account and all its data</em></div><input type="password" id="dpw" placeholder="Enter your password" autocomplete="current-password"><button class="btn danger" data-a="delacct" style="margin-top:10px">Delete account</button></div></div>`,fromScrub)}
 
-function render(fromScrub=false){if(booting)return loadV();if(bootErr)return errV();if(!U)return authV();if(!U.ready)return setupV();if(sub=='form')return formV();if(sub=='fadd')return faddV();if(sub=='famt'&&fsel)return famtV();({day:dayV,food:foodV,plan:planV,prog:progV,me:meV})[tab](fromScrub)}
+const baseV=fs=>({day:dayV,food:foodV,plan:planV,prog:progV,me:meV})[tab](fs);
+function render(fromScrub=false){const sv=!booting&&!bootErr&&U&&U.ready?(sub=='form'?formV:sub=='fadd'?faddV:sub=='famt'&&fsel?famtV:null):null;
+ if(!sv)closeSheet();if(booting)return loadV();if(bootErr)return errV();if(!U)return authV();if(!U.ready)return setupV();
+ if(sv){if(!$('.view-stage')||renderedTab!==tab)baseV(false);return sv()}
+ baseV(fromScrub)}
 
 // ---------- Events ----------
 function addCardio(t){const days=[6,0,3,2,4,5,1];for(const i of days){const c={type:t,n:1,days:[i]};U.cardio.push(c);if(restFree())return true;U.cardio.pop()}return false}
-document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(Date.now()<suppressClickUntil)return;const D=b.dataset;
+document.addEventListener('click',e=>{if(e.target.id=='scrim'){sub=null;fsel=null;fedit=null;fa=null;return render()}const b=e.target.closest('button')||e.target.closest('[data-fadd]');if(!b)return;if(Date.now()<suppressClickUntil)return;const D=b.dataset;
  if(D.tab){switchTab(D.tab,false);return}
  if(D.day){const old=vd;vd=D.day;pickP=null;stripAnimDir=tab=='day'?Math.sign(monN(vd)-monN(old)):0;tab='day';sub=null;swapP=null;es=null;wcarry=null;rmP=null;return render()}
  if(D.fday){vd=D.fday;return render()}
  if(D.fadd){fmeal=D.fadd;sub='fadd';fres=null;ferr='';fq='';qmsg='';return render()}
  if(D.fm){fmeal=D.fm;document.querySelectorAll('[data-fm]').forEach(x=>x.classList.toggle('on',x.dataset.fm==fmeal));const qb=document.querySelector('[data-a=fqsave]');if(qb)qb.textContent='Add to '+MEALS.find(m=>m[0]==fmeal)[1];return}
- if(D.fshop!=null){fshop=D.fshop;document.querySelectorAll('[data-fshop]').forEach(x=>x.classList.toggle('on',x.dataset.fshop==fshop));const q=$('#fq');if(q&&q.value.trim())foodSearch();return}
+ if(D.fshop!=null){fshop=D.fshop;document.querySelectorAll('[data-fshop]').forEach(x=>x.classList.toggle('on',x.dataset.fshop==fshop));const q=$('#fq'),qv=q?q.value.trim():'';if(fall&&qv&&qv==fq){applyShop();fresUpd()}else if(qv)foodSearch();return}
+ if(D.fq){const v=+D.fq,i=$('#famt');if(i)i.value=v;famt=v;famtUpd();return}
+ if(D.frq){const it=(U.frec||[])[+D.frq];if(it){fsel=Object.assign({},it);fu=it.lu;fedit=null;saveFood(it.lq||1)}return}
  if(D.fpick){const[src,i]=D.fpick.split('|'),it=(src=='r'?fres:U.frec||[])[+i];if(it)pickFood(it);return}
  if(D.fe){const e=foodOf(vd).find(x=>x.i==D.fe);if(e){fsel=Object.assign({},e);fedit=e.i;fu=e.u;famt=e.q;fmeal=e.m;sub='famt';render()}return}
- if(D.fu){const q=parseFloat(($('#famt')||{}).value),g=(isNaN(q)?famt:q)*unitG(fsel,fu);fu=D.fu;famt=r1(g/unitG(fsel,fu));return render()}
+ if(D.fu){fu=D.fu;famt=({g:100,ml:250,oz:4})[fu]||1;return render()}
  if(D.axn){axn=+D.axn;const sel=$('#axp');if(sel)axp=sel.value;return renderAdd()}
  if(D.cxt){readCust();cdraft.b=D.cxt=='b';return renderAdd()}
  if(D.ws){wsel=D.ws;smsg='';return render()}
@@ -1015,6 +1099,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  else if(a=='fpback'){sub='fadd';render()}
  else if(a=='fclose'){sub=null;fedit=null;fsel=null;render()}
  else if(a=='fsearch')foodSearch();
+ else if(a=='fshopq')foodSearch(true);
+ else if(a=='fscan')startScan();
+ else if(a=='fscanstop'){stopScan();const fb=$('#fscan');if(fb)fb.innerHTML=''}
  else if(a=='fbar')foodBarcode();
  else if(a=='fqa'){fqa=!fqa;const q=$('#fq');if(q)fq=q.value;render()}
  else if(a=='fsave')saveFood();
@@ -1067,7 +1154,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  else if(a=='out')logout();
  else if(a=='reset'&&confirm('Erase all your logged data? Your account stays.')){U=newU();save();tab='plan';vd=TODAY;addOpen=false;rmP=null;render()}});
 function addDay(c){for(const i of [6,0,3,2,4,5,1]){c.days=[i];if(restFree())return true}c.days=[];return false}
-function famtUpd(){const p=$('#fprev'),l=$('#ful'),q=parseFloat(($('#famt')||{}).value);if(p)p.innerHTML=fprevH();if(l&&fsel)l.textContent=unitL(fsel,fu,isNaN(q)?famt:q)}
+function famtUpd(){const p=$('#fprev'),l=$('#ful'),q=parseFloat(($('#famt')||{}).value),a=isNaN(q)?famt:q;if(p)p.innerHTML=fprevH();if(l&&fsel)l.textContent=fu=='100g'?`× 100 g = ${r1(a*100)} ${fsel.liq?'ml':'g'}`:unitL(fsel,fu,a);document.querySelectorAll('[data-fq]').forEach(x=>x.classList.toggle('on',+x.dataset.fq==a))}
 document.addEventListener('input',e=>{const t=e.target;if(t.id=='famt')famtUpd();if(t.dataset&&t.dataset.p)document.querySelectorAll('[data-p="'+t.dataset.p+'"]').forEach(x=>{if(x!==t)x.value=t.value})});
 document.addEventListener('change',e=>{const t=e.target,d=t.dataset,i=t.id,v=parseFloat(t.value);
  if(d.lift){lift=t.value;render()}

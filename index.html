@@ -243,7 +243,9 @@ const gd=d=>U.days[d]||{},sd=(d,o)=>{U.days[d]=Object.assign(U.days[d]||{},o);sa
 
 // ---------- Schedule and progression ----------
 const isW=d=>U.ov[d]?U.ov[d]=='work':!!U.wd[pd(d).getDay()];
-const cdue=d=>d<U.start?[]:U.cardio.filter(c=>c.days.includes(pd(d).getDay()));
+const crmOf=d=>(U.dex&&U.dex[d]&&U.dex[d].crm)||[];
+const cdue=d=>d<U.start?[]:U.cardio.filter(c=>c.days.includes(pd(d).getDay())&&!crmOf(d).includes(c.type));
+const cdueAll=d=>d<U.start?[]:U.cardio.filter(c=>c.days.includes(pd(d).getDay()));
 function plan(d){if(d<U.start||!isW(d))return null;let k=0;for(let x=dn(U.start);x<dn(d);x++)if(isW(fromN(x)))k++;return SPLIT[k%SPLIT.length]}
 const avail=p=>{const a=lad(p).map((e,i)=>({e,i})),r=a.filter(x=>x.e.eq=='bw'||x.e.eq=='cu'||U.eq[x.e.eq]);return r.length?r:a};
 // Training style: calisthenics exercises have no per-kg start ratio (bodyweight, or weighted dips and pull-ups).
@@ -645,13 +647,15 @@ function authV(){renderedTab=null;$('#app').innerHTML=`<div class="auth"><div cl
 // ---------- Today ----------
 function target(){const c=calc(),ph=phaseAt(vd),gp=U.goal?goalPlan():null,maint=c.maint||2700,delta=ph?ph.kcal:(gp&&gp.ok&&dn(vd)>=dn(U.start)?0:330);
  const lg=dayActs().reduce((t,a)=>t+am(a).kcal,0),burn=lg||cardioBurn(vd);
- let kc=maint+delta+burn*U.set.actAdd;if(!plan(vd)&&!burn)kc-=100;kc=Math.round(kc/10)*10;
+ const sets=dayList(vd).reduce((t,e)=>t+e[1],0),liftK=sets*.08*bw()-100,cardK=burn*U.set.actAdd;
+ // Lifting: about 0.08 kcal per kg bodyweight per set, against a rest-day drop of 100 kcal (a typical 16-set workout comes out near 0).
+ let kc=maint+delta+cardK+liftK;kc=Math.round(kc/10)*10;
  const w=bw(),pr=Math.round((ph&&ph.t=='cut'?2.2:2)*w),fat=Math.round(.9*w);
- return{kc,pr,fat,carb:Math.max(0,Math.round((kc-pr*4-fat*9)/4)),src:c.src,ph,delta,maint}}
+ return{kc,pr,fat,carb:Math.max(0,Math.round((kc-pr*4-fat*9)/4)),src:c.src,ph,delta,maint,sets,liftK,cardK,lg}}
 function fuelH(){const g=target(),n=dn(vd)-dn(U.start);
  const st=g.ph?`<span class="stage">${cap(g.ph.t)} stage · week ${Math.floor((n-g.ph.s)/7)+1} of ${Math.ceil((g.ph.e-g.ph.s)/7)}</span>`:'';
- return`${st}<div class="eyebrow">Eat today</div><div class="fuel"><b>${g.kc}</b><span>kcal</span></div><div class="macros"><div><b>${g.pr} g</b><span>Protein</span></div><div><b>${g.carb} g</b><span>Carbs</span></div><div><b>${g.fat} g</b><span>Fat</span></div></div><p class="m">Maintenance ${Math.round(g.maint)} (from ${g.src}) ${g.delta>=0?'+':'−'} ${Math.abs(Math.round(g.delta))} for ${g.ph?'your '+g.ph.t+' stage':U.goal?'holding your weight':'a lean gain of about 0.3 kg a week'}.${U.base.h?'':' Add your baseline in Me for a personal figure.'}</p>`}
-function cardioH(){return cdue(vd).map(c=>{const x=cardioRx(c,vd);return`<div class="card"><div class="eyebrow">${esc(c.type)}</div><h3>${x.n}</h3><p class="rx">${rxText(x)}</p><div class="tags">${x.spm?`<span>Rate ${x.spm}</span>`:''}<span>RPE ${x.rpe}</span><span>about ${Math.round(x.kcal)} kcal</span></div><p class="m">${x.d}${x.why?' '+x.why:''}</p>${c.type=='Rowing erg'&&!x.sp?'<p class="m">There is no pace on record yet. Row by feel and log your splits, and paces appear from next week. A rough 2k split in Plan sets them now.</p>':''}<button class="btn" data-a="rxlog" data-c="${esc(c.type)}">Log this session</button></div>`}).join('')}
+ return`${st}<div class="eyebrow">Eat today</div><div class="fuel"><b>${g.kc}</b><span>kcal</span></div><div class="macros"><div><b>${g.pr} g</b><span>Protein</span></div><div><b>${g.carb} g</b><span>Carbs</span></div><div><b>${g.fat} g</b><span>Fat</span></div></div><p class="m">Maintenance ${Math.round(g.maint)} (from ${g.src}) ${g.delta>=0?'+':'−'} ${Math.abs(Math.round(g.delta))} for ${g.ph?'your '+g.ph.t+' stage':U.goal?'holding your weight':'a lean gain of about 0.3 kg a week'}.${U.base.h?'':' Add your baseline in Me for a personal figure.'}</p><p class="m">Training today: ${g.sets?`lifting ${g.sets} sets ${g.liftK>=0?'+':'−'} ${Math.abs(Math.round(g.liftK))}`:'no lifting − 100'}${g.cardK?`, ${g.lg?'logged':'planned'} cardio + ${Math.round(g.cardK)}`:''} kcal. This updates when you add or remove exercises or cardio.</p>`}
+function cardioH(){return cdue(vd).map(c=>{const x=cardioRx(c,vd);return`<div class="card"><div class="eyebrow">${esc(c.type)}</div><h3>${x.n}</h3><p class="rx">${rxText(x)}</p><div class="tags">${x.spm?`<span>Rate ${x.spm}</span>`:''}<span>RPE ${x.rpe}</span><span>about ${Math.round(x.kcal)} kcal</span></div><p class="m">${x.d}${x.why?' '+x.why:''}</p>${c.type=='Rowing erg'&&!x.sp?'<p class="m">There is no pace on record yet. Row by feel and log your splits, and paces appear from next week. A rough 2k split in Plan sets them now.</p>':''}<button class="btn" data-a="rxlog" data-c="${esc(c.type)}">Log this session</button><button class="tx" data-a="crm" data-c="${esc(c.type)}">Remove from today</button></div>`}).join('')+crmOf(vd).filter(t=>cdueAll(vd).some(c=>c.type==t)).map(t=>`<p class="m">${esc(t)} removed from today. <button class="tx" data-a="cadd" data-c="${esc(t)}" style="color:var(--ink)">Put it back</button></p>`).join('')}
 // ---------- Session clock: starts with the first set logged today and stops after the last one ----------
 function clkReset(){if(!U.sets.some(x=>x.d==vd)&&U.days[vd])delete U.days[vd].st}
 const hms=ms=>{const t=Math.max(0,Math.floor(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t/60)%60;return(h?h+':'+z(m):m)+':'+z(t%60)};
@@ -912,6 +916,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  const a=D.a;
  if(a=='auth')auth();else if(a=='forgot')forgot();else if(a=='retry')location.reload();
  else if(a=='log')logSet(D.p,+D.ns);else if(a=='swap'){swapP=swapP==D.p?null:D.p;rmP=null;wk()}
+ else if(a=='crm'){const x=dex(vd);x.crm=x.crm||[];if(!x.crm.includes(D.c))x.crm.push(D.c);save();render()}
+ else if(a=='cadd'){const x=dex(vd);x.crm=(x.crm||[]).filter(t=>t!=D.c);save();render()}
  else if(a=='donow'){pickP=D.p;es=null;wcarry=null;swapP=null;rmP=null;wk();const c=document.querySelector('.ex.act');if(c&&c.scrollIntoView)c.scrollIntoView({behavior:'smooth',block:'start'})}
  else if(a=='rmex'){rmP=rmP==D.p?null:D.p;swapP=null;wk()}
  else if(a=='rmcancel'){rmP=null;wk()}

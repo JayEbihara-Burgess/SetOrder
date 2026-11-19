@@ -110,6 +110,7 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{padding:9px 4px
 .mealc{cursor:pointer;transition:transform .15s ease}.mealc:active{transform:scale(.985)}
 .mplus{width:28px;height:28px;border-radius:50%;background:var(--acc);color:var(--on);display:grid;place-items:center}.mplus .ic{width:16px;height:16px}
 .frow{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}.frow .rowsw{flex:1;min-width:0;border-bottom:0}.frow .dchip{flex:none;padding:9px 12px;font-size:.8rem}.fplus{flex:none;white-space:nowrap;padding:9px 12px!important;font-size:.8rem;background:var(--acc)!important;color:var(--on)!important}
+.formula{font:600 1.02rem/1.5 ui-serif,Georgia,serif;background:var(--soft);border-radius:14px;padding:12px 14px;margin:10px 0 6px;text-align:center;letter-spacing:.01em}
 .ck{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--line);flex:none;margin-right:10px}.ck.on{background:var(--acc);box-shadow:inset 0 0 0 2px var(--ink)}
 .selbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(94px + env(safe-area-inset-bottom,0px));width:min(calc(100% - 28px),420px);background:var(--ink);color:var(--bg);border-radius:20px;padding:10px 10px 10px 18px;display:flex;align-items:center;gap:12px;z-index:6;box-shadow:0 10px 26px rgba(0,0,0,.25)}.selbar span{flex:1;font-weight:700;font-size:.9rem}.selbar .btn{width:auto;margin:0;padding:10px 16px}.selbar .btn:disabled{opacity:.4}
 .scanbox{position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-top:10px}.scanbox video{width:100%;height:100%;object-fit:cover;display:block}.scanbox i{position:absolute;left:10%;right:10%;top:50%;height:2px;background:var(--acc);box-shadow:0 0 14px var(--acc)}
@@ -182,7 +183,7 @@ const mmss=s=>{if(s==null)return'–';const r=Math.round(s);return Math.floor(r/
 const fdate=(d,o)=>pd(d).toLocaleDateString('en-GB',o);
 const IC=p=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
 const I={food:IC('<path d="M7 3v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3M9 12v9M17 21V3c-2.5 1-4 3.5-4 7v3h4"/>'),today:IC('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),plan:IC('<rect x="4" y="5" width="16" height="15" rx="3.5"/><path d="M4 10h16M9 3v4M15 3v4"/>'),prog:IC('<path d="M4 18l5-6 4 3 7-9"/><path d="M15 6h5v5"/>'),me:IC('<circle cx="12" cy="9" r="4"/><path d="M4.5 20c1.5-4 5-5 7.5-5s6 1 7.5 5"/>'),left:IC('<path d="M15 5l-7 7 7 7"/>'),right:IC('<path d="M9 5l7 7-7 7"/>'),minus:IC('<path d="M6 12h12"/>'),plus:IC('<path d="M12 6v12M6 12h12"/>'),down:IC('<path d="M6 9l6 6 6-6"/>'),up:IC('<path d="M12 19V5M6 11l6-6 6 6"/>')};
-let U=null,user=null,tab='day',renderedTab=null,pillAnim=null,slideCleanup=null,vd=TODAY,stripAnimDir=0,sub=null,editId=null,swapP=null,mode='login',msg='',un='',rest=null,AC=null,fa=null,draft=null,wmsg='',gmsg='',gok=false,swmsg='',es=null,wcarry=null,lift=null,amsg='',aok=false,booting=true,bootErr='',dname='',email='',pendingName='',msgok=false,dirty=false,pt=null,syncMsg='',folds={cal:false,wt:false,ses:false},rmP=null,pickP=null,addOpen=false,custOpen=false,axn=3,axp=null,cdraft={},cmsg='',wsel=null,smsg='';
+let U=null,user=null,tab='day',renderedTab=null,pillAnim=null,slideCleanup=null,vd=TODAY,stripAnimDir=0,sub=null,editId=null,swapP=null,mode='login',msg='',un='',rest=null,AC=null,fa=null,draft=null,wmsg='',gmsg='',gok=false,swmsg='',es=null,wcarry=null,lift=null,amsg='',aok=false,booting=true,bootErr='',dname='',email='',pendingName='',msgok=false,dirty=false,pt=null,syncMsg='',folds={cal:false,wt:false,ses:false,em:false},rmP=null,pickP=null,addOpen=false,custOpen=false,axn=3,axp=null,cdraft={},cmsg='',wsel=null,smsg='';
 
 // ---------- Accounts (Firebase Auth + Firestore cloud save) ----------
 const lsg=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},lss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
@@ -292,7 +293,96 @@ function reg(P,min){const n=P.length;if(n<min)return null;const xb=avg(P.map(p=>
 const tq=df=>1.96+2.37/df+2.8/df/df;
 function pred(r,x){const t=tq(r.n-2),m=r.a+r.b*x,se=r.s*Math.sqrt(1+1/r.n+(x-r.xb)**2/r.Sxx);return[m,m-t*se,m+t*se]}
 const wpts=()=>Object.keys(U.days).filter(k=>U.days[k].w!=null&&dn(k)>dn(TODAY)-56).sort().map(k=>[dn(k),U.days[k].w]);
-function calc(){const P=wpts(),r=reg(P,6),ks=Object.keys(U.days).filter(k=>U.days[k].kcal!=null&&dn(k)>dn(TODAY)-14),kc=avg(ks.map(k=>U.days[k].kcal)),tdee=r&&ks.length>=5?kc-r.b*7700:null,B=base();return{r,kc,kn:ks.length,tdee,maint:tdee||(B?B.tdee:null),src:tdee?'your logged data':B?'your baseline':'a default estimate'}}
+function calc(){const P=wpts(),r=reg(P,6),M=emodel(),ks=Object.keys(U.days).filter(k=>U.days[k].kcal!=null&&dn(k)>dn(TODAY)-14),kc=avg(ks.map(k=>U.days[k].kcal)),old=r&&ks.length>=5?kc-r.b*7700:null,useM=M.ok&&M.Teat>1200&&M.Teat<6000,tdee=useM?M.Teat:old,B=base();
+ return{r,M,useM,kc,kn:ks.length,tdee,maint:tdee||(B?B.tdee:null),src:useM?'your food and weight logs':old?'your logged data':B?'your baseline':'a default estimate'}}
+// ---------- Energy-balance model: weight explained by what you eat ----------
+// w(t) = w0 + [N(t) − T·t] / rho + e
+//   w(t)  scale weight on day t (kg), t = days since the window started
+//   N(t)  net calories eaten before day t: food energy minus what digesting it costs
+//         net per day = 3.0·protein g + 3.7·carbs g + 8.775·fat g + 0.9·(other kcal: alcohol, fibre, rounding)
+//   T     net maintenance, kcal per day (the unknown)
+//   rho   kcal stored or released per kg of weight change = p·1816 + (1 − p)·9440
+//   p     lean share of a weight change (Forbes 10.4/(10.4 + fat kg), scaled for protein and lifting)
+//   e     water and gut noise
+// Rearranged, y = w − N/rho = w0 − (T/rho)·t, a straight line fitted by weighted least squares
+// (weight 0.5^(age in days / 14)), so T = −rho × slope.
+const EM={days:56,half:14,rhoL:1816,rhoF:9440,forbes:10.4,minW:8,minSpan:14,minCover:.6};
+function dayIntake(d){const L=foodOf(d),D=U.days[d]||{};
+ if(L.length){const t=dayFood(d);return{I:t.k,P:t.p,C:t.cb,F:t.f,N:3*t.p+3.7*t.cb+8.775*t.f+.9*(t.k-4*t.p-4*t.cb-9*t.f),full:1}}
+ if(D.kcal!=null){const P=D.p!=null?D.p:.15*D.kcal/4;return{I:D.kcal,P,C:null,F:null,N:3*P+.95*(D.kcal-4*P),full:0}}
+ return null}
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function leanShare(F,pk,spw){const pf=EM.forbes/(EM.forbes+F),lift=spw>=2;
+ return{s:clamp(pf*Math.min(1,pk/1.6)*(lift?1.3:.8),0,.6),d:clamp(pf*(pk>=1.6?.6:1)*(lift?.8:1),.05,.6),pf}}
+const rhoOf=p=>p*EM.rhoL+(1-p)*EM.rhoF;
+function wls(P,half){const tl=Math.max(...P.map(p=>p[0]));let w=P.map(p=>Math.pow(.5,(tl-p[0])/half));const sw=w.reduce((a,b)=>a+b,0),sw2=w.reduce((a,b)=>a+b*b,0),ne=sw*sw/sw2;w=w.map(x=>x*ne/sw);
+ const xb=P.reduce((a,p,i)=>a+w[i]*p[0],0)/ne,yb=P.reduce((a,p,i)=>a+w[i]*p[1],0)/ne;let Sxx=0,Sxy=0;P.forEach((p,i)=>{Sxx+=w[i]*(p[0]-xb)**2;Sxy+=w[i]*(p[0]-xb)*(p[1]-yb)});
+ const b=Sxy/Sxx,a=yb-b*xb;let rss=0;P.forEach((p,i)=>rss+=w[i]*(p[1]-a-b*p[0])**2);const s2=rss/Math.max(ne-2,1);return{a,b,s:Math.sqrt(s2),seb:Math.sqrt(s2/Sxx),Sxx,xb,ne,n:P.length}}
+function emodel(){const t1=dn(TODAY),t0=t1-EM.days+1,W=[],ins=[];
+ for(let x=t0;x<=t1;x++){const D=U.days[fromN(x)]||{};ins.push(dayIntake(fromN(x)));if(D.w!=null)W.push([x-t0,D.w])}
+ if(W.length<EM.minW)return{ok:0,why:`${W.length} of ${EM.minW} weigh-ins`};
+ const s0=W[0][0],sL=W[W.length-1][0],span=sL-s0;if(span<EM.minSpan)return{ok:0,why:`weigh-ins span ${span} of ${EM.minSpan} days`};
+ const win=ins.slice(s0,sL),lg=win.filter(Boolean),cover=lg.length/Math.max(1,win.length);
+ if(lg.length<7||cover<EM.minCover)return{ok:0,why:`food logged on ${Math.round(cover*100)}% of days between weigh-ins (needs ${EM.minCover*100}%)`};
+ const all=ins.filter(Boolean),mN=avg(all.map(x=>x.N)),mI=avg(all.map(x=>x.I)),ratio=all.reduce((a,x)=>a+x.I,0)/all.reduce((a,x)=>a+x.N,0);
+ const Nd=ins.map(x=>x?x.N:mN),Nc=[0];Nd.forEach((v,i)=>Nc.push(Nc[i]+v));   // Nc[k] = net kcal eaten before day k; unlogged days use the average
+ const wNow=W[W.length-1][1],bf=(U.base.bf??15),Fkg=wNow*bf/100,recent=ins.slice(-14).filter(Boolean),R=recent.length?recent:all;
+ const pk=avg(R.map(x=>x.P))/wNow,spw=new Set(U.sets.filter(x=>dn(x.d)>t1-28).map(x=>x.d)).size/4,ls=leanShare(Fkg,pk,spw);
+ const fit=rho=>{const r=wls(W.map(([t,w])=>[t,w-Nc[t]/rho]),EM.half);return Object.assign(r,{rho,T:-rho*r.b,seT:rho*r.seb})};
+ const simple=reg(W,3);let dir=simple&&simple.b>0?'s':'d',m=fit(rhoOf(ls[dir]));const dir2=mN>m.T?'s':'d';if(dir2!=dir){dir=dir2;m=fit(rhoOf(ls[dir]))}
+ const p=ls[dir],k1=t1-t0,wHat=m.a+m.b*k1+Nc[k1]/m.rho;
+ // How noisy the scale is around the model, in kg, and how much of the weight swing the model explains
+ const res=W.map(([t,w])=>w-(m.a+m.b*t+Nc[t]/m.rho)),wm=avg(W.map(x=>x[1])),sst=W.reduce((a,x)=>a+(x[1]-wm)**2,0),r2=sst>0?1-res.reduce((a,x)=>a+x*x,0)/sst:null;
+ const rI=avg(R.map(x=>x.I)),rN=avg(R.map(x=>x.N)),rP=avg(R.map(x=>x.P)),fR=R.filter(x=>x.full),rC=fR.length?avg(fR.map(x=>x.C)):null,rF=fR.length?avg(fR.map(x=>x.F)):null;
+ return{ok:1,t0,W,Nc,ins,a:m.a,b:m.b,T:m.T,seT:m.seT,rho:m.rho,s:m.s,ne:m.ne,n:W.length,span,cover,ratio,Teat:m.T*ratio,seTeat:m.seT*ratio,
+  p,dir,ls,Fkg,bf,pk,spw,wHat,wNow,r2,mI,mN,rI,rN,rP,rC,rF,rn:R.length}}
+// Expected change over h days if net intake is n per day: total, lean and fat, with a 95% range.
+// Muscle gain is also capped by training experience (the goal planner's monthly rate); surplus beyond the cap is stored as fat.
+const leanCap=M=>{const x=U.base.exp||1;return M.wNow*(x<.9?.010:x<1.1?.006:.003)*12/365};
+function emProj(M,n,h){const bal=n-M.T,p=bal>=0?M.ls.s:M.ls.d,rho=rhoOf(p),E=h*bal;let lean=p*E/rho,fat=(1-p)*E/rho,capped=false;
+ if(bal>0&&lean>leanCap(M)*h){lean=leanCap(M)*h;fat=(E-lean*EM.rhoL)/EM.rhoF;capped=true}
+ const dw=lean+fat,sd=Math.sqrt((h*M.seT/rho)**2+M.s**2);return{dw,lean,fat,lo:dw-1.96*sd,hi:dw+1.96*sd,p,rho,bal,capped}}
+// Day-to-day calorie change the plan asks for (stage surplus or deficit), as used for the daily target.
+function planDelta(d){const ph=phaseAt(d),gp=U.goal?goalPlan():null;return ph?ph.kcal:(gp&&gp.ok&&dn(d)>=dn(U.start)?0:330)}
+function emChart(M,h,nA,nB){const W=700,H=230,q=30,x0=M.t0,tl=dn(TODAY),x1=tl+h,P=M.W.map(([t,w])=>[x0+t,w]);
+ const fitL=[];for(let t=M.W[0][0];t<=tl-x0;t++)fitL.push([x0+t,M.a+M.b*t+M.Nc[t]/M.rho]);
+ const fc=(n,k)=>{const e=emProj(M,n,k);return[M.wHat+e.dw,M.wHat+e.lo,M.wHat+e.hi]},xs=[];for(let i=0;i<=20;i++)xs.push(tl+h*i/20);
+ const A=xs.map(x=>fc(nA,x-tl)),B=nB!=null?xs.map(x=>fc(nB,x-tl)[0]):null;
+ const ys=[...P.map(p=>p[1]),...fitL.map(p=>p[1]),...A.flat(),...(B||[])],mn=Math.floor(Math.min(...ys)),mx=Math.ceil(Math.max(...ys)),st=Math.max(1,Math.ceil((mx-mn)/6));
+ const X=x=>q+(x-P[0][0])*(W-2*q)/Math.max(1,x1-P[0][0]),Y=y=>H-q-(y-mn)*(H-2*q)/Math.max(1,mx-mn);let g='';
+ for(let v=mn;v<=mx;v+=st)g+=`<line x1="${q}" x2="${W-q}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="2" y="${Y(v)+4}" font-size="11" fill="var(--mute)">${v}</text>`;
+ const band=xs.map((x,i)=>X(x)+','+Y(A[i][2])).concat(xs.map((x,i)=>X(x)+','+Y(A[i][1])).reverse()).join(' ');
+ const ln=(pts,extra)=>`<path d="${pts.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join('')}" fill="none" ${extra}/>`;
+ return`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight explained by food, with forecast">${g}<line x1="${X(tl)}" x2="${X(tl)}" y1="${q-10}" y2="${H-q}" stroke="var(--mute)" stroke-dasharray="3 4"/><polygon points="${band}" fill="var(--acc)" opacity=".45"/>${ln(fitL,'stroke="var(--mute)" stroke-width="2"')}${ln(xs.map((x,i)=>[x,A[i][0]]),'stroke="var(--ink)" stroke-width="2.5"')}${B?ln(xs.map((x,i)=>[x,B[i]]),'stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 5"'):''}${P.map(p=>`<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="3" fill="var(--ink)"/>`).join('')}</svg>`}
+function emCard(M,horizon){const kc=x=>Math.round(x).toLocaleString('en-GB'),sg=x=>(x>=0?'+':'−')+f(Math.abs(x),1),h=horizon;
+ const nTarget=(M.Teat+planDelta(TODAY))/M.ratio,A=emProj(M,M.rN,h),B=emProj(M,nTarget,h),wk=Math.round(h/7);
+ const split=e=>`${sg(e.dw)} kg (${sg(e.lean)} lean, ${sg(e.fat)} fat)`;
+ return`<div class="card"><div class="eyebrow">Weight, explained by your food</div>${emChart(M,h,M.rN,nTarget)}
+ <p class="m" style="margin-top:6px">Dots are weigh-ins. Grey is the model's fit to your food log. Solid is your recent eating, with the 95% range shaded. Dashed is eating to your target.</p>
+ <h3 style="margin-top:12px">In ${wk} weeks at your recent eating: ${split(A)}</h3>
+ <p class="m">Recent average ${kc(M.rI)} kcal, ${Math.round(M.rP)} g protein${M.rC!=null?`, ${Math.round(M.rC)} g carbs, ${Math.round(M.rF)} g fat`:''} over ${M.rn} logged days. 95% range ${sg(A.lo)} to ${sg(A.hi)} kg.</p>
+ <h3 style="margin-top:12px">At your target (${kc(M.Teat+planDelta(TODAY))} kcal a day): ${split(B)}</h3>
+ <p class="m">The lean and fat split assumes ${Math.round((A.bal>=0?M.ls.s:M.ls.d)*100)}% of a ${A.bal>=0?'gain':'loss'} is lean, from your body fat, protein (${f(M.pk,1)} g per kg) and lifting (${f(M.spw,1)} sessions a week). ${A.capped||B.capped?` Muscle gain is capped at ${f(leanCap(M)*30.4,2)} kg a month for your experience level, so extra surplus counts as fat.`:''} It is an estimate, not a measurement.</p>
+ <button class="fold-hd" data-fold="em" aria-expanded="${!!folds.em}" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px"><div class="eyebrow" style="margin:0">The model and its variables</div><span class="fold-meta">${folds.em?'Hide':'Show'}${I.down.replace('class="ic"','class="ic'+(folds.em?' open':'')+'"')}</span></button>
+ ${folds.em?`<div class="fold-body"><div class="formula">w(t) = w₀ + [N(t) − T·t] ÷ ρ + ε</div>
+ <p class="m">Rearranged as a straight line, w − N/ρ = w₀ − (T/ρ)·t, and fitted by weighted least squares so recent days count more. Then T = −ρ × slope.</p>
+ <div class="kv">
+ <div><span>w(t) weight on day t</span><b>${M.n} weigh-ins over ${M.span} days</b></div>
+ <div><span>w₀ starting weight (fitted)</span><b>${f(M.a+M.Nc[M.W[0][0]]/M.rho+M.b*M.W[0][0],1)} kg</b></div>
+ <div><span>N(t) net calories eaten before day t</span><b>food on ${Math.round(M.cover*100)}% of days</b></div>
+ <div><span>net kcal per day</span><b>3.0·P + 3.7·C + 8.8·F + 0.9·other</b></div>
+ <div><span>T maintenance (net)</span><b>${kc(M.T)} ± ${kc(1.96*M.seT)} kcal</b></div>
+ <div><span>T maintenance (as eaten)</span><b>${kc(M.Teat)} ± ${kc(1.96*M.seTeat)} kcal</b></div>
+ <div><span>ρ energy per kg of change</span><b>${kc(M.rho)} kcal/kg</b></div>
+ <div><span>p lean share (gain / loss)</span><b>${Math.round(M.ls.s*100)}% / ${Math.round(M.ls.d*100)}%</b></div>
+ <div><span>F fat mass (${f(M.bf,1)}% of ${f(M.wNow,1)} kg)</span><b>${f(M.Fkg,1)} kg</b></div>
+ <div><span>Forbes share 10.4 ÷ (10.4 + F)</span><b>${Math.round(M.ls.pf*100)}%</b></div>
+ <div><span>ε scale noise (1 s.d.)</span><b>±${f(M.s,2)} kg</b></div>
+ <div><span>R² share of weight swings explained</span><b>${M.r2==null?'–':f(M.r2,2)}</b></div>
+ <div><span>weights ωᵢ</span><b>0.5^(age in days ÷ 14)</b></div></div>
+ <div class="formula" style="margin-top:12px">Δw(h) = h × (N̄ − T) ÷ ρ<br>Δlean = min(p × Δw, h × L<sub>max</sub>), Δfat = rest ÷ 9,440</div>
+ <p class="m">ρ = p × 1,816 + (1 − p) × 9,440 kcal/kg. In a gain, p = Forbes × min(1, protein ÷ 1.6 g/kg) × (1.3 if you lift twice a week or more, else 0.8), capped at 60%. In a loss, p = Forbes × (0.6 if protein ≥ 1.6 g/kg) × (0.8 if you lift), between 5% and 60%. L<sub>max</sub> is ${f(leanCap(M)*30.4,2)} kg of muscle a month at your experience level. Days with no food logged use your average. Forecasts assume your maintenance stays the same, so they get less reliable the further out they go.</p></div>`:''}</div>`}
+
 const sports=()=>U.set.sports.split('\n').map(l=>{const[n,m]=l.split(',');return{n:(n||'').trim(),met:parseFloat(m)||6}}).filter(x=>x.n);
 function am(a){const arr=(a.splits||'').split(/[,\s]+/).filter(Boolean).map(ps).filter(x=>x>0),sp=arr.length?avg(arr):(a.split?ps(a.split):null),w=sp&&a.type=='Rowing erg'?2.8/(sp/500)**3:null;
  const m=sports().find(x=>x.n==a.type),rpe=a.rpe||6,kcal=w?w*a.min*60/4184/.24:(m?m.met:6)*bw()*(a.min/60)*(rpe/6);let drift=null;
@@ -1053,12 +1143,13 @@ function strengthCard(names){if(!names.length)return'';if(!names.includes(lift))
   b=chart(r,xe,P,'Strength trend for '+lift)+`<h3 style="margin-top:10px">${w>=0?'+':''}${f(w,2)} ± ${f(ci,2)} kg a week</h3><p class="m">Estimated 1-rep max, best set each session, with a straight regression line and a 95% range. It reaches about ${f(p[0],0)} kg (${f(p[1],0)} to ${f(p[2],0)}) by ${fdate(fromN(Math.max(xe,dn(TODAY))),{day:'numeric',month:'short'})} if the trend holds. Based on ${r.n} sessions.</p>`}
  return`<div class="card"><div class="eyebrow">Strength trend</div><select data-lift="1" aria-label="Exercise">${names.map(n=>`<option${n==lift?' selected':''}>${esc(n)}</option>`).join('')}</select><div style="height:12px"></div>${b}</div>`}
 function progV(fromScrub=false){const c=calc(),x1=dn(U.goal?U.goal.date:U.date),r=c.r,L=loads(),gp=U.goal?goalPlan():null;let h='<h1 style="margin-bottom:18px">Progress</h1>';
- if(gp&&gp.ok){const n=dn(TODAY)-dn(U.start),pw=planW(gp,n),aw=r?r.a+r.b*dn(TODAY):(wpts().slice(-1)[0]||[0,null])[1],df=aw==null?null:aw-pw;
+ if(gp&&gp.ok){const n=dn(TODAY)-dn(U.start),pw=planW(gp,n),aw=c.M.ok?c.M.wHat:r?r.a+r.b*dn(TODAY):(wpts().slice(-1)[0]||[0,null])[1],df=aw==null?null:aw-pw;
   h+=`<div class="card"><div class="eyebrow">Goal plan</div><h3>${f(gp.wEnd)} kg at ${f(gp.bfEnd,0)}% body fat by ${fdate(gp.tight?gp.earliest:U.goal.date,FD)}</h3><p class="m">Planned weight today ${f(pw)} kg.${df==null?' Log your weight to compare.':Math.abs(df)<.5?' You are on plan.':` You are ${f(Math.abs(df))} kg ${df>0?'above':'below'} plan, so eat about 100 kcal a day ${df>0?'less':'more'} and check again in two weeks.`}</p>${goalTable()}</div>`}
- h+='<div class="card"><div class="eyebrow">Weight</div>';
- if(!r)h+='<p class="m" style="margin-top:0">Log your weight on 6 or more days across at least a week. The forecast is a regression line, so it needs data to fit.</p>';
+ if(c.M.ok)h+=emCard(c.M,28)+'<div class="card"><div class="eyebrow">Weight trend</div><p class="m" style="margin-top:0">The simple trend line below ignores food and only extends the recent slope. The model above is more reliable.</p>';
+ else h+=`<div class="card"><div class="eyebrow">Weight</div><p class="m" style="margin-top:0">To forecast from your food, log food on most days and weigh in at least ${EM.minW} times over ${EM.minSpan} days or more (now: ${c.M.why}). Until then this is a simple trend line.</p>`;
+ if(!r)h+='<p class="m">Log your weight on 6 or more days across at least a week. The forecast is a regression line, so it needs data to fit.</p>';
  else{const w=r.b*7,ci=tq(r.n-2)*r.seb*7,p=pred(r,x1);h+=chart(r,x1,wpts())+`<h3 style="margin-top:10px">${f(p[0])} kg on ${fdate(fromN(x1),{day:'numeric',month:'short'})} if the trend holds</h3><p class="m">95% range ${f(p[1])} to ${f(p[2])} kg. Trend ${w>=0?'+':''}${f(w,2)} ± ${f(ci,2)} kg a week from ${r.n} weigh-ins.</p>`}
- h+='</div><div class="card"><div class="eyebrow">Energy</div>'+(c.tdee?`<h3>${Math.round(c.tdee)} kcal measured maintenance</h3><p class="m">Average intake ${Math.round(c.kc)} kcal over ${c.kn} days, minus weight slope × 7,700 kcal/kg. Your daily target is this plus or minus the stage adjustment.</p>`:`<p class="m" style="margin-top:0">Needs a weight trend plus calories on 5 of the last 14 days. Until then your target uses ${c.src}.</p>`)+'</div>';
+ h+='</div><div class="card"><div class="eyebrow">Energy</div>'+(c.useM?`<h3>${Math.round(c.M.Teat)} ± ${Math.round(1.96*c.M.seTeat)} kcal measured maintenance</h3><p class="m">From the food model: what you ate against how your weight moved, with protein, carbs and fat counted separately. Your daily target is this plus or minus the stage adjustment.</p>`:c.M.ok?`<p class="m" style="margin-top:0">The food model gives ${Math.round(c.M.Teat)} kcal, which looks implausible, so your target uses ${c.src}. Check for days with missing or doubled food entries.</p>`:c.tdee?`<h3>${Math.round(c.tdee)} kcal measured maintenance</h3><p class="m">Average intake ${Math.round(c.kc)} kcal over ${c.kn} days, minus weight slope × 7,700 kcal/kg. Your daily target is this plus or minus the stage adjustment.</p>`:`<p class="m" style="margin-top:0">Needs a weight trend plus calories on 5 of the last 14 days. Until then your target uses ${c.src}.</p>`)+'</div>';
  h+=`<div class="card"><div class="eyebrow">Training load</div><h3>${Math.round(L.ac)} units this week</h3><p class="m">Four-week weekly average ${Math.round(L.ch)}, ratio ${f(L.r,2)}. ${!L.r?'Not enough history yet.':L.r<.8?'Under-loaded: room to add.':L.r<=1.3?'In the sweet spot.':L.r<=1.5?'Climbing fast. Watch recovery.':'A spike. Injury risk is higher, so ease off.'} Gym sets count ${U.set.setAU} units each. Cardio and sport count minutes × effort.</p></div>`;
  const names=[...new Set(U.sets.filter(s=>s.w>0).map(s=>s.ex))];
  h+=strengthCard(names);

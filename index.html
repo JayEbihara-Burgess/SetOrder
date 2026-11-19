@@ -110,7 +110,6 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{padding:9px 4px
 .mealc{cursor:pointer;transition:transform .15s ease}.mealc:active{transform:scale(.985)}
 .mplus{width:28px;height:28px;border-radius:50%;background:var(--acc);color:var(--on);display:grid;place-items:center}.mplus .ic{width:16px;height:16px}
 .frow{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}.frow .rowsw{flex:1;min-width:0;border-bottom:0}.frow .dchip{flex:none;padding:9px 12px;font-size:.8rem}.fplus{flex:none;white-space:nowrap;padding:9px 12px!important;font-size:.8rem;background:var(--acc)!important;color:var(--on)!important}
-.formula{font:600 1.02rem/1.5 ui-serif,Georgia,serif;background:var(--soft);border-radius:14px;padding:12px 14px;margin:10px 0 6px;text-align:center;letter-spacing:.01em}
 .ck{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--line);flex:none;margin-right:10px}.ck.on{background:var(--acc);box-shadow:inset 0 0 0 2px var(--ink)}
 .selbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(94px + env(safe-area-inset-bottom,0px));width:min(calc(100% - 28px),420px);background:var(--ink);color:var(--bg);border-radius:20px;padding:10px 10px 10px 18px;display:flex;align-items:center;gap:12px;z-index:6;box-shadow:0 10px 26px rgba(0,0,0,.25)}.selbar span{flex:1;font-weight:700;font-size:.9rem}.selbar .btn{width:auto;margin:0;padding:10px 16px}.selbar .btn:disabled{opacity:.4}
 .scanbox{position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-top:10px}.scanbox video{width:100%;height:100%;object-fit:cover;display:block}.scanbox i{position:absolute;left:10%;right:10%;top:50%;height:2px;background:var(--acc);box-shadow:0 0 14px var(--acc)}
@@ -183,7 +182,7 @@ const mmss=s=>{if(s==null)return'–';const r=Math.round(s);return Math.floor(r/
 const fdate=(d,o)=>pd(d).toLocaleDateString('en-GB',o);
 const IC=p=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
 const I={food:IC('<path d="M7 3v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3M9 12v9M17 21V3c-2.5 1-4 3.5-4 7v3h4"/>'),today:IC('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),plan:IC('<rect x="4" y="5" width="16" height="15" rx="3.5"/><path d="M4 10h16M9 3v4M15 3v4"/>'),prog:IC('<path d="M4 18l5-6 4 3 7-9"/><path d="M15 6h5v5"/>'),me:IC('<circle cx="12" cy="9" r="4"/><path d="M4.5 20c1.5-4 5-5 7.5-5s6 1 7.5 5"/>'),left:IC('<path d="M15 5l-7 7 7 7"/>'),right:IC('<path d="M9 5l7 7-7 7"/>'),minus:IC('<path d="M6 12h12"/>'),plus:IC('<path d="M12 6v12M6 12h12"/>'),down:IC('<path d="M6 9l6 6 6-6"/>'),up:IC('<path d="M12 19V5M6 11l6-6 6 6"/>')};
-let U=null,user=null,tab='day',renderedTab=null,pillAnim=null,slideCleanup=null,vd=TODAY,stripAnimDir=0,sub=null,editId=null,swapP=null,mode='login',msg='',un='',rest=null,AC=null,fa=null,draft=null,wmsg='',gmsg='',gok=false,swmsg='',es=null,wcarry=null,lift=null,amsg='',aok=false,booting=true,bootErr='',dname='',email='',pendingName='',msgok=false,dirty=false,pt=null,syncMsg='',folds={cal:false,wt:false,ses:false,em:false},rmP=null,pickP=null,addOpen=false,custOpen=false,axn=3,axp=null,cdraft={},cmsg='',wsel=null,smsg='';
+let U=null,user=null,tab='day',renderedTab=null,pillAnim=null,slideCleanup=null,vd=TODAY,stripAnimDir=0,sub=null,editId=null,swapP=null,mode='login',msg='',un='',rest=null,AC=null,fa=null,draft=null,wmsg='',gmsg='',gok=false,swmsg='',es=null,wcarry=null,lift=null,amsg='',aok=false,booting=true,bootErr='',dname='',email='',pendingName='',msgok=false,dirty=false,pt=null,syncMsg='',folds={cal:false,wt:false,ses:false},rmP=null,pickP=null,addOpen=false,custOpen=false,axn=3,axp=null,cdraft={},cmsg='',wsel=null,smsg='';
 
 // ---------- Accounts (Firebase Auth + Firestore cloud save) ----------
 const lsg=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},lss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
@@ -363,25 +362,7 @@ function emCard(M,horizon){const kc=x=>Math.round(x).toLocaleString('en-GB'),sg=
  <p class="m">Recent average ${kc(M.rI)} kcal, ${Math.round(M.rP)} g protein${M.rC!=null?`, ${Math.round(M.rC)} g carbs, ${Math.round(M.rF)} g fat`:''} over ${M.rn} logged days. 95% range ${sg(A.lo)} to ${sg(A.hi)} kg.</p>
  <h3 style="margin-top:12px">At your target (${kc(M.Teat+planDelta(TODAY))} kcal a day): ${split(B)}</h3>
  <p class="m">The lean and fat split assumes ${Math.round((A.bal>=0?M.ls.s:M.ls.d)*100)}% of a ${A.bal>=0?'gain':'loss'} is lean, from your body fat, protein (${f(M.pk,1)} g per kg) and lifting (${f(M.spw,1)} sessions a week). ${A.capped||B.capped?` Muscle gain is capped at ${f(leanCap(M)*30.4,2)} kg a month for your experience level, so extra surplus counts as fat.`:''} It is an estimate, not a measurement.</p>
- <button class="fold-hd" data-fold="em" aria-expanded="${!!folds.em}" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px"><div class="eyebrow" style="margin:0">The model and its variables</div><span class="fold-meta">${folds.em?'Hide':'Show'}${I.down.replace('class="ic"','class="ic'+(folds.em?' open':'')+'"')}</span></button>
- ${folds.em?`<div class="fold-body"><div class="formula">w(t) = w₀ + [N(t) − T·t] ÷ ρ + ε</div>
- <p class="m">Rearranged as a straight line, w − N/ρ = w₀ − (T/ρ)·t, and fitted by weighted least squares so recent days count more. Then T = −ρ × slope.</p>
- <div class="kv">
- <div><span>w(t) weight on day t</span><b>${M.n} weigh-ins over ${M.span} days</b></div>
- <div><span>w₀ starting weight (fitted)</span><b>${f(M.a+M.Nc[M.W[0][0]]/M.rho+M.b*M.W[0][0],1)} kg</b></div>
- <div><span>N(t) net calories eaten before day t</span><b>food on ${Math.round(M.cover*100)}% of days</b></div>
- <div><span>net kcal per day</span><b>3.0·P + 3.7·C + 8.8·F + 0.9·other</b></div>
- <div><span>T maintenance (net)</span><b>${kc(M.T)} ± ${kc(1.96*M.seT)} kcal</b></div>
- <div><span>T maintenance (as eaten)</span><b>${kc(M.Teat)} ± ${kc(1.96*M.seTeat)} kcal</b></div>
- <div><span>ρ energy per kg of change</span><b>${kc(M.rho)} kcal/kg</b></div>
- <div><span>p lean share (gain / loss)</span><b>${Math.round(M.ls.s*100)}% / ${Math.round(M.ls.d*100)}%</b></div>
- <div><span>F fat mass (${f(M.bf,1)}% of ${f(M.wNow,1)} kg)</span><b>${f(M.Fkg,1)} kg</b></div>
- <div><span>Forbes share 10.4 ÷ (10.4 + F)</span><b>${Math.round(M.ls.pf*100)}%</b></div>
- <div><span>ε scale noise (1 s.d.)</span><b>±${f(M.s,2)} kg</b></div>
- <div><span>R² share of weight swings explained</span><b>${M.r2==null?'–':f(M.r2,2)}</b></div>
- <div><span>weights ωᵢ</span><b>0.5^(age in days ÷ 14)</b></div></div>
- <div class="formula" style="margin-top:12px">Δw(h) = h × (N̄ − T) ÷ ρ<br>Δlean = min(p × Δw, h × L<sub>max</sub>), Δfat = rest ÷ 9,440</div>
- <p class="m">ρ = p × 1,816 + (1 − p) × 9,440 kcal/kg. In a gain, p = Forbes × min(1, protein ÷ 1.6 g/kg) × (1.3 if you lift twice a week or more, else 0.8), capped at 60%. In a loss, p = Forbes × (0.6 if protein ≥ 1.6 g/kg) × (0.8 if you lift), between 5% and 60%. L<sub>max</sub> is ${f(leanCap(M)*30.4,2)} kg of muscle a month at your experience level. Days with no food logged use your average. Forecasts assume your maintenance stays the same, so they get less reliable the further out they go.</p></div>`:''}</div>`}
+ </div>`}
 
 const sports=()=>U.set.sports.split('\n').map(l=>{const[n,m]=l.split(',');return{n:(n||'').trim(),met:parseFloat(m)||6}}).filter(x=>x.n);
 function am(a){const arr=(a.splits||'').split(/[,\s]+/).filter(Boolean).map(ps).filter(x=>x>0),sp=arr.length?avg(arr):(a.split?ps(a.split):null),w=sp&&a.type=='Rowing erg'?2.8/(sp/500)**3:null;

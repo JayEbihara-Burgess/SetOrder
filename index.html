@@ -943,44 +943,44 @@ const OFF='https://world.openfoodfacts.org',OFF_F='code,product_name,brands,stor
 // Open Food Facts often turns requests away when it is busy, and those refusals reach the browser as a failed request.
 // So every request is retried with growing waits, and finished searches are kept on the phone for a day.
 const sleep=ms=>new Promise(z=>setTimeout(z,ms));
-// Keeps trying until Open Food Facts answers, waiting a little longer each time (up to 20 s), and waits
-// for a connection when offline. Stops when alive() turns false: a newer search, or the sheet was closed.
-async function offGet(u,alive){const waits=[1200,2500,4000,6000,10000,15000,20000];let i=0;
+// Retries quietly (the screen just says "Searching…"), waiting a little longer each time, for up to 45 seconds,
+// then gives up with "Search failed". Stops early when alive() turns false: a newer search, or the sheet was closed.
+const FTRY_MS=45000;
+async function offGet(u,alive){const waits=[1200,2500,4000,6000,10000,15000],t0=Date.now();let i=0;
  for(;;){if(!alive())throw new Error('cancel');
-  if(navigator.onLine===false){fwait='Waiting for a connection…';fresUpd();await new Promise(z=>{const f=()=>{removeEventListener('online',f);z()};addEventListener('online',f);setTimeout(f,5000)});continue}
-  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),12000);let r=null;
-  try{r=await fetch(u,{signal:ac.signal})}catch(e){r=null}clearTimeout(to);
-  if(r&&r.ok){try{return await r.json()}catch(e){}}
-  if(r&&r.status==404)throw new Error('http 404');
+  if(navigator.onLine!==false){const ac=new AbortController(),to=setTimeout(()=>ac.abort(),12000);let r=null;
+   try{r=await fetch(u,{signal:ac.signal})}catch(e){r=null}clearTimeout(to);
+   if(r&&r.ok){try{return await r.json()}catch(e){}}
+   if(r&&r.status==404)throw new Error('http 404')}
   if(!alive())throw new Error('cancel');
-  await sleep(waits[Math.min(i++,waits.length-1)]);
-  const msg=i>=3?'Still searching…':'Searching…';if(fwait!=msg){fwait=msg;fresUpd()}}}
+  const left=FTRY_MS-(Date.now()-t0);if(left<=0)throw new Error('fail');
+  await sleep(Math.min(left,waits[Math.min(i++,waits.length-1)]))}}
 const FC_KEY='setorder-fc',FC_MS=864e5;
 function fcGet(k){try{const c=JSON.parse(localStorage.getItem(FC_KEY))||{},e=c[k];return e&&Date.now()-e.t<FC_MS?e.items:null}catch(e){return null}}
 function fcSet(k,items){try{const c=JSON.parse(localStorage.getItem(FC_KEY))||{};c[k]={t:Date.now(),items};const ks=Object.keys(c).sort((x,y)=>c[y].t-c[x].t);ks.slice(40).forEach(x=>delete c[x]);localStorage.setItem(FC_KEY,JSON.stringify(c))}catch(e){}}
 const shopMatch=(it,k)=>!k||(it.sh||[]).includes(SHOPN[k])||shopNames([it.b]).includes(SHOPN[k]);
-let fall=null,fwait='',fshopDone={};
+let fall=null,fwait='',fshopDone={},fretry='';
 function applyShop(){fres=fall?fall.filter(it=>it.gen?!fshop:shopMatch(it,fshop)):null}
 async function offSearch(q,shop,alive){const key=q.toLowerCase()+'|'+shop,c=fcGet(key);if(c)return c;
  const u=`${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=50&sort_by=unique_scans_n&fields=${OFF_F}&tagtype_0=countries&tag_contains_0=contains&tag_0=united-kingdom`+(shop?`&tagtype_1=stores&tag_contains_1=contains&tag_1=${shop}`:'');
  const d=await offGet(u,alive),items=(d.products||[]).map(offItem).filter(Boolean);fcSet(key,items);return items}
-async function foodSearch(shopOnly){const inp=$('#fq');if(inp)fq=inp.value.trim();if(!fq)return;const tk=++ftok;fbusy=true;fwait='';ferr='';fresUpd();
+async function foodSearch(shopOnly){const inp=$('#fq');if(inp)fq=inp.value.trim();if(!fq)return;const tk=++ftok;fbusy=true;fwait='';ferr='';fretry='';fresUpd();
  const ws=fq.toLowerCase().split(/\s+/).filter(Boolean),basics=BASICS.filter(b=>ws.every(w=>b.n.toLowerCase().includes(w)));
  if(!shopOnly){fall=null;fshopDone={}}
  const alive=()=>tk==ftok&&sub=='fadd';
  try{const items=await offSearch(fq,shopOnly?fshop:'',alive);if(tk!=ftok)return;
   if(shopOnly){fshopDone[fshop]=1;const have=new Set((fall||[]).map(x=>x.c||x.n));fall=(fall||basics).concat(items.filter(x=>!have.has(x.c||x.n)))}else{fall=basics.concat(items);U.fsq=[fq,...(U.fsq||[]).filter(x=>x.toLowerCase()!=fq.toLowerCase())].slice(0,8);save()}}
- catch(e){return}
+ catch(e){if(e.message=='cancel'||tk!=ftok)return;ferr='Search failed.';fretry='fsearch';if(!fall)fall=basics}
  fbusy=false;fwait='';applyShop();fresUpd()}
-async function foodBarcode(){const code=(($('#fbc')||{}).value||'').replace(/\D/g,'');if(code.length<6){ferr='Type the numbers under the barcode.';return fresUpd()}const tk=++ftok;fbusy=true;fwait='';ferr='';fresUpd();
+async function foodBarcode(){const code=(($('#fbc')||{}).value||'').replace(/\D/g,'');if(code.length<6){ferr='Type the numbers under the barcode.';return fresUpd()}const tk=++ftok;fbusy=true;fwait='';ferr='';fretry='';fresUpd();
  const ck='#'+code,alive=()=>tk==ftok&&sub=='fadd';let it=null;const c=fcGet(ck);
  try{if(c)it=c[0];else{const d=await offGet(`${OFF}/api/v2/product/${code}?fields=${OFF_F}`,alive);it=d&&d.product&&offItem(Object.assign({code},d.product));if(it)fcSet(ck,[it])}
   if(tk!=ftok)return;fbusy=false;fwait='';if(it)return pickFood(it);ferr='That barcode is not in Open Food Facts yet, or has no nutrition. Try searching by name, or use Quick add.'}
- catch(e){if(e.message=='cancel'||tk!=ftok)return;ferr='That barcode is not in Open Food Facts yet. Try searching by name, or use Quick add.'}
+ catch(e){if(e.message=='cancel'||tk!=ftok)return;if(e.message=='fail'){ferr='Search failed.';fretry='fbar'}else ferr='That barcode is not in Open Food Facts yet. Try searching by name, or use Quick add.'}
  fbusy=false;fwait='';fresUpd()}
 const itemRowBase=(it,i,src)=>`<button class="rowsw" data-fpick="${src}|${i}"><span style="min-width:0"><b style="font-weight:600">${esc(it.n)}</b><br><span class="m" style="margin:0;font-size:.8rem">${[it.gen?'Basic food, typical values':esc(it.b),...shopsBut(it).map(esc)].filter(Boolean).join(' · ')}</span></span><span class="m" style="margin:0;text-align:right;flex:none;font-size:.8rem"><b style="color:var(--ink)">${Math.round(it.k)}</b> kcal<br>${r1(it.p)} g protein<br>per 100 ${it.liq?'ml':'g'}</span></button>`;
 const itemRow=(it,i,src)=>{const row=itemRowBase(it,i,src);return src=='c'&&it.lu&&unitsFor(it).includes(it.lu)?`<div class="frow">${row}<button class="dchip fplus" data-frq="${i}" aria-label="Add ${esc(it.n)} again">+ ${esc(amtL({u:it.lu,q:it.lq||1,liq:it.liq,qa:it.qa,sv:it.sv,svl:it.svl,gen:it.gen}).replace(/ \(.*\)$/,''))}</button></div>`:row};
-function fresH(){if(fbusy)return`<p class="m">${fwait||'Searching…'}</p>`;let h=ferr?`<p class="warn">${esc(ferr)}</p>`:'';
+function fresH(){if(fbusy)return'<p class="m">Searching…</p>';let h=ferr?`<p class="warn">${esc(ferr)}</p>${fretry?`<button class="btn ghost" data-a="${fretry}" style="margin-top:6px">Try again</button>`:''}`:'';
  if(fres&&ferr&&!fres.length)fres=null;
  if(fres)h+=fres.length?`<div class="eyebrow" style="margin-top:14px">Results</div>${fres.map((it,i)=>itemRow(it,i,'r')).join('')}${moreShop()}<p class="m">Shop names come from shoppers who added the product, so some products show none. Not finding it? Try fewer words, another shop, or the barcode.</p>`:(fshop?moreShop()||`<p class="m">Nothing found at ${esc(SHOPN[fshop])}. Try All UK.</p>`:'<p class="m">Nothing found. Try fewer or different words.</p>');
  else h+=recentsH();
@@ -1172,7 +1172,7 @@ document.addEventListener('click',e=>{if(e.target.id=='scrim'){sub=null;fsel=nul
  if(D.tab){switchTab(D.tab,false);return}
  if(D.day){const old=vd;vd=D.day;pickP=null;stripAnimDir=tab=='day'?Math.sign(monN(vd)-monN(old)):0;tab='day';sub=null;swapP=null;es=null;wcarry=null;rmP=null;return render()}
  if(D.fday){vd=D.fday;fpicked.clear();return render()}
- if(D.fadd){fmeal=D.fadd;sub='fadd';ftok++;fbusy=false;fwait='';fres=null;fall=null;ferr='';fq='';qmsg='';return render()}
+ if(D.fadd){fmeal=D.fadd;sub='fadd';ftok++;fbusy=false;fwait='';fretry='';fres=null;fall=null;ferr='';fq='';qmsg='';return render()}
  if(D.fm){fmeal=D.fm;document.querySelectorAll('[data-fm]').forEach(x=>x.classList.toggle('on',x.dataset.fm==fmeal));const qb=document.querySelector('[data-a=fqsave]');if(qb)qb.textContent='Add to '+MEALS.find(m=>m[0]==fmeal)[1];return}
  if(D.fshop!=null){fshop=D.fshop;document.querySelectorAll('[data-fshop]').forEach(x=>x.classList.toggle('on',x.dataset.fshop==fshop));const q=$('#fq'),qv=q?q.value.trim():'';if(fall&&qv&&qv==fq){applyShop();fresUpd()}else if(qv)foodSearch();return}
  if(D.fq){const v=+D.fq,i=$('#famt');if(i)i.value=v;famt=v;famtUpd();return}

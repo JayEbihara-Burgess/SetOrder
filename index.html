@@ -115,6 +115,7 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{padding:9px 4px
 .mealc{cursor:pointer;transition:transform .15s ease}.mealc:active{transform:scale(.985)}
 .mplus{width:28px;height:28px;border-radius:50%;background:var(--acc);color:var(--on);display:grid;place-items:center}.mplus .ic{width:16px;height:16px}
 .frow{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}.frow .rowsw{flex:1;min-width:0;border-bottom:0}.frow .dchip{flex:none;padding:9px 12px;font-size:.8rem}.fplus{flex:none;white-space:nowrap;padding:9px 12px!important;font-size:.8rem;background:var(--acc)!important;color:var(--on)!important}
+.chips2{display:grid;grid-template-columns:1fr 1fr;gap:6px}.hero .dchip{background:rgba(128,128,128,.25);color:inherit}.hero .dchip.on{background:var(--acc);color:var(--on)}
 .ck{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--line);flex:none;margin-right:10px}.ck.on{background:var(--acc);box-shadow:inset 0 0 0 2px var(--ink)}
 .selbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(94px + env(safe-area-inset-bottom,0px));width:min(calc(100% - 28px),420px);background:var(--ink);color:var(--bg);border-radius:20px;padding:10px 10px 10px 18px;display:flex;align-items:center;gap:12px;z-index:6;box-shadow:0 10px 26px rgba(0,0,0,.25)}.selbar span{flex:1;font-weight:700;font-size:.9rem}.selbar .btn{width:auto;margin:0;padding:10px 16px}.selbar .btn:disabled{opacity:.4}
 .scanbox{position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-top:10px}.scanbox video{width:100%;height:100%;object-fit:cover;display:block}.scanbox i{position:absolute;left:10%;right:10%;top:50%;height:2px;background:var(--acc);box-shadow:0 0 14px var(--acc)}
@@ -259,11 +260,15 @@ document.addEventListener('visibilitychange',async()=>{if(document.hidden){stopS
 const gd=d=>U.days[d]||{},sd=(d,o)=>{U.days[d]=Object.assign(U.days[d]||{},o);save()};
 
 // ---------- Schedule and progression ----------
-const isW=d=>U.ov[d]?U.ov[d]=='work':!!U.wd[pd(d).getDay()];
+// A day override is 'rest', 'work' (next in rotation), or a session name such as 'Lower B'.
+const isW=d=>{const o=U.ov[d];return o?o!='rest':!!U.wd[pd(d).getDay()]};
 const crmOf=d=>(U.dex&&U.dex[d]&&U.dex[d].crm)||[];
 const cdue=d=>d<U.start?[]:U.cardio.filter(c=>c.days.includes(pd(d).getDay())&&!crmOf(d).includes(c.type));
 const cdueAll=d=>d<U.start?[]:U.cardio.filter(c=>c.days.includes(pd(d).getDay()));
-function plan(d){if(d<U.start||!isW(d))return null;let k=0;for(let x=dn(U.start);x<dn(d);x++)if(isW(fromN(x)))k++;return SPLIT[k%SPLIT.length]}
+// Sessions rotate through SPLIT on workout days. A day set to a named session uses it, and the rotation carries on from there.
+function plan(d){if(d<U.start||!isW(d))return null;let k=0;
+ for(let x=dn(U.start);x<dn(d);x++){const e=fromN(x);if(!isW(e))continue;const o=U.ov[e];k=SES[o]?SPLIT.indexOf(o)+1:k+1}
+ const o=U.ov[d];return SES[o]?o:SPLIT[k%SPLIT.length]}
 const avail=p=>{const a=lad(p).map((e,i)=>({e,i})),r=a.filter(x=>x.e.eq=='bw'||x.e.eq=='cu'||U.eq[x.e.eq]);return r.length?r:a};
 // Training style: calisthenics exercises have no per-kg start ratio (bodyweight, or weighted dips and pull-ups).
 // U.cal.pct is the share of movements done with bodyweight. The movements best suited to calisthenics switch first.
@@ -753,13 +758,16 @@ function clkText(){const D=gd(vd);if(!D.st)return'';const ts=U.sets.filter(x=>x.
 const timeH=()=>`<p class="m" style="margin-top:2px;font-variant-numeric:tabular-nums" id="sclk">${clkText()}</p>`;
 function refreshDay(){const a=$('#fuel'),b=$('#cardio');if(a)a.innerHTML=fuelH();if(b)b.innerHTML=cardioH();wk()}
 function actCard(a){const m=am(a);return`<div class="card"><div class="row"><h3>${esc(a.type)}</h3><span class="m" style="margin:0">${a.min} min</span></div><div class="tags">${a.dist?`<span>${a.dist} m</span>`:''}${m.sp?`<span>${mmss(m.sp)} /500m</span>`:''}${m.w?`<span>${Math.round(m.w)} W</span>`:''}${a.spm?`<span>${a.spm} spm</span>`:''}${a.hr?`<span>${a.hr} bpm</span>`:''}<span>RPE ${a.rpe||6}</span><span>${a.fed?'fed':'fasted'}</span><span>about ${Math.round(m.kcal)} kcal</span></div>${m.drift!=null?`<p class="m">Splits ${m.drift>0?'slowed':'sped up'} by ${f(Math.abs(m.drift))} s across the session.</p>`:''}${a.note?`<p class="m">${esc(a.note)}</p>`:''}<div class="row"><button class="tx" data-a="edit" data-i="${a.id}">Edit</button><button class="tx" data-a="del" data-i="${a.id}">Delete</button></div></div>`}
+let dpick=false;
+function dayPick(t){if(!dpick)return'';return`<div class="dpick"><div class="eyebrow" style="margin:12px 0 8px">Make ${vd==TODAY?'today':'this day'}</div><div class="chips2">${SPLIT.map(x=>`<button class="dchip${t==x?' on':''}" data-dses="${x}">${x}</button>`).join('')}<button class="dchip${!t?' on':''}" data-dses="rest" style="grid-column:1/-1">Rest day</button></div>
+ <p class="m" style="margin-top:8px">Later workouts carry on the rotation from the session you pick.</p>${U.ov[vd]?'<button class="tx" data-dses="plan">Back to the planned day</button>':''}</div>`}
 function dayV(fromScrub=false){const N=dn(vd)-dn(U.start)+1,t=plan(vd),D=gd(vd),L=dayList(vd),tot=L.reduce((s,x)=>s+x[1],0),done=U.sets.filter(s=>s.d==vd).length,cd=cdue(vd).length;
  let h=`<div class="date-swipe" id="date-swipe"><div class="top"><div><div class="eyebrow">${fdate(vd,{weekday:'long',day:'numeric',month:'long'})}</div><h1>${N>0?'Day '+N:'Soon'}</h1></div><div class="nav2"><button class="ib" data-day="${fromN(dn(vd)-1)}" aria-label="Previous day">${I.left}</button><button class="ib" data-day="${fromN(dn(vd)+1)}" aria-label="Next day">${I.right}</button></div></div>
  <div class="strip-vp" id="date-vp"><div class="strip-track" id="date-track">${[-1,0,1].map(o=>{const tg=fromN(dn(vd)+o*7);return`<div class="strip">${wkDays(o).map(d=>`<button class="dc${d==tg?' sel':''}${d==TODAY?' tdy':''}" data-day="${d}">${DL[pd(d).getDay()]}<b>${pd(d).getDate()}</b><i class="${U.sets.some(s=>s.d==d)||U.acts.some(a=>a.d==d)?'d':(isW(d)||cdue(d).length)&&d>=U.start?'w':''}"></i></button>`).join('')}</div>`}).join('')}</div></div><div class="wklbl">${weekLbl()} · swipe for other weeks</div></div>`;
  if(vd!=TODAY)h+=`<button class="tx" data-day="${TODAY}">Back to today</button>`;
  if(N<1)h+=`<div class="card hero"><div class="eyebrow">Not started</div><h2>Day 1 is ${fdate(U.start,{weekday:'long',day:'numeric',month:'long'})}</h2><button class="tx" data-day="${U.start}">Jump to Day 1</button></div>`;
- else{h+=t?`<div class="card hero"><div class="eyebrow">Workout</div><h2>${t}</h2><p class="m"><span id="hc">${done}</span> of ${tot} sets · ${L.length} exercise${L.length==1?'':'s'}</p>${timeH()}<div class="bar"><i id="hb" style="width:${tot?Math.round(done/tot*100):0}%"></i></div><button class="tx" data-a="toggle">Make this a rest day</button></div>`
-  :`<div class="card hero"><div class="eyebrow">${cd?'Cardio day':'Recovery'}</div><h2>${cd?'No lifting today':'Rest day'}</h2><p class="m">${cd?'Your cardio is below.':'Rest is when you grow. Eat well and sleep.'}</p><button class="tx" data-a="toggle">Add a workout today</button></div>`;
+ else{h+=t?`<div class="card hero"><div class="eyebrow">Workout${U.ov[vd]?' · changed from plan':''}</div><h2>${t}</h2><p class="m"><span id="hc">${done}</span> of ${tot} sets · ${L.length} exercise${L.length==1?'':'s'}</p>${timeH()}<div class="bar"><i id="hb" style="width:${tot?Math.round(done/tot*100):0}%"></i></div><button class="tx" data-a="dayedit">${dpick?'Close':'Change this day'}</button>${dayPick(t)}</div>`
+  :`<div class="card hero"><div class="eyebrow">${cd?'Cardio day':'Recovery'}</div><h2>${cd?'No lifting today':'Rest day'}</h2><p class="m">${cd?'Your cardio is below.':'Rest is when you grow. Eat well and sleep.'}</p><button class="tx" data-a="dayedit">${dpick?'Close':'Add a workout'}</button>${dayPick(t)}</div>`;
   if(!t&&L.length)h+=`<div class="card"><div class="eyebrow">Extra exercises</div><p class="m" style="margin-top:0"><span id="hc">${done}</span> of ${tot} sets · ${L.length} exercise${L.length==1?'':'s'}</p>${timeH()}<div class="bar"><i id="hb" style="width:0%"></i></div></div>`;
   if(t&&!L.length)h+=`<p class="m">You removed every exercise from today. Add one below, or make it a rest day.</p>`;
   h+=`<div class="card" id="fuel">${fuelH()}</div>`;
@@ -769,7 +777,7 @@ function dayV(fromScrub=false){const N=dn(vd)-dn(U.start)+1,t=plan(vd),D=gd(vd),
   <div class="card" style="margin-top:14px"><div class="eyebrow">Body</div><div class="fl"><span>Weight (kg)</span></div>${stp('lw',D.w??null,.1)}<button class="btn dark" data-a="body">Save weight</button><button class="btn ghost" data-tab="food" style="margin-top:8px">Log food</button></div>`}
  shell(h,fromScrub);wk();initDateSwipe()}
 
-function moveWeek(dir,anim){vd=fromN(dn(vd)+dir*7);pickP=null;swapP=null;es=null;wcarry=null;rmP=null;stripAnimDir=anim?dir:0;render()}
+function moveWeek(dir,anim){vd=fromN(dn(vd)+dir*7);pickP=null;dpick=false;swapP=null;es=null;wcarry=null;rmP=null;stripAnimDir=anim?dir:0;render()}
 function initDateSwipe(){
  const zone=$('#date-swipe'),vp=$('#date-vp'),tr=$('#date-track');
  if(!zone||!tr)return;
@@ -1176,7 +1184,8 @@ function render(fromScrub=false){const sv=!booting&&!bootErr&&U&&U.ready?(sub=='
 function addCardio(t){const days=[6,0,3,2,4,5,1];for(const i of days){const c={type:t,n:1,days:[i]};U.cardio.push(c);if(restFree())return true;U.cardio.pop()}return false}
 document.addEventListener('click',e=>{if(e.target.id=='scrim'){sub=null;fsel=null;fedit=null;fa=null;return render()}const b=e.target.closest('button')||e.target.closest('[data-fadd]');if(!b)return;if(Date.now()<suppressClickUntil)return;const D=b.dataset;
  if(D.tab){switchTab(D.tab,false);return}
- if(D.day){const old=vd;vd=D.day;pickP=null;stripAnimDir=tab=='day'?Math.sign(monN(vd)-monN(old)):0;tab='day';sub=null;swapP=null;es=null;wcarry=null;rmP=null;return render()}
+ if(D.day){const old=vd;vd=D.day;dpick=false;pickP=null;stripAnimDir=tab=='day'?Math.sign(monN(vd)-monN(old)):0;tab='day';sub=null;swapP=null;es=null;wcarry=null;rmP=null;return render()}
+ if(D.dses){const c=D.dses;delete U.ov[vd];if(c!='plan'){const planned=plan(vd)||'rest';if(c!=planned)U.ov[vd]=c}dpick=false;rmP=null;pickP=null;save();return render()}
  if(D.fday){vd=D.fday;fpicked.clear();return render()}
  if(D.fadd){fmeal=D.fadd;sub='fadd';ftok++;fbusy=false;fwait='';fretry='';fres=null;fall=null;ferr='';fq='';qmsg='';return render()}
  if(D.fm){fmeal=D.fm;document.querySelectorAll('[data-fm]').forEach(x=>x.classList.toggle('on',x.dataset.fm==fmeal));const qb=document.querySelector('[data-a=fqsave]');if(qb)qb.textContent='Add to '+MEALS.find(m=>m[0]==fmeal)[1];return}
@@ -1268,6 +1277,7 @@ document.addEventListener('click',e=>{if(e.target.id=='scrim'){sub=null;fsel=nul
  else if(a=='skip')rest=null;else if(a=='add30'&&rest){rest.end=Math.max(rest.end,Date.now())+30000;rest.b=0}
  else if(a=='fed'){sd(vd,{fed:!gd(vd).fed});b.querySelector('.tg').classList.toggle('on',!!gd(vd).fed);refreshDay()}
  else if(a=='afed'){fa=Object.assign({},fa);fa.fed=!fa.fed;$('#afedtg').classList.toggle('on',!!fa.fed)}
+ else if(a=='dayedit'){dpick=!dpick;render()}
  else if(a=='toggle'){U.ov[vd]=isW(vd)?'rest':'work';rmP=null;save();render()}
  else if(a=='body'){sd(vd,{w:nv('lw')});render()}
  else if(a=='savegoal'){saveGoal();render()}

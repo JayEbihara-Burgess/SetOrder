@@ -303,8 +303,17 @@ function reg(P,min){const n=P.length;if(n<min)return null;const xb=avg(P.map(p=>
 const tq=df=>1.96+2.37/df+2.8/df/df;
 function pred(r,x){const t=tq(r.n-2),m=r.a+r.b*x,se=r.s*Math.sqrt(1+1/r.n+(x-r.xb)**2/r.Sxx);return[m,m-t*se,m+t*se]}
 const wpts=()=>Object.keys(U.days).filter(k=>U.days[k].w!=null&&dn(k)>dn(TODAY)-56).sort().map(k=>[dn(k),U.days[k].w]);
-function calc(){const P=wpts(),r=reg(P,6),M=emodel(),ks=Object.keys(U.days).filter(k=>U.days[k].kcal!=null&&dn(k)>dn(TODAY)-14),kc=avg(ks.map(k=>U.days[k].kcal)),old=r&&ks.length>=5?kc-r.b*7700:null,useM=M.ok&&M.Teat>1200&&M.Teat<6000,tdee=useM?M.Teat:old,B=base();
- return{r,M,useM,kc,kn:ks.length,tdee,maint:tdee||(B?B.tdee:null),src:useM?'your food and weight logs':old?'your logged data':B?'your baseline':'a default estimate'}}
+// A logged day only counts towards maintenance if it is over (today is still in progress) and looks complete:
+// at least 45% of the baseline estimate and 1,000 kcal. Half-logged days would otherwise drag maintenance down.
+const intakeThr=()=>{const B=base();return Math.max(1000,.45*(B?B.tdee:2500))};
+const PRIOR_SD=300;
+function calc(){const P=wpts(),r=reg(P,6),M=emodel(),B=base(),t=dn(TODAY),thr=intakeThr();
+ const ks=Object.keys(U.days).filter(k=>U.days[k].kcal!=null&&dn(k)<t&&dn(k)>=t-14&&U.days[k].kcal>=thr),kv=ks.map(k=>U.days[k].kcal),kc=avg(kv);
+ const old=r&&ks.length>=7?kc-r.b*7700:null,sdk=kv.length>1?Math.sqrt(kv.reduce((a,x)=>a+(x-kc)**2,0)/(kv.length-1)):300,seOld=r?Math.sqrt((r.seb*7700)**2+sdk**2/Math.max(1,kv.length)):null;
+ const useM=M.ok&&M.Teat>1200&&M.Teat<6000,meas=useM?{v:M.Teat,se:M.seTeat}:old!=null?{v:old,se:seOld}:null;
+ // Measured maintenance is blended with the baseline formula, weighted by how certain each is, so a few days of data cannot swing it far.
+ let maint=B?B.tdee:null;if(meas&&B){const w1=1/Math.max(40,meas.se)**2,w0=1/PRIOR_SD**2;maint=(meas.v*w1+B.tdee*w0)/(w1+w0)}else if(meas)maint=meas.v;
+ return{r,M,useM,kc,kn:ks.length,tdee:meas?meas.v:null,maint,src:useM?'your food and weight logs':old!=null?'your logged data':B?'your baseline':'a default estimate'}}
 // ---------- Energy-balance model: weight explained by what you eat ----------
 // w(t) = w0 + [N(t) − T·t] / rho + e
 //   w(t)  scale weight on day t (kg), t = days since the window started
@@ -317,9 +326,9 @@ function calc(){const P=wpts(),r=reg(P,6),M=emodel(),ks=Object.keys(U.days).filt
 // Rearranged, y = w − N/rho = w0 − (T/rho)·t, a straight line fitted by weighted least squares
 // (weight 0.5^(age in days / 14)), so T = −rho × slope.
 const EM={days:56,half:14,rhoL:1816,rhoF:9440,forbes:10.4,minW:8,minSpan:14,minCover:.6};
-function dayIntake(d){const L=foodOf(d),D=U.days[d]||{};
- if(L.length){const t=dayFood(d);return{I:t.k,P:t.p,C:t.cb,F:t.f,N:3*t.p+3.7*t.cb+8.775*t.f+.9*(t.k-4*t.p-4*t.cb-9*t.f),full:1}}
- if(D.kcal!=null){const P=D.p!=null?D.p:.15*D.kcal/4;return{I:D.kcal,P,C:null,F:null,N:3*P+.95*(D.kcal-4*P),full:0}}
+function dayIntake(d,thr){const L=foodOf(d),D=U.days[d]||{};
+ if(L.length){const t=dayFood(d);if(t.k<thr)return null;return{I:t.k,P:t.p,C:t.cb,F:t.f,N:3*t.p+3.7*t.cb+8.775*t.f+.9*(t.k-4*t.p-4*t.cb-9*t.f),full:1}}
+ if(D.kcal!=null){if(D.kcal<thr)return null;const P=D.p!=null?D.p:.15*D.kcal/4;return{I:D.kcal,P,C:null,F:null,N:3*P+.95*(D.kcal-4*P),full:0}}
  return null}
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 function leanShare(F,pk,spw){const pf=EM.forbes/(EM.forbes+F),lift=spw>=2;
@@ -329,7 +338,7 @@ function wls(P,half){const tl=Math.max(...P.map(p=>p[0]));let w=P.map(p=>Math.po
  const xb=P.reduce((a,p,i)=>a+w[i]*p[0],0)/ne,yb=P.reduce((a,p,i)=>a+w[i]*p[1],0)/ne;let Sxx=0,Sxy=0;P.forEach((p,i)=>{Sxx+=w[i]*(p[0]-xb)**2;Sxy+=w[i]*(p[0]-xb)*(p[1]-yb)});
  const b=Sxy/Sxx,a=yb-b*xb;let rss=0;P.forEach((p,i)=>rss+=w[i]*(p[1]-a-b*p[0])**2);const s2=rss/Math.max(ne-2,1);return{a,b,s:Math.sqrt(s2),seb:Math.sqrt(s2/Sxx),Sxx,xb,ne,n:P.length}}
 function emodel(){const t1=dn(TODAY),t0=t1-EM.days+1,W=[],ins=[];
- for(let x=t0;x<=t1;x++){const D=U.days[fromN(x)]||{};ins.push(dayIntake(fromN(x)));if(D.w!=null)W.push([x-t0,D.w])}
+ const thr=intakeThr();for(let x=t0;x<=t1;x++){const D=U.days[fromN(x)]||{};ins.push(x<t1?dayIntake(fromN(x),thr):null);if(D.w!=null)W.push([x-t0,D.w])}
  if(W.length<EM.minW)return{ok:0,why:`${W.length} of ${EM.minW} weigh-ins`};
  const s0=W[0][0],sL=W[W.length-1][0],span=sL-s0;if(span<EM.minSpan)return{ok:0,why:`weigh-ins span ${span} of ${EM.minSpan} days`};
  const win=ins.slice(s0,sL),lg=win.filter(Boolean),cover=lg.length/Math.max(1,win.length);
@@ -988,7 +997,9 @@ async function foodSearch(shopOnly){const inp=$('#fq');if(inp)fq=inp.value.trim(
  fbusy=false;fwait='';applyShop();fresUpd()}
 async function foodBarcode(){const code=(($('#fbc')||{}).value||'').replace(/\D/g,'');if(code.length<6){ferr='Type the numbers under the barcode.';return fresUpd()}const tk=++ftok;fbusy=true;fwait='';ferr='';fretry='';fresUpd();
  const ck='#'+code,alive=()=>tk==ftok&&sub=='fadd';let it=null;const c=fcGet(ck);
- try{if(c)it=c[0];else{const d=await offGet(`${OFF}/api/v2/product/${code}?fields=${OFF_F}`,alive);it=d&&d.product&&offItem(Object.assign({code},d.product));if(it)fcSet(ck,[it])}
+ const alt=code.length==12?'0'+code:code.length==13&&code[0]=='0'?code.slice(1):null;
+ const look=async cd=>{try{const d=await offGet(`${OFF}/api/v2/product/${cd}?fields=${OFF_F}`,alive);return d&&d.product&&offItem(Object.assign({code:cd},d.product))}catch(e){if(e.message=='http 404')return null;throw e}};
+ try{if(c)it=c[0];else{it=await look(code);if(!it&&alt)it=await look(alt);if(it)fcSet(ck,[it])}
   if(tk!=ftok)return;fbusy=false;fwait='';if(it)return pickFood(it);ferr='That barcode is not in Open Food Facts yet, or has no nutrition. Try searching by name, or use Quick add.'}
  catch(e){if(e.message=='cancel'||tk!=ftok)return;if(e.message=='fail'){ferr='Search failed.';fretry='fbar'}else ferr='That barcode is not in Open Food Facts yet. Try searching by name, or use Quick add.'}
  fbusy=false;fwait='';fresUpd()}
@@ -1085,20 +1096,30 @@ function closeSheet(){stopScan();const s=$('#sheet'),sc=$('#scrim');if(!s)return
 const ZX_URL='https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js';
 function loadZX(){if(window.ZXingBrowser)return Promise.resolve();return ZXP=ZXP||new Promise((ok,no)=>{const sc=document.createElement('script');sc.src=ZX_URL;sc.onload=ok;sc.onerror=()=>{ZXP=null;no(new Error('load'))};document.head.appendChild(sc)})}
 function stopScan(){scanTok++;if(scanCtl){try{scanCtl.stop()}catch(e){}scanCtl=null}}
+// Safari has no built-in barcode reader, so iPhones use ZXing. The camera is requested straight away, inside the tap
+// (Safari is strict about camera requests that come later), at a high resolution with continuous focus, while
+// ZXing loads alongside. Android Chrome uses its own BarcodeDetector.
+const isApple=/iPhone|iPad|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&'ontouchend' in document)||(/Safari/.test(navigator.userAgent)&&!/Chrome|Chromium|Android/.test(navigator.userAgent));
 async function startScan(){const box=$('#fscan');if(!box)return;stopScan();const tok=scanTok;
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){box.innerHTML='<p class="warn">This browser cannot use the camera here. Type the barcode instead.</p>';return}
  box.innerHTML=`<div class="scanbox"><video id="fvid" playsinline muted autoplay></video><i></i></div><p class="m c" id="fscanmsg">Starting the camera…</p><div class="c"><button class="tx" data-a="fscanstop">Cancel</button></div>`;
- const v=$('#fvid'),say=t=>{const m=$('#fscanmsg');if(m)m.textContent=t},cam={video:{facingMode:{ideal:'environment'}},audio:false};
+ const v=$('#fvid'),say=t=>{const m=$('#fscanmsg');if(m)m.textContent=t};
+ const camP=navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});
+ const zxP=isApple||!window.BarcodeDetector?loadZX():null;if(zxP)zxP.catch(()=>{});
+ let st=null;const stopAll=()=>{if(st)st.getTracks().forEach(t=>t.stop())};
  const done=code=>{if(tok!=scanTok)return;stopScan();try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}const i=$('#fbc');if(i)i.value=code;box.innerHTML='';foodBarcode()};
- try{
-  if(window.BarcodeDetector&&BarcodeDetector.getSupportedFormats){const fm=await BarcodeDetector.getSupportedFormats();
-   if(fm.includes('ean_13')){const st=await navigator.mediaDevices.getUserMedia(cam);if(tok!=scanTok){st.getTracks().forEach(t=>t.stop());return}
-    v.srcObject=st;await v.play();const det=new BarcodeDetector({formats:fm.filter(f=>/ean|upc/.test(f))});let alive=true;scanCtl={stop(){alive=false;st.getTracks().forEach(t=>t.stop())}};say('Point the camera at the barcode.');
-    const tick=async()=>{if(!alive)return;try{const r=await det.detect(v);if(r.length)return done(r[0].rawValue)}catch(e){}setTimeout(tick,150)};tick();return}}
-  say('Loading the scanner…');await loadZX();if(tok!=scanTok)return;
-  const rd=new ZXingBrowser.BrowserMultiFormatOneDReader(),c=await rd.decodeFromConstraints(cam,v,res=>{if(res)done(res.getText())});
-  if(tok!=scanTok){c.stop();return}scanCtl=c;say('Point the camera at the barcode. Hold it steady and fill the frame.')
- }catch(e){if(tok!=scanTok)return;stopScan();box.innerHTML=`<p class="warn">${e&&e.name=='NotAllowedError'?'Camera access was blocked. In Safari, tap aA in the address bar, then Website Settings, and allow the camera. Or type the barcode below.':e&&e.message=='load'?'Could not load the scanner. Check your connection, or type the barcode below.':'Could not start the camera. Type the barcode below instead.'}</p>`}}
+ try{st=await camP;if(tok!=scanTok){stopAll();return}
+  const tr=st.getVideoTracks()[0];try{const cp=tr.getCapabilities&&tr.getCapabilities();if(cp&&cp.focusMode&&cp.focusMode.includes('continuous'))await tr.applyConstraints({advanced:[{focusMode:'continuous'}]})}catch(e){}
+  setTimeout(()=>{if(tok==scanTok&&$('#fscanmsg'))say('Still looking. Hold the barcode about 15 to 20 cm away so it is sharp, keep it flat and well lit, or type the numbers below.')},9000);
+  let fm=[];if(!zxP&&window.BarcodeDetector&&BarcodeDetector.getSupportedFormats){try{fm=await BarcodeDetector.getSupportedFormats()}catch(e){}}
+  if(!zxP&&fm.includes('ean_13')){v.srcObject=st;await v.play();const det=new BarcodeDetector({formats:fm.filter(f=>/ean|upc/.test(f))});let alive=true;scanCtl={stop(){alive=false;stopAll()}};say('Point the camera at the barcode.');
+   const tick=async()=>{if(!alive)return;try{const r=await det.detect(v);if(r.length)return done(r[0].rawValue)}catch(e){}setTimeout(tick,150)};tick();return}
+  say('Loading the scanner…');await (zxP||loadZX());if(tok!=scanTok){stopAll();return}
+  // EAN-13, EAN-8, UPC-A and UPC-E only, trying harder on each frame, 8 frames a second
+  const rd=new ZXingBrowser.BrowserMultiFormatReader(new Map([[2,[7,6,14,15]],[3,true]]),120);
+  scanCtl={stop(){stopAll()}};const c=await rd.decodeFromStream(st,v,res=>{if(res)done(res.getText())});
+  if(tok!=scanTok){try{c.stop()}catch(e){}stopAll();return}scanCtl={stop(){try{c.stop()}catch(e){}stopAll()}};say('Point the camera at the barcode.')
+ }catch(e){stopAll();if(tok!=scanTok)return;stopScan();const n=e&&e.name;box.innerHTML=`<p class="warn">${n=='NotAllowedError'?'Camera access was blocked. In Safari, tap aA in the address bar, then Website Settings, and allow the camera. On a home-screen app, allow it in Settings, Safari, Camera. Or type the barcode below.':n=='NotFoundError'||n=='OverconstrainedError'?'No camera was found. Type the barcode below instead.':e&&e.message=='load'?'Could not load the scanner. Check your connection, or type the barcode below.':'Could not start the camera ('+esc(n||e&&e.message||'unknown')+'). Type the barcode below instead.'}</p>`}}
 // ---------- Plan ----------
 const restFree=()=>[0,1,2,3,4,5,6].some(i=>!U.wd[i]&&!U.cardio.some(c=>c.days.includes(i)));
 function daysCard(){return`<div class="fl"><span>Lifting days</span><em>keep at least one full rest day</em></div><div class="chips7">${ORD.map(i=>`<button class="dchip${U.wd[i]?' on':''}" data-wd="${i}">${NM[i]}</button>`).join('')}</div>

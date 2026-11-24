@@ -920,7 +920,14 @@ function formV(){const a=fa||{type:'Running',min:30,rpe:6};
 // ---------- Food: search UK supermarket products (Open Food Facts), log by meal, totals feed the day's calories ----------
 const MEALS=[['b','Breakfast'],['l','Lunch'],['d','Dinner'],['s','Snacks']];
 const SHOPS=[['tesco','Tesco'],['sainsbury-s',"Sainsbury's"],['asda','Asda'],['morrisons','Morrisons'],['waitrose','Waitrose'],['lidl','Lidl'],['aldi','Aldi'],['marks-spencer','M&S'],['co-op','Co-op'],['iceland','Iceland'],['ocado','Ocado']];
-const SHOPN=Object.fromEntries(SHOPS);
+// Japanese chains, as Open Food Facts tags them
+const SHOPS_JP=[['7-eleven','7-Eleven'],['lawson','Lawson'],['family-mart','FamilyMart'],['aeon','AEON'],['ito-yokado','Ito-Yokado'],['seiyu','Seiyu'],['don-quijote','Don Quijote']];
+const SHOPN=Object.fromEntries([...SHOPS,...SHOPS_JP,['familymart','FamilyMart'],['seven-eleven','7-Eleven'],['7-11','7-Eleven']]);
+// Shop names written in Japanese map to the same chains
+const SHOP_JA={'セブンイレブン':'7-eleven','セブン-イレブン':'7-eleven','ローソン':'lawson','ファミリーマート':'family-mart','ファミマ':'family-mart','イオン':'aeon','イトーヨーカドー':'ito-yokado','西友':'seiyu','ドン・キホーテ':'don-quijote'};
+// Where to search: the country filter sent to Open Food Facts, and that country's shops
+const REGIONS={uk:{l:'UK',tag:'united-kingdom',shops:SHOPS,ph:'e.g. Tesco semi skimmed milk'},jp:{l:'Japan',tag:'japan',shops:SHOPS_JP,ph:'e.g. おにぎり, 納豆 or Pocky'},all:{l:'All countries',tag:'',shops:[...SHOPS,...SHOPS_JP],ph:'e.g. a product or brand name'}};
+const freg=()=>REGIONS[U.set.freg]?U.set.freg:'uk';
 // Generic basics, per 100 g or 100 ml: name, kcal, protein, carbs, fat, portion (g or ml), portion label, liquid
 const BASICS=[['Apple',52,.3,14,.2,150,'1 medium'],['Banana',89,1.1,23,.3,120,'1 medium'],['Orange',47,.9,12,.1,160,'1 medium'],['Strawberries',32,.7,7.7,.3,80,'1 handful'],['Blueberries',57,.7,14,.3,80,'1 handful'],['Grapes',69,.7,18,.2,80,'1 handful'],['Avocado',160,2,9,15,75,'half'],
  ['Broccoli',34,2.8,7,.4,80,'1 portion'],['Carrot',41,.9,10,.2,80,'1 medium'],['Spinach',23,2.9,3.6,.4,80,'1 portion'],['Potato, boiled',87,1.9,20,.1,200,'1 portion'],['Sweet potato, baked',90,2,21,.2,180,'1 medium'],
@@ -931,6 +938,10 @@ const BASICS=[['Apple',52,.3,14,.2,150,'1 medium'],['Banana',89,1.1,23,.3,120,'1
  ['Lager or beer, 4%',43,.5,3.6,0,568,'1 pint',1],['Red wine',85,.1,2.6,0,175,'1 medium glass',1],['Cola',42,0,10.6,0,330,'1 can',1],['Black coffee',2,.1,0,0,250,'1 mug',1],
  ['Peanut butter',597,25,13,50,15,'1 tablespoon'],['Almonds',579,21,22,50,30,'1 handful'],['Olive oil',884,0,0,100,14,'1 tablespoon'],['Butter',717,.9,.1,81,10,'1 portion'],['Honey',304,.3,82,0,15,'1 tablespoon'],['Whey protein powder',400,80,8,6,30,'1 scoop'],
  ['Baked beans',78,4.7,12.5,.2,200,'half a tin'],['Houmous',310,7,10,26,30,'1 portion'],['Crisps',530,6,53,32,25,'1 bag'],['Dark chocolate 70%',600,7.8,46,43,20,'2 squares'],['Wholewheat cereal biscuits',362,12,69,2,38,'2 biscuits'],['Cornflakes',378,7,84,.9,30,'1 bowl'],['Granola',450,10,60,18,45,'1 bowl'],['Margherita pizza',266,11,33,10,150,'half a pizza']]
+ .concat([['Onigiri, salmon おにぎり 鮭',180,4.5,37,1.2,110,'1 rice ball'],['Onigiri, tuna mayo おにぎり ツナマヨ',230,5,35,7,110,'1 rice ball'],['Natto 納豆',190,16.5,12,10,45,'1 pack'],['Miso soup 味噌汁',20,1.5,2.5,.6,180,'1 bowl',1],
+ ['Ramen, tonkotsu ラーメン',93,4.5,11,3.5,700,'1 bowl'],['Udon, kake うどん',76,2.5,15,.5,500,'1 bowl'],['Soba, cold zaru そば',130,4.8,26,1,200,'1 serving'],['Gyudon 牛丼',170,6,24,5.5,380,'1 bowl'],['Karaage 唐揚げ',290,17,13,18,100,'4 pieces'],
+ ['Edamame 枝豆',135,11.5,9,6,70,'1 serving'],['Tamagoyaki 卵焼き',150,10.5,6.5,9,60,'2 slices'],['Tuna sashimi マグロ 刺身',125,26,.1,1.4,80,'5 slices'],['Gyoza 餃子',210,7,23,10,120,'6 pieces'],['Katsu curry カツカレー',180,5,24,7,500,'1 plate'],
+ ['Melon pan メロンパン',370,8,58,11,100,'1 bun'],['Green tea 緑茶',0,0,0,0,500,'1 bottle',1]])
  .map(([n,k,p,cb,f,sv,svl,liq])=>({n,k,p,cb,f,sv,svl,liq:!!liq,gen:1}));
 // Units: [singular label, plural label, grams or ml each]. Liquids count 1 ml as 1 g.
 const UNITS={g:['g','g',1],'100g':['× 100 g','× 100 g',100],oz:['oz','oz',28.35],ml:['ml','ml',1],glass:['glass (250 ml)','glasses (250 ml)',250],can:['can (330 ml)','cans (330 ml)',330],bottle:['bottle (500 ml)','bottles (500 ml)',500],hpt:['half pint','half pints',284],pt:['pint','pints',568],tbsp:['tbsp (15 g)','tbsp (15 g)',15],tsp:['tsp (5 g)','tsp (5 g)',5],hand:['handful (30 g)','handfuls (30 g)',30],slice:['slice (40 g)','slices (40 g)',40],egg:['egg (50 g)','eggs (50 g)',50]};
@@ -958,11 +969,11 @@ function dayFood(d){return foodOf(d).reduce((a,e)=>{const t=tot(e,e.g);a.k+=t.k;
 // The day's calorie and protein log (used by the energy and maintenance maths) follows the food diary.
 function syncFood(d){const D=U.days[d]=U.days[d]||{};if(foodOf(d).length){const t=dayFood(d);D.kcal=Math.round(t.k);D.p=Math.round(t.p);D.fk=1}else if(D.fk){delete D.kcal;delete D.p;delete D.fk}}
 const shopsBut=it=>(it.sh||[]).filter(x=>x.toLowerCase()!=String(it.b||'').toLowerCase());
-const shopNames=tags=>[...new Set((tags||[]).map(t=>SHOPN[String(t).toLowerCase().replace(/&/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')]).filter(Boolean))];
-function offItem(p){const n=p.nutriments||{};let k=n['energy-kcal_100g'];if(k==null&&n.energy_100g!=null)k=n.energy_100g/4.184;const name=(p.product_name||'').trim();if(k==null||!name)return null;
+const shopNames=tags=>[...new Set((tags||[]).map(t=>{t=String(t).trim();return SHOPN[SHOP_JA[t]||t.toLowerCase().replace(/&/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')]}).filter(Boolean))];
+function offItem(p){const n=p.nutriments||{};let k=n['energy-kcal_100g'];if(k==null&&n.energy_100g!=null)k=n.energy_100g/4.184;const name=(p.product_name||p.product_name_en||p.product_name_ja||'').trim();if(k==null||!name)return null;
  const sv=parseFloat(p.serving_quantity)||0;
  return{n:name.slice(0,80),b:String(p.brands||'').split(',')[0].trim().slice(0,40),c:p.code,k:r1(k),p:r1(n.proteins_100g),cb:r1(n.carbohydrates_100g),f:r1(n.fat_100g),sv:sv>0&&sv<3000?r1(sv):0,svl:sv>0?String(p.serving_size||'').slice(0,30):'',liq:/\d\s*(ml|cl|l|pt|pints?)\b/i.test(p.quantity||''),sh:shopNames(p.stores_tags)}}
-const OFF='https://world.openfoodfacts.org',OFF_F='code,product_name,brands,stores_tags,serving_quantity,serving_size,quantity,nutriments';
+const OFF='https://world.openfoodfacts.org',OFF_F='code,product_name,product_name_en,product_name_ja,brands,stores_tags,serving_quantity,serving_size,quantity,nutriments';
 // Open Food Facts often turns requests away when it is busy, and those refusals reach the browser as a failed request.
 // So every request is retried with growing waits, and finished searches are kept on the phone for a day.
 const sleep=ms=>new Promise(z=>setTimeout(z,ms));
@@ -984,8 +995,8 @@ function fcSet(k,items){try{const c=JSON.parse(localStorage.getItem(FC_KEY))||{}
 const shopMatch=(it,k)=>!k||(it.sh||[]).includes(SHOPN[k])||shopNames([it.b]).includes(SHOPN[k]);
 let fall=null,fwait='',fshopDone={},fretry='';
 function applyShop(){fres=fall?fall.filter(it=>it.gen?!fshop:shopMatch(it,fshop)):null}
-async function offSearch(q,shop,alive){const key=q.toLowerCase()+'|'+shop,c=fcGet(key);if(c)return c;
- const u=`${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=50&sort_by=unique_scans_n&fields=${OFF_F}&tagtype_0=countries&tag_contains_0=contains&tag_0=united-kingdom`+(shop?`&tagtype_1=stores&tag_contains_1=contains&tag_1=${shop}`:'');
+async function offSearch(q,shop,alive){const rg=REGIONS[freg()],key=q.toLowerCase()+'|'+shop+'|'+freg(),c=fcGet(key);if(c)return c;
+ const u=`${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=50&sort_by=unique_scans_n&fields=${OFF_F}`+(rg.tag?`&tagtype_0=countries&tag_contains_0=contains&tag_0=${rg.tag}`:'')+(shop?`&tagtype_1=stores&tag_contains_1=contains&tag_1=${shop}`:'');
  const d=await offGet(u,alive),items=(d.products||[]).map(offItem).filter(Boolean);fcSet(key,items);return items}
 async function foodSearch(shopOnly){const inp=$('#fq');if(inp)fq=inp.value.trim();if(!fq)return;const tk=++ftok;fbusy=true;fwait='';ferr='';fretry='';fresUpd();
  const ws=fq.toLowerCase().split(/\s+/).filter(Boolean),basics=BASICS.filter(b=>ws.every(w=>b.n.toLowerCase().includes(w)));
@@ -1043,8 +1054,9 @@ function fmSeg(){return`<div class="seg">${MEALS.map(([k,l])=>`<button data-fm="
 function faddV(){
  sheet(`<div class="wrap"><div class="top" style="margin-bottom:16px;align-items:center"><div><div class="eyebrow">${fdate(vd,{weekday:'long',day:'numeric',month:'long'})}</div><h1 style="font-size:2.2rem">Add food</h1></div><button class="ib" data-a="fback" aria-label="Back">${I.left}</button></div>
  <div class="card"><div class="fl"><span>Meal</span></div>${fmSeg()}
- <div class="fld"><div class="fl"><span>Search UK shops</span><em>brand and product name work best</em></div><div class="swr"><input type="text" id="fq" value="${esc(fq)}" placeholder="e.g. Tesco semi skimmed milk" enterkeyhint="search" autocomplete="off"><button class="btn" data-a="fsearch" style="margin:0;padding:12px">Search</button></div></div>
- <div class="fld"><div class="fl"><span>Shop</span></div><div class="shops"><button data-fshop="" class="dchip${fshop?'':' on'}">All UK</button>${SHOPS.map(([k,l])=>`<button data-fshop="${k}" class="dchip${fshop==k?' on':''}">${esc(l)}</button>`).join('')}</div></div>
+ <div class="fld"><div class="fl"><span>Country</span></div><div class="seg">${Object.entries(REGIONS).map(([k,r])=>`<button data-freg="${k}" class="${freg()==k?'on':''}">${r.l}</button>`).join('')}</div></div>
+ <div class="fld"><div class="fl"><span>Search</span><em>${freg()=='jp'?'Japanese or English works':'brand and product name work best'}</em></div><div class="swr"><input type="text" id="fq" value="${esc(fq)}" placeholder="${REGIONS[freg()].ph}" enterkeyhint="search" autocomplete="off"><button class="btn" data-a="fsearch" style="margin:0;padding:12px">Search</button></div></div>
+ <div class="fld"><div class="fl"><span>Shop</span></div><div class="shops"><button data-fshop="" class="dchip${fshop?'':' on'}">All shops</button>${REGIONS[freg()].shops.map(([k,l])=>`<button data-fshop="${k}" class="dchip${fshop==k?' on':''}">${esc(l)}</button>`).join('')}</div></div>
  <div id="fres">${fresH()}</div><div class="fld" style="margin-top:22px;padding-top:16px;border-top:1px solid var(--line)"><div class="fl"><span>Barcode</span></div><button class="btn dark" data-a="fscan" style="margin-top:0">Scan a barcode</button><div id="fscan"></div><div class="fl" style="margin-top:12px"><span class="m" style="margin:0">Or type the numbers</span></div><div class="swr"><input type="text" id="fbc" inputmode="numeric" placeholder="5000000000000" autocomplete="off"><button class="btn dark" data-a="fbar" style="margin:0;padding:12px">Look up</button></div></div>
  </div>
  <div class="card"><button class="fold-hd" data-a="fqa" aria-expanded="${fqa}"><div><div class="eyebrow">Quick add</div><div class="m" style="margin-top:2px">Type the numbers yourself</div></div><span class="fold-meta">${fqa?'Hide':'Show'}${I.down.replace('class="ic"','class="ic'+(fqa?' open':'')+'"')}</span></button>${fqa?`<div class="fold-body">
@@ -1210,6 +1222,7 @@ document.addEventListener('click',e=>{if(e.target.id=='scrim'){sub=null;fsel=nul
  if(D.fday){vd=D.fday;fpicked.clear();return render()}
  if(D.fadd){fmeal=D.fadd;sub='fadd';ftok++;fbusy=false;fwait='';fretry='';fres=null;fall=null;ferr='';fq='';qmsg='';return render()}
  if(D.fm){fmeal=D.fm;document.querySelectorAll('[data-fm]').forEach(x=>x.classList.toggle('on',x.dataset.fm==fmeal));const qb=document.querySelector('[data-a=fqsave]');if(qb)qb.textContent='Add to '+MEALS.find(m=>m[0]==fmeal)[1];return}
+ if(D.freg){U.set.freg=D.freg;fshop='';fres=null;fall=null;ferr='';save();const q=$('#fq'),qv=q?q.value.trim():'';fq=qv;render();if(qv)foodSearch();return}
  if(D.fshop!=null){fshop=D.fshop;document.querySelectorAll('[data-fshop]').forEach(x=>x.classList.toggle('on',x.dataset.fshop==fshop));const q=$('#fq'),qv=q?q.value.trim():'';if(fall&&qv&&qv==fq){applyShop();fresUpd()}else if(qv)foodSearch();return}
  if(D.fq){const v=+D.fq,i=$('#famt');if(i)i.value=v;famt=v;famtUpd();return}
  if(D.fsel){const id=+D.fsel;fpicked.has(id)?fpicked.delete(id):fpicked.add(id);const c=b.querySelector('.ck');if(c)c.classList.toggle('on',fpicked.has(id));return selbarUpd()}

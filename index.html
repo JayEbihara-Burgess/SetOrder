@@ -11,8 +11,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="SetOrder">
 <style>
-:root{--wms:#15171a;--wmo:#5f8f00;--bg:#f4f2ec;--card:#fff;--ink:#15171a;--mute:#797b7f;--line:#e8e5dc;--soft:#f0ede4;--acc:#c9f23a;--on:#15171a;--tb:#15171a;--tf:#9a9c94;--sh:0 1px 2px rgba(30,28,10,.05),0 10px 30px rgba(30,28,10,.06)}
-@media (prefers-color-scheme:dark){:root{--wms:#fff;--wmo:#c9f23a;--bg:#0e0f0d;--card:#181915;--ink:#f4f3ed;--mute:#8d8e87;--line:#282923;--soft:#21221d;--tb:#2a2b26;--tf:#8d8e87;--sh:none}}
+:root{--tl-g:#2e9d4f;--tl-a:#e0a100;--tl-r:#d2481f;--wms:#15171a;--wmo:#5f8f00;--bg:#f4f2ec;--card:#fff;--ink:#15171a;--mute:#797b7f;--line:#e8e5dc;--soft:#f0ede4;--acc:#c9f23a;--on:#15171a;--tb:#15171a;--tf:#9a9c94;--sh:0 1px 2px rgba(30,28,10,.05),0 10px 30px rgba(30,28,10,.06)}
+@media (prefers-color-scheme:dark){:root{--tl-g:#4cc26e;--tl-a:#f2b632;--tl-r:#ff6a3d;--wms:#fff;--wmo:#c9f23a;--bg:#0e0f0d;--card:#181915;--ink:#f4f3ed;--mute:#8d8e87;--line:#282923;--soft:#21221d;--tb:#2a2b26;--tf:#8d8e87;--sh:none}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{background:var(--bg);touch-action:pan-x pan-y;overscroll-behavior-x:none;overflow-x:hidden}
 body{margin:0;color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
@@ -116,6 +116,11 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{padding:9px 4px
 .mplus{width:28px;height:28px;border-radius:50%;background:var(--acc);color:var(--on);display:grid;place-items:center}.mplus .ic{width:16px;height:16px}
 .frow{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}.frow .rowsw{flex:1;min-width:0;border-bottom:0}.frow .dchip{flex:none;padding:9px 12px;font-size:.8rem}.fplus{flex:none;white-space:nowrap;padding:9px 12px!important;font-size:.8rem;background:var(--acc)!important;color:var(--on)!important}
 .chips2{display:grid;grid-template-columns:1fr 1fr;gap:6px}.hero .dchip{background:rgba(128,128,128,.25);color:inherit}.hero .dchip.on{background:var(--acc);color:var(--on)}
+.tlc{display:inline-block;padding:2px 7px;border-radius:8px;font-size:.66rem;font-weight:700;color:#fff;margin:5px 4px 0 0;line-height:1.4}.tlc.g{background:var(--tl-g)}.tlc.a{background:var(--tl-a);color:#1d1600}.tlc.r{background:var(--tl-r)}
+.tld{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 4px 0 8px;vertical-align:0}.tld:first-child{margin-left:0}.tld.g{background:var(--tl-g)}.tld.a{background:var(--tl-a)}.tld.r{background:var(--tl-r)}
+.macros4{grid-template-columns:repeat(4,1fr)}.macros4 div{padding:10px 8px}.macros4 b{font-size:.98rem}
+.tlrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}.tlb{border-radius:14px;padding:8px 6px;text-align:center;color:#fff}.tlb span,.tlb em{display:block;font-size:.66rem;font-weight:700;font-style:normal;opacity:.9}.tlb b{display:block;font-size:.95rem;margin:2px 0}
+.tlb.g{background:var(--tl-g)}.tlb.a{background:var(--tl-a);color:#1d1600}.tlb.r{background:var(--tl-r)}.tlb.n{background:var(--soft);color:var(--mute)}
 .ck{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--line);flex:none;margin-right:10px}.ck.on{background:var(--acc);box-shadow:inset 0 0 0 2px var(--ink)}
 .selbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(94px + env(safe-area-inset-bottom,0px));width:min(calc(100% - 28px),420px);background:var(--ink);color:var(--bg);border-radius:20px;padding:10px 10px 10px 18px;display:flex;align-items:center;gap:12px;z-index:6;box-shadow:0 10px 26px rgba(0,0,0,.25)}.selbar span{flex:1;font-weight:700;font-size:.9rem}.selbar .btn{width:auto;margin:0;padding:10px 16px}.selbar .btn:disabled{opacity:.4}
 .scanbox{position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-top:10px}.scanbox video{width:100%;height:100%;object-fit:cover;display:block}.scanbox i{position:absolute;left:10%;right:10%;top:50%;height:2px;background:var(--acc);box-shadow:0 0 14px var(--acc)}
@@ -185,8 +190,179 @@ const f=(n,k=1)=>n==null||isNaN(n)?'–':n.toFixed(k),avg=a=>a.length?a.reduce((
 const nv=id=>{const v=parseFloat(($('#'+id)||{}).value);return isNaN(v)?null:v};
 const ps=x=>{const[a,b]=String(x).trim().split(':');return b!=null?(+a)*60+(+b):+a};
 const mmss=s=>{if(s==null)return'–';const r=Math.round(s);return Math.floor(r/60)+':'+z(r%60)};
-const fdate=(d,o)=>pd(d).toLocaleDateString('en-GB',o);
+const fdate=(d,o)=>pd(d).toLocaleDateString(LANG=='ja'?'ja-JP':'en-GB',o);
 const IC=p=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+// ---------- Languages: English is written in the app; other languages translate the screen after it is drawn ----------
+// Exact UI strings map whole; text with numbers goes through patterns; long text is translated sentence by sentence.
+// Product names, brands and anything the user types are never in the dictionary, so they stay as they are.
+const LANGS={en:'English',ja:'日本語'};
+let LANG=(()=>{try{return localStorage.getItem('setorder-lang')||'en'}catch(e){return'en'}})();
+const JA={
+// navigation and shared
+'Today':'今日','Food':'食事','Plan':'プラン','Progress':'進捗','Me':'マイページ','Sign out':'ログアウト','Synced':'同期済み','Saving…':'保存中…','Not synced yet':'未同期',
+'Back':'戻る','Close':'閉じる','Cancel':'キャンセル','Edit':'編集','Done':'完了','Delete':'削除','Remove':'削除','Add':'追加','Save':'保存','Show':'表示','Hide':'隠す','Skip':'スキップ','Go':'スタート',
+'Previous day':'前の日','Next day':'次の日','Back to today':'今日に戻る','optional':'任意','Search':'検索','Name':'名前','Type':'種類','Notes':'メモ','less':'減らす','more':'増やす',
+'This week':'今週','Next week':'来週','Last week':'先週','Mon':'月','Tue':'火','Wed':'水','Thu':'木','Fri':'金','Sat':'土','Sun':'日',
+'kg':'kg','cm':'cm','min':'分','hours':'時間','bpm':'bpm','kcal':'kcal','ml':'ml','%':'%','×':'×','–':'–',
+// auth and setup
+'Welcome back':'おかえりなさい','Make your account':'アカウントを作成','Log in to pick up where you left off.':'ログインして続きから始めましょう。',
+'Your data is saved to your account, so it follows you to any device.':'データはアカウントに保存されるので、どの端末でも使えます。',
+'Log in':'ログイン','Create account':'アカウント作成','Display name':'表示名','Email':'メールアドレス','Password':'パスワード','6 or more characters':'6文字以上','Forgot password?':'パスワードを忘れた場合',
+'Loading your data…':'データを読み込み中…',"Let's set you up":'はじめに設定しましょう','A minute now, then Day 1 appears with your workout and calories.':'1分ほどで設定でき、その後1日目のワークアウトとカロリーが表示されます。',
+'About you':'あなたについて','Your goal (optional)':'目標（任意）','Start Day 1':'1日目を開始',
+// Today
+'Workout':'ワークアウト','Rest day':'休養日','Recovery':'リカバリー','Cardio day':'有酸素の日','No lifting today':'今日は筋トレなし','Rest is when you grow. Eat well and sleep.':'休むことで成長します。しっかり食べて、よく眠りましょう。',
+'Your cardio is below.':'有酸素メニューは下にあります。','Change this day':'この日を変更','Add a workout':'ワークアウトを追加','Make today':'今日の内容','Make this day':'この日の内容',
+'Later workouts carry on the rotation from the session you pick.':'以降のワークアウトは、選んだセッションからローテーションが続きます。','Back to the planned day':'予定どおりに戻す',
+'Upper A':'上半身A','Upper B':'上半身B','Lower A':'下半身A','Lower B':'下半身B','Soon':'まもなく','Not started':'未開始','Jump to Day 1':'1日目へ','Extra exercises':'追加種目',
+'Readiness':'コンディション','Sleep last night':'昨夜の睡眠','Eaten beforehand?':'事前に食事した？','Fully ready, so no adjustment.':'万全なので調整なし。',
+'Eat today':'今日の摂取目安','Protein':'タンパク質','Carbs':'炭水化物','Fat':'脂質','Calories':'カロリー','Body':'体','Weight (kg)':'体重 (kg)','Save weight':'体重を保存','Log food':'食事を記録',
+'Add an exercise':'種目を追加','Log cardio or a sport':'有酸素・スポーツを記録','Swap':'入れ替え','Do now':'今やる','Reps':'回数','Weight step':'重量の刻み','kg per tap, or type any weight':'1タップごとのkg（任意の重量も入力可）',
+'Tap a logged set to edit it.':'記録したセットをタップで編集できます。','Undo last set':'最後のセットを取り消す','Session complete':'セッション完了','Targets for next time are set.':'次回の目標を設定しました。',
+'Save changes':'変更を保存','Delete set':'セットを削除','Movement':'動作','Sets':'セット','Add today only':'今日だけ追加','Once it is added you can swap it for any exercise on its ladder.':'追加後は、同じ段階リストの種目と入れ替えられます。',
+'Create your own exercise':'自分の種目を作成','it joins this ladder':'この段階リストに追加されます','Weights':'ウエイト','Bodyweight':'自重','Fewest reps':'最少回数','Most reps':'最多回数','Save and add to today':'保存して今日に追加',
+'Remove today only':'今日だけ外す','Every movement is already in today’s workout.':'すべての動作がすでに今日のワークアウトに入っています。',
+'Log this session':'このセッションを記録','Remove from today':'今日から外す','Put it back':'元に戻す','fed':'食後','fasted':'空腹時',
+'Steady state':'定常','4-minute intervals':'4分インターバル','Long steady state':'ロング定常','500 m repeats':'500mレペティション','1-minute pick-ups':'1分ピックアップ','Easy steady state':'軽めの定常','Short steady state':'ショート定常',
+'Easy and even. You should be able to speak in full sentences.':'楽に一定のペースで。普通に会話できる程度で。','Hard but controlled. Hold the same effort on every rep.':'きついがコントロールできる強度で。毎回同じ強度を保ちましょう。',
+'Builds your aerobic base. Keep it steady and do not chase pace.':'有酸素の土台を作ります。一定に保ち、ペースを追いすぎないように。','Fast but repeatable. Your last rep should match your first.':'速く、でも繰り返せる強度で。最後の1本を最初の1本と同じに。',
+'Short and fast. Your last rep should match your first.':'短く速く。最後の1本を最初の1本と同じに。','A recovery session. Keep it light.':'回復のためのセッションです。軽めに。','Do it after your lifting.':'筋トレの後に行いましょう。',
+'Short sleep, so today is light.':'睡眠不足のため、今日は軽めです。','Training load is spiking, so today is light.':'トレーニング負荷が急増しているため、今日は軽めです。',
+'Last session felt harder than planned, so this one is 3% easier.':'前回が予定よりきつかったので、今回は3%軽くしています。','Last session felt easier than planned, so this one is 3% harder.':'前回が予定より楽だったので、今回は3%強くしています。',
+'There is no pace on record yet.':'まだペースの記録がありません。','Row by feel and log your splits, and paces appear from next week.':'感覚で漕いでスプリットを記録すると、来週からペースが表示されます。','A rough 2k split in Plan sets them now.':'プランで2kmの大まかなスプリットを入れると今すぐ設定されます。',
+'Rest. Next:':'休憩。次：',
+// Food
+'Eaten':'摂取','The target already adjusts for today\'s training.':'目標は今日のトレーニングに合わせて調整済みです。','On track':'順調','Close to or a little over':'目標付近・やや超過','Well over':'大幅に超過','A little off':'少しずれ','Well off target':'目標から大きくずれ',
+'Breakfast':'朝食','Lunch':'昼食','Dinner':'夕食','Snacks':'間食','Save foods as a meal':'食事をセットとして保存','Select the foods for your meal.':'セットにする食品を選んでください。','Tap foods to select them':'食品をタップして選択','Save as meal':'セットとして保存',
+'Add food':'食品を追加','Meal':'食事','Country':'国','UK':'イギリス','Japan':'日本','All countries':'すべての国','brand and product name work best':'ブランド名と商品名がおすすめ','Japanese or English works':'日本語でも英語でも検索できます',
+'Shop':'店舗','All shops':'すべての店舗','Barcode':'バーコード','Scan a barcode':'バーコードをスキャン','Or type the numbers':'または数字を入力','Look up':'検索','Results':'検索結果',
+'Recent and saved':'最近と保存済み','Recent searches':'最近の検索','My meals':'マイセット','tap + to add the whole meal':'+でセットをまとめて追加','Recent foods':'最近の食品','tap + to add the same amount again':'+で同じ量をもう一度追加',
+'Clear all recent searches and foods':'最近の検索と食品をすべて消去','Quick add':'クイック追加','Type the numbers yourself':'数値を直接入力','Protein (g)':'タンパク質 (g)','Carbs (g)':'炭水化物 (g)','Fat (g)':'脂質 (g)',
+'Product data comes from Open Food Facts, a free database filled in by shoppers.':'商品データは、利用者が入力する無料データベース Open Food Facts のものです。','Check the label if a number looks wrong.':'数値がおかしい場合はラベルを確認してください。',
+'Shop names come from shoppers who added the product, so some products show none.':'店舗名は商品を登録した利用者によるもので、表示されない商品もあります。','Not finding it?':'見つかりませんか？','Try fewer words, another shop, or the barcode.':'単語を減らす、別の店舗にする、またはバーコードを試してください。',
+'Searching…':'検索中…','Search failed.':'検索に失敗しました。','Try again':'もう一度','Nothing found.':'見つかりませんでした。','Try fewer or different words.':'単語を減らすか、別の言葉で試してください。','Try All UK.':'すべての店舗で試してください。',
+'Basic food, typical values':'基本食品（一般的な値）','Basic food':'基本食品','per 100 g':'100 gあたり','per 100 ml':'100 mlあたり','Saturates':'飽和脂肪','Sugars':'糖類','Salt':'食塩','Low':'低','Medium':'中','High':'高','Not listed':'記載なし',
+'How much?':'量は？','Portion':'1人前','Portions':'1人前','Glass':'グラス','Bottle':'ボトル','Pint':'パイント','½ pint':'ハーフパイント','Can':'缶','Slice':'枚','Egg':'個','Tbsp':'大さじ','Tsp':'小さじ','Handful':'ひとつかみ','Grams':'グラム','oz':'オンス','Serving':'食分','Servings':'食分',
+'pint':'パイント','pints':'パイント','serving':'食分','servings':'食分','Add to diary':'記録に追加','Remove from diary':'記録から削除','Values per serving.':'1食分あたりの値です。','Drinks are counted as 1 ml = 1 g.':'飲み物は1 ml = 1 gとして計算します。',
+'Save as a meal':'セットとして保存','Save meal':'セットを保存','Give the meal a name.':'セットに名前をつけてください。','You already have a meal with that name.':'同じ名前のセットがすでにあります。',
+'Saved meals appear in Add food under My meals, ready to add in one tap.':'保存したセットは「食品を追加」のマイセットに表示され、ワンタップで追加できます。','Amounts are saved as they are now.':'量は現在の値で保存されます。',
+'My meal':'マイセット','Add all to diary':'すべて記録に追加','Delete this meal':'このセットを削除','Add to':'追加先','Type the numbers under the barcode.':'バーコードの下の数字を入力してください。',
+'Starting the camera…':'カメラを起動中…','Loading the scanner…':'スキャナーを読み込み中…','Point the camera at the barcode.':'カメラをバーコードに向けてください。',
+'Still looking.':'探しています。','Hold the barcode about 15 to 20 cm away so it is sharp, keep it flat and well lit, or type the numbers below.':'ピントが合うよう15〜20 cmほど離し、平らにして明るい場所で。または下に数字を入力してください。',
+'That barcode is not in Open Food Facts yet.':'このバーコードはまだ Open Food Facts にありません。','Try searching by name, or use Quick add.':'名前で検索するか、クイック追加を使ってください。',
+// Plan
+'Goal':'目標','Goal weight':'目標体重','Goal body fat':'目標体脂肪率','Reach it by':'達成日','Save goal':'目標を保存','Your week':'1週間','Lifting days':'筋トレの日','keep at least one full rest day':'完全な休養日を最低1日','Day 1 is':'1日目',
+'Training style':'トレーニングスタイル','Mixed':'ミックス','Calisthenics':'自重','Bodyweight share':'自重の割合','Every movement uses weights where it can.':'できる限りすべての動作でウエイトを使います。','Calisthenics exercises':'自重種目','Weights exercises':'ウエイト種目',
+'Switch off any you do not want.':'不要なものはオフにしてください。','They will not be picked or offered as swaps.':'選ばれたり、入れ替え候補に出たりしなくなります。','Cardio':'有酸素','Cardio (optional)':'有酸素（任意）',
+'Optional.':'任意です。','Every sport can be logged from Today; these are the ones the app can plan sessions for.':'どのスポーツも「今日」から記録できます。ここにあるのはアプリがメニューを組めるものです。','Switch on what you do, then choose sessions per week and which days.':'行うものをオンにして、週の回数と曜日を選んでください。','Intensity is set for you.':'強度は自動で設定されます。',
+'Rough 2k erg split':'2kmエルゴの大まかなスプリット','optional, like 2:05':'任意（例：2:05）','Workouts':'ワークアウト','Add, remove and set the sets in each session':'セッションごとに種目とセット数を編集','Use the arrow to change the order.':'矢印で順番を変更できます。',
+'Your own exercises':'自分の種目','Next two weeks':'今後2週間','No sessions planned. Pick lifting days above.':'予定がありません。上で筋トレの日を選んでください。','Your gym':'ジム設備',
+'Everything starts on.':'最初はすべてオンです。','Switch off what your gym lacks and the ladders skip it.':'ジムにない設備をオフにすると、その種目は使われません。','Bodyweight exercises are always available.':'自重種目はいつでも使えます。',
+'Dumbbells':'ダンベル','Barbell and squat rack':'バーベルとスクワットラック','Smith machine':'スミスマシン','Cable machine':'ケーブルマシン','Chest, shoulder and row machines':'チェスト・ショルダー・ロウのマシン','Leg curl and extension machines':'レッグカール・エクステンションのマシン','Pull-up bar':'懸垂バー','Dip station':'ディップスタンド',
+'Exercises and starting weights':'種目と開始重量','Each movement is a ladder from bodyweight to heavy weights.':'各動作は自重から高重量までの段階リストになっています。','Pick the step you want and, for loaded lifts, the weight you start at (any value, such as 11.5 kg dumbbells).':'好きな段階を選び、重量を使う種目は開始重量も入力できます（11.5 kgのダンベルなど任意の値）。','After your first session the app sets reps for each session and tells you how much to add.':'初回の後は、アプリが毎回の回数と増やす重量を提案します。',
+'Weights are in kg.':'重量はkg単位です。','Leave a box empty to use the estimate from your bodyweight.':'空欄にすると体重からの推定値を使います。',
+'Where do you want to end up?':'どこを目指しますか？','The plan splits the time into bulk and cut stages.':'プランは期間を増量期と減量期に分けます。','If your date is too soon, it tells you the earliest realistic date (with a 15% buffer) and leaves the choice to you.':'日付が早すぎる場合は、現実的な最短の日付（15%の余裕込み）を示し、判断はあなたに任せます。',
+'Stage':'段階','Days':'日数','kcal/day vs maintenance':'維持比 kcal/日','Ends at':'終了時','Bulk':'増量','Cut':'減量','Maintain':'維持',
+// Progress
+'Goal plan':'目標プラン','Weight':'体重','Weight trend':'体重の推移','Energy':'エネルギー','Training load':'トレーニング負荷','Strength trend':'筋力の推移','Lifts':'種目一覧','Exercise':'種目','Start':'開始','Now':'現在','Growth':'伸び','Target date':'目標日','needs 3 sessions':'3回分必要',
+'Weight, explained by your food':'食事から見た体重','Dots are weigh-ins.':'点は体重の記録です。',"Grey is the model's fit to your food log.":'灰色は食事記録へのモデルの当てはめです。','Solid is your recent eating, with the 95% range shaded.':'実線は最近の食事の場合で、影は95%の範囲です。','Dashed is eating to your target.':'破線は目標どおりに食べた場合です。',
+'It is an estimate, not a measurement.':'これは推定値で、測定値ではありません。','The simple trend line below ignores food and only extends the recent slope.':'下の単純な推移線は食事を考慮せず、最近の傾きを延ばしただけです。','The model above is more reliable.':'上のモデルの方が信頼できます。',
+'Log your weight on 6 or more days across at least a week.':'1週間以上にわたり6日以上体重を記録してください。','The forecast is a regression line, so it needs data to fit.':'予測は回帰直線なので、データが必要です。',
+'Not enough history yet.':'まだ履歴が足りません。','Under-loaded: room to add.':'負荷不足：まだ増やせます。','In the sweet spot.':'ちょうど良い範囲です。','Climbing fast. Watch recovery.':'急上昇中。回復に注意。','A spike. Injury risk is higher, so ease off.':'急増しています。けがのリスクが高いので控えめに。',
+'Cardio and sport count minutes × effort.':'有酸素とスポーツは分数×強度で数えます。','Your daily target is this plus or minus the stage adjustment.':'1日の目標はこれに段階ごとの調整を加えたものです。',
+'Growth is a log-linear regression, so long-range lines flatter you.':'伸びは対数線形回帰なので、長期の線は甘めになります。','Weighted exercises appear here.':'ウエイト種目がここに表示されます。','Bodyweight ones progress by reps and steps.':'自重種目は回数と段階で進みます。',
+// Me
+'Baseline':'基本情報','Take height and weight from your NHS BMI check.':'身長と体重はNHSのBMIチェックの値を使ってください。','Body fat can be a rough guess.':'体脂肪率は大まかな推定で構いません。','Height':'身長','Body fat':'体脂肪率','Lifting experience':'筋トレ経験','Beginner':'初心者','Some':'経験あり','Experienced':'上級者',
+'Your numbers':'あなたの数値','BMI':'BMI','Lean mass':'除脂肪量','Fat-free mass index':'除脂肪量指数','Resting energy':'安静時代謝','Maintenance estimate':'維持カロリーの推定','Add height and weight to see your numbers.':'身長と体重を入力すると数値が表示されます。',
+'BMI ignores muscle, so lean mass and fat-free mass index say more.':'BMIは筋肉を考慮しないため、除脂肪量や除脂肪量指数の方が参考になります。','Once you log enough weight and calories, your measured maintenance replaces this estimate.':'体重とカロリーが十分に記録されると、実測の維持カロリーがこの推定値に代わります。',
+'Tuning':'調整','Lift weight drop per hour of sleep under 7.5':'睡眠が7.5時間未満のとき1時間ごとに下げる重量','Drop when training fasted':'空腹時トレーニングで下げる割合','Activity multiplier for baseline maintenance':'基準維持カロリーの活動係数','Share of cardio and sport calories added to your target':'目標に加える有酸素・スポーツのカロリーの割合','Load units per gym set':'ジム1セットあたりの負荷単位','Rest timer length (1 is the default)':'休憩タイマーの長さ（1が標準）',
+'These are rough starting values, not precise science.':'あくまで目安の初期値で、厳密なものではありません。','Sports list':'スポーツ一覧','One per line: name, MET (energy intensity).':'1行に1つ：名前, MET（運動強度）','Account':'アカウント','Change name':'名前を変更','Change password':'パスワードを変更','Current password':'現在のパスワード','New password (6 or more characters)':'新しいパスワード（6文字以上）',
+'Erase my logged data':'記録データを消去','Delete account':'アカウントを削除','removes the account and all its data':'アカウントとすべてのデータを削除','Enter your password':'パスワードを入力','Language':'言語','Choose the language for the app.':'アプリの言語を選んでください。','Your data is saved to your account in the cloud.':'データはクラウド上のアカウントに保存されています。',
+// cardio form
+'New session':'新しいセッション','Edit session':'セッションを編集','What was it?':'種目は？','Duration':'時間','Distance (optional)':'距離（任意）','Average heart rate (optional)':'平均心拍数（任意）','Effort, RPE (10 is all out)':'きつさ RPE（10が全力）','Average split /500m':'平均スプリット /500m','Stroke rate':'ストロークレート','Individual splits':'各スプリット',
+'comma separated, overrides the average':'カンマ区切り、平均より優先','intervals, rest, how it felt':'インターバル、休憩、感想など','Save session':'セッションを保存',
+// movements
+'Chest press':'チェストプレス','Bench press':'ベンチプレス','Incline press':'インクラインプレス','Chest fly':'チェストフライ','Dips':'ディップス','Shoulder press':'ショルダープレス','Side delts':'三角筋中部','Triceps':'上腕三頭筋','Vertical pull':'縦方向のプル','Row':'ロウ','Rear delts':'三角筋後部','Biceps':'上腕二頭筋','Traps':'僧帽筋',
+'Squat':'スクワット','Back squat':'バックスクワット','Hinge':'ヒンジ','Glutes':'臀部','Single leg':'片脚','Quads':'大腿四頭筋','Hamstrings':'ハムストリングス','Calves':'ふくらはぎ','Core':'体幹',
+// exercises
+'Incline push-up':'インクライン腕立て伏せ','Push-up':'腕立て伏せ','Feet-elevated push-up':'デクライン腕立て伏せ','Machine chest press':'マシンチェストプレス','DB bench press':'ダンベルベンチプレス','Smith bench press':'スミスベンチプレス','Barbell bench press':'バーベルベンチプレス','Wide push-up':'ワイド腕立て伏せ',
+'Incline DB press':'インクラインダンベルプレス','Smith incline press':'スミスインクラインプレス','Incline barbell press':'インクラインバーベルプレス','Cable fly':'ケーブルフライ','Pec deck':'ペックデック','DB fly':'ダンベルフライ','Bench dip':'ベンチディップ','Weighted dip':'加重ディップ',
+'Pike push-up':'パイク腕立て伏せ','Feet-elevated pike push-up':'足上げパイク腕立て伏せ','Machine shoulder press':'マシンショルダープレス','DB shoulder press':'ダンベルショルダープレス','Smith shoulder press':'スミスショルダープレス','Barbell overhead press':'バーベルオーバーヘッドプレス',
+'Y-raise':'Yレイズ','Lateral raise':'サイドレイズ','Cable lateral raise':'ケーブルサイドレイズ','Machine lateral raise':'マシンサイドレイズ','Close-grip push-up':'ナロー腕立て伏せ','Overhead DB extension':'オーバーヘッドダンベルエクステンション','Cable pushdown':'ケーブルプッシュダウン','Cable overhead extension':'ケーブルオーバーヘッドエクステンション','Skull crusher':'スカルクラッシャー',
+'Negative pull-up':'ネガティブ懸垂','Lat pulldown':'ラットプルダウン','Pull-up':'懸垂','Chin-up':'チンアップ','Weighted pull-up':'加重懸垂','Inverted row':'インバーテッドロウ','Feet-elevated inverted row':'足上げインバーテッドロウ','Seated cable row':'シーテッドケーブルロウ','One-arm DB row':'ワンハンドダンベルロウ','Chest-supported row':'チェストサポーテッドロウ','Barbell row':'バーベルロウ',
+'Prone Y-T raise':'うつ伏せY-Tレイズ','Cable face pull':'ケーブルフェイスプル','DB rear delt fly':'ダンベルリアデルトフライ','Reverse pec deck':'リバースペックデック','Supinated inverted row':'逆手インバーテッドロウ','DB curl':'ダンベルカール','Hammer curl':'ハンマーカール','Cable curl':'ケーブルカール','Barbell curl':'バーベルカール',
+'Scapular pull-up':'スキャプラプルアップ','DB shrug':'ダンベルシュラッグ','Smith shrug':'スミスシュラッグ','Barbell shrug':'バーベルシュラッグ','Bodyweight squat':'自重スクワット','Goblet squat':'ゴブレットスクワット','Leg press':'レッグプレス','Smith squat':'スミススクワット','Barbell back squat':'バーベルバックスクワット',
+'Back extension':'バックエクステンション','DB Romanian deadlift':'ダンベルルーマニアンデッドリフト','Smith Romanian deadlift':'スミスルーマニアンデッドリフト','Barbell Romanian deadlift':'バーベルルーマニアンデッドリフト','Deadlift':'デッドリフト','Glute bridge':'グルートブリッジ','Single-leg glute bridge':'片脚グルートブリッジ','Cable pull-through':'ケーブルプルスルー','Smith hip thrust':'スミスヒップスラスト','Barbell hip thrust':'バーベルヒップスラスト',
+'Reverse lunge':'リバースランジ','Bulgarian split squat':'ブルガリアンスクワット','DB Bulgarian split squat':'ダンベルブルガリアンスクワット','Smith split squat':'スミススプリットスクワット','Step-up':'ステップアップ','DB step-up':'ダンベルステップアップ','Leg extension':'レッグエクステンション','Slider leg curl':'スライダーレッグカール','Leg curl machine':'レッグカールマシン','Nordic curl':'ノルディックカール',
+'Calf raise':'カーフレイズ','Single-leg calf raise':'片脚カーフレイズ','DB calf raise':'ダンベルカーフレイズ','Smith calf raise':'スミスカーフレイズ','Leg press calf raise':'レッグプレスカーフレイズ','Calf machine':'カーフマシン','Dead bug':'デッドバグ','Hanging knee raise':'ハンギングニーレイズ','Hanging leg raise':'ハンギングレッグレイズ','Ab wheel':'腹筋ローラー','Cable crunch':'ケーブルクランチ',
+// sports
+'Rowing erg':'ローイングエルゴ','Rowing (on water)':'ボート（水上）','Running':'ランニング','Trail running':'トレイルランニング','Cycling':'サイクリング','Indoor cycling':'インドアサイクリング','Mountain biking':'マウンテンバイク','Swimming':'水泳','Open-water swimming':'オープンウォータースイミング','Ski erg':'スキーエルゴ','Incline walk':'傾斜ウォーキング','Walking':'ウォーキング','Hiking':'ハイキング','Elliptical':'クロストレーナー','Stair climber':'ステアクライマー','Jump rope':'縄跳び',
+'Football':'サッカー','Rugby':'ラグビー','Basketball':'バスケットボール','Netball':'ネットボール','Hockey':'ホッケー','Ice hockey':'アイスホッケー','Volleyball':'バレーボール','Beach volleyball':'ビーチバレー','Ultimate':'アルティメット','Tennis':'テニス','Squash':'スカッシュ','Badminton':'バドミントン','Padel':'パデル','Table tennis':'卓球','Cricket':'クリケット','Baseball or softball':'野球・ソフトボール','Golf':'ゴルフ',
+'Boxing':'ボクシング','Kickboxing':'キックボクシング','Martial arts':'武道・格闘技','Brazilian jiu-jitsu':'ブラジリアン柔術','Wrestling':'レスリング','Climbing':'クライミング','Bouldering':'ボルダリング','Yoga':'ヨガ','Pilates':'ピラティス','Dance':'ダンス','CrossFit':'クロスフィット','Circuit training':'サーキットトレーニング','Kayaking':'カヤック','Canoeing':'カヌー','Stand-up paddleboarding':'SUP','Surfing':'サーフィン','Skiing':'スキー','Snowboarding':'スノーボード','Cross-country skiing':'クロスカントリースキー','Ice skating':'アイススケート','Skateboarding':'スケートボード','Horse riding':'乗馬','Other':'その他',
+'Carbs / fat':'炭水化物 / 脂質','e.g. Canteen lunch':'例：社食のランチ','e.g. Landmine press':'例：ランドマインプレス','e.g. Usual breakfast':'例：いつもの朝食','e.g. Tesco semi skimmed milk':'例：Tesco 低脂肪乳','e.g. a product or brand name':'例：商品名やブランド名',
+'How much of your training is bodyweight.':'トレーニングのうち自重の割合です。','0% is all weights.':'0%はすべてウエイトです。','At 100% every movement that has a bodyweight option uses one.':'100%では、自重の選択肢がある動作はすべて自重になります。','In between, the movements best suited to calisthenics switch first.':'その間では、自重に向いた動作から先に切り替わります。',
+'Until then this is a simple trend line.':'それまでは単純な推移線です。','Until then your target uses your baseline.':'それまでは目標に基準値を使います。','RPE':'RPE',
+'underweight':'低体重','healthy weight':'標準体重','overweight':'過体重','obese':'肥満'};
+const JM={b:'朝食',l:'昼食',d:'夕食',s:'間食'},jt=x=>JA[x]??x;
+// [pattern, replacement]: the replacement is a string with $1… or a function of the match
+const JA_RX=[
+[/^Day (\d+)$/,'$1日目'],[/^Day 1 is (.+)$/,m=>'1日目は'+m[1]],[/^Week of (.+)$/,'$1の週'],[/^(.+) · swipe for other weeks$/,m=>jt(m[1])+' · スワイプで他の週へ'],
+[/^Workout · changed from plan$/,'ワークアウト · 予定から変更'],[/^of (\d+) sets$/,'/ $1セット'],[/^(\d+) exercises?$/,'$1種目'],[/^of (\d+) kcal$/,'/ $1 kcal'],
+[/^(\d+) kcal left today\.$/,'今日はあと$1 kcal。'],[/^(\d+) kcal over today's target\.$/,'今日の目標を$1 kcal超えています。'],
+[/^Log set (\d+) of (\d+)$/,'セット $1/$2 を記録'],[/^(.+) · (\d+) × (\d+)-(\d+)$/,m=>`${jt(m[1])} · ${m[2]} × ${m[3]}-${m[4]}`],[/^(.+) · (\d+) × (\d+)-(\d+) · bodyweight$/,m=>`${jt(m[1])} · ${m[2]} × ${m[3]}-${m[4]} · 自重`],
+[/^Readiness (-?[\d.]+)%: loaded targets are lowered to match\.$/,'コンディション $1%：重量の目標をそれに合わせて下げています。'],
+[/^First time: (?:start at|your starting weight is) ([\d.]+) kg for (\d+) reps, with about 3 reps spare\.$/,'初回：$1 kgで$2回から（あと3回できる余裕を残して）。'],
+[/^First time: (\d+) sets of (\d+), stopping 2 reps short of failure\.$/,'初回：$2回を$1セット、限界の2回手前で止めましょう。'],
+[/^Aim for ([\d.]+) kg × (\d+) on every set\.$/,'全セット$1 kg × $2回を目指しましょう。'],[/^Aim for (\d+) on every set\.$/,'全セット$1回を目指しましょう。'],[/^Last time: (.+)\.$/,'前回：$1。'],
+[/^Reach (\d+) on every set in about (\d+) more sessions?, then add ([\d.]+) kg and expect about (\d+) reps\.$/,'あと約$2回のセッションで全セット$1回に届いたら、$3 kg増やして約$4回が目安です。'],
+[/^Hit (\d+) on every set and next time add ([\d.]+) kg \(about (\d+) reps\)\.$/,'全セット$1回できたら、次回は$2 kg増やしましょう（約$3回）。'],
+[/^Reach (\d+) on every set in about (\d+) more sessions?, then you move up a step\.$/,'あと約$2回のセッションで全セット$1回に届いたら、次の段階へ進みます。'],
+[/^Hit (\d+) on every set and you move up a step next time\.$/,'全セット$1回できたら、次回は次の段階へ進みます。'],[/^You topped the last one, so you moved up a step\.$/,'前回の上限に達したので、次の段階に進みました。'],
+[/^Maintenance (\d+) \(from (.+?)\) ([+−]) (\d+) for (.+?)\.$/,m=>`維持カロリー ${m[1]}（${({'your baseline':'基準値','your food and weight logs':'食事と体重の記録','your logged data':'記録データ','a default estimate':'標準の推定値'})[m[2]]||m[2]}）${m[3]} ${m[4]}：${({'a lean gain of about 0.3 kg a week':'週約0.3 kgの緩やかな増量','holding your weight':'体重維持','your bulk stage':'増量期','your cut stage':'減量期','your maintain stage':'維持期'})[m[5]]||m[5]}。`],
+[/^Add your baseline in Me for a personal figure\.$/,'マイページで基本情報を入力すると、あなた向けの値になります。'],
+[/^Training today: (.+) kcal\.$/,m=>'今日のトレーニング：'+m[1].replace(/lifting (\d+) sets/,'筋トレ$1セット').replace('no lifting','筋トレなし').replace('planned cardio','予定の有酸素').replace('logged cardio','記録した有酸素').replace(/, /g,'、')+' kcal。'],
+[/^This updates when you add or remove exercises or cardio\.$/,'種目や有酸素を追加・削除すると更新されます。'],[/^Eaten so far: (\d+) kcal and (\d+) g protein\.$/,'ここまでの摂取：$1 kcal、タンパク質 $2 g。'],
+[/^Rest\. Next: (.+)$/,m=>'休憩。次：'+m[1].replace(/^(.+), set (\d+)$/,(x,a,b)=>jt(a)+' セット'+b)],[/^Next: (.+)$/,m=>'次：'+m[1].replace(/^(.+), set (\d+)$/,(x,a,b)=>jt(a)+' セット'+b)],
+[/^Session clock (.+)$/,'セッション時間 $1'],[/^Session took (.+)$/,'セッション時間 $1'],
+[/^(\d+) min at RPE ([\d.]+)$/,'RPE $2で$1分'],[/^(\d+) min at (.+)$/,'$2で$1分'],[/^(\d+) × (\d+) min at (.+), ([\d.]+) min easy between$/,'$3で$2分 × $1本、間に$4分楽に'],[/^(\d+) × (\d+) m at (.+), ([\d.]+) min rest between$/,'$3で$2 m × $1本、間に$4分休憩'],
+[/^Rate (.+)$/,'レート $1'],[/^about (\d+) kcal$/,'約$1 kcal'],[/^(.+) removed from today\.$/,m=>jt(m[1])+'を今日から外しました。'],[/^(.+): (.+)$/,m=>JA[m[1]]?jt(m[1])+'：'+jt(m[2]):null],
+[/^Shortened to about (\d+) min so lifting and cardio fit in an hour\.$/,'筋トレと有酸素を1時間に収めるため約$1分に短縮。'],
+[/^(\d+) selected$/,'$1件選択中'],[/^(\d+) foods? selected$/,'$1品を選択'],[/^Tap to add (breakfast|lunch|dinner|snacks)\.$/,m=>'タップして'+JM[m[1][0]]+'を追加'],[/^Add food to (.+)$/,m=>jt(m[1])+'に食品を追加'],[/^Add to (Breakfast|Lunch|Dinner|Snacks)$/,m=>jt(m[1])+'に追加'],
+[/^([\d.]+) g protein$/,'タンパク質 $1 g'],[/^([\d.]+) g fat$/,'脂質 $1 g'],[/^Search more at (.+)$/,'$1でさらに検索'],[/^Nothing found at (.+)\.$/,'$1では見つかりませんでした。'],
+[/^([\d.]+) kcal, ([\d.]+) g protein per 100 (g|ml)\.$/,'100 $3あたり $1 kcal、タンパク質 $2 g。'],[/^(\d+|\d*½) pints?$/,'$1パイント'],[/^(\d+) foods?: (.+)$/,'$1品：$2'],
+[/^My (breakfast|lunch|dinner|snacks)$/,m=>'私の'+JM[m[1][0]]],
+[/^(\d+) of (\d+) enabled$/,'$2件中$1件が有効'],[/^(\d+) of (\d+) days chosen$/,'$2日中$1日を選択'],[/^Add a movement to (.+)$/,m=>jt(m[1])+'に動作を追加'],[/^Reset (.+) to the default$/,m=>jt(m[1])+'を初期設定に戻す'],
+[/^Changes apply to every (.+) from now on\.$/,m=>'変更は今後のすべての'+jt(m[1])+'に適用されます。'],[/^To change a single day, use Add and Remove on Today\.$/,'1日だけ変える場合は「今日」で追加・削除してください。'],
+[/^Add to every (.+)$/,m=>'すべての'+jt(m[1])+'に追加'],[/^Remove from every (.+)$/,m=>'すべての'+jt(m[1])+'から外す'],[/^Remove (.+)$/,m=>JA[m[1]]?jt(m[1])+'を外す':null],
+[/^Drop it just for today, or from every (.+) from now on\.$/,m=>'今日だけ外すか、今後のすべての'+jt(m[1])+'から外すか選べます。'],[/^It was added just for today\.$/,'今日だけ追加された種目です。'],[/^Sets you already logged stay in your history\.$/,'記録済みのセットは履歴に残ります。'],
+[/^Sessions rotate through (.+) on these days\.$/,m=>'これらの日に'+m[1].split(', ').map(jt).join('、')+'の順で回ります。'],[/^You can still add or skip a single day from Today\.$/,'「今日」から1日単位で追加・スキップもできます。'],
+[/^Bodyweight: (.+)\.$/,m=>'自重：'+m[1].split(', ').map(jt).join('、')+'。'],
+[/^([\d.]+) · (underweight|healthy weight|overweight|obese)$/,m=>m[1]+' · '+jt(m[2])],[/^Signed in as (.+)\.$/,'$1 でログイン中。'],
+[/^(\d+) weeks$/,'$1週間'],[/^(\d+) to (\d+)$/,'$1〜$2日目'],[/^(\d+) units this week$/,'今週 $1 単位'],[/^Planned weight today ([\d.]+) kg\.$/,'今日の予定体重 $1 kg。'],[/^You are on plan\.$/,'予定どおりです。'],[/^Log your weight to compare\.$/,'比較するには体重を記録してください。'],
+[/^In (\d+) weeks at your recent eating: (.+)$/,m=>`最近の食事なら${m[1]}週間で：${m[2].replace('lean','除脂肪').replace('fat','脂肪')}`],[/^At your target \(([\d,]+) kcal a day\): (.+)$/,m=>`目標（1日${m[1]} kcal）なら：${m[2].replace('lean','除脂肪').replace('fat','脂肪')}`],
+[/^A strength line needs at least 3 sessions of (.+) spread over about a week or more\.$/,m=>jt(m[1])+'の筋力の推移には、1週間ほどにわたる3回以上のセッションが必要です。'],[/^You have (\d+) so far\.$/,'現在$1回です。'],
+[/^Needs a weight trend plus calories on 5 of the last 14 days\.$/,'体重の推移と、直近14日のうち5日分のカロリー記録が必要です。'],
+[/^To forecast from your food, log food on most days and weigh in at least (\d+) times over (\d+) days or more \(now: (.+)\)\.$/,m=>`食事から予測するには、ほぼ毎日食事を記録し、${m[2]}日以上の間に${m[1]}回以上体重を測ってください（現在：${m[3].replace(/(\d+) of (\d+) weigh-ins/,'体重記録 $1/$2回').replace(/food logged on (\d+)% of days between weigh-ins \(needs (\d+)%\)/,'食事記録 $1%（必要 $2%）').replace(/weigh-ins span (\d+) of (\d+) days/,'記録期間 $1/$2日')}）。`],
+[/^(× )?(\d+|½|half a|half) (.+)$/,m=>{const w=PORT[m[3]];return w==null?null:(m[1]||'')+(m[2]=='half a'||m[2]=='half'?'半分':m[2])+(w?' '+w:'')}],
+[/^Starting weight for (.+)$/,m=>jt(m[1])+'の開始重量'],[/^(\d+) or more characters$/,'$1文字以上']];
+// portion words used by the basic foods
+const PORT={glass:'グラス','medium glass':'グラス',glasses:'グラス',medium:'個（中）','medium egg':'個',slice:'枚',slices:'枚',bowl:'杯',handful:'つかみ',pot:'個',breast:'枚',fillet:'切れ',portion:'人前',can:'缶',bag:'袋',scoop:'杯',tablespoon:'大さじ',pint:'パイント',pints:'パイント',mug:'杯','rice ball':'個',pack:'パック',bun:'個',plate:'皿',pieces:'個',serving:'食分',bottle:'本','small tin':'缶',tin:'缶',pizza:'枚',squares:'かけ',biscuits:'枚',
+ 'glass (250 ml)':'グラス (250 ml)','glasses (250 ml)':'グラス (250 ml)','can (330 ml)':'缶 (330 ml)','cans (330 ml)':'缶 (330 ml)','bottle (500 ml)':'本 (500 ml)','bottles (500 ml)':'本 (500 ml)','half pint':'ハーフパイント','half pints':'ハーフパイント','tbsp (15 g)':'大さじ (15 g)','tsp (5 g)':'小さじ (5 g)','handful (30 g)':'つかみ (30 g)','handfuls (30 g)':'つかみ (30 g)','slice (40 g)':'枚 (40 g)','slices (40 g)':'枚 (40 g)','egg (50 g)':'個 (50 g)','eggs (50 g)':'個 (50 g)'};
+function trS(s){if(JA[s]!=null)return JA[s];for(const[re,f]of JA_RX){const m=s.match(re);if(m){const r=typeof f=='function'?f(m):s.replace(re,f);if(r!=null)return r}}return null}
+function trT(s){let r=trS(s);if(r!=null)return r;
+ for(const sep of[' · ',' + ']){if(s.includes(sep)){const ps=s.split(sep),t=ps.map(p=>trS(p)??p);if(t.some((x,i)=>x!==ps[i]))return t.join(sep)}}
+ const sn=s.match(/.+?[.?!。](?=\s|$)|.+$/g);if(sn&&sn.length>1){const raw=sn.map(x=>x.trim()),t=raw.map(x=>trS(x)??x);if(t.some((x,i)=>x!==raw[i]))return t.join('')}
+ return null}
+function trNode(n){const v=n.nodeValue;if(!v)return;const s=v.trim();if(!s||!/[A-Za-z]/.test(s))return;const p=n.parentElement;if(!p||p.closest('script,style,textarea,[data-notr]'))return;
+ const t=trT(s);if(t!=null&&t!==s)n.nodeValue=v.replace(s,t)}
+function trEl(el){if(el.closest&&el.closest('[data-notr]'))return;for(const a of['placeholder','aria-label','title']){const v=el.getAttribute&&el.getAttribute(a);if(v){const t=trS(v.trim());if(t!=null&&t!==v)el.setAttribute(a,t)}}}
+function trTree(root){if(LANG=='en'||!root)return;if(root.nodeType==3)return trNode(root);if(root.nodeType!=1)return;trEl(root);
+ root.querySelectorAll('[placeholder],[aria-label],[title]').forEach(trEl);const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode())trNode(n)}
+if(LANG!='en')document.addEventListener('DOMContentLoaded',()=>trTree(document.getElementById('rest')));setTimeout(()=>trTree(document.getElementById('rest')),0);
+new MutationObserver(ms=>{if(LANG=='en')return;for(const m of ms){if(m.type=='characterData')trNode(m.target);else m.addedNodes.forEach(trTree)}}).observe(document.body,{subtree:true,childList:true,characterData:true});
+const dl=i=>LANG=='ja'?'日月火水木金土'[i]:DL[i];
+function setLang(l){if(!LANGS[l])return;LANG=l;const rb=document.querySelectorAll('#rest button');if(rb[1])rb[1].textContent='Skip';trTree(document.getElementById('rest'));try{localStorage.setItem('setorder-lang',l)}catch(e){}document.documentElement.lang=l;if(U){U.set.lang=l;save()}renderedTab=null;$('#app').innerHTML='';render()}
+
 const BRAND=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-37 -37 2074 1459" class="mark" aria-hidden="true"><g stroke="currentColor" stroke-linecap="round" fill="none"><g stroke-width="55.5"><path d="M208.5 536.5V1235.7"/><path d="M707.5 625.5V892.7"/><path d="M831 1074.5V807.8"/><path d="M1285.5 86.5V495.4"/><path d="M1428 1146.5V397.5"/><path d="M1760.5 559V168.9"/></g><path d="M14 1369.4L1985 14.6" stroke-width="97.5"/></g><path d="M240.8 610.3A80.5 80.5 0 1 0 176.3 610.3" stroke="var(--wmo)" stroke-width="57" fill="none"/><path d="M739.8 699.3A80.5 80.5 0 1 0 675.3 699.3" stroke="var(--wmo)" stroke-width="57" fill="none"/><path d="M863.3 1000.7A80.5 80.5 0 1 1 798.8 1000.7" stroke="var(--wmo)" stroke-width="57" fill="none"/><path d="M1317.8 160.3A80.5 80.5 0 1 0 1253.3 160.3" stroke="var(--wmo)" stroke-width="57" fill="none"/><path d="M1460.3 1072.7A80.5 80.5 0 1 1 1395.8 1072.7" stroke="var(--wmo)" stroke-width="57" fill="none"/><path d="M1792.8 485.2A80.5 80.5 0 1 1 1728.3 485.2" stroke="var(--wmo)" stroke-width="57" fill="none"/></svg><span class="wm"><span class="ws">Set</span><span class="wo">Order</span></span>`;
 const I={food:IC('<path d="M7 3v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3M9 12v9M17 21V3c-2.5 1-4 3.5-4 7v3h4"/>'),today:IC('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),plan:IC('<rect x="4" y="5" width="16" height="15" rx="3.5"/><path d="M4 10h16M9 3v4M15 3v4"/>'),prog:IC('<path d="M4 18l5-6 4 3 7-9"/><path d="M15 6h5v5"/>'),me:IC('<circle cx="12" cy="9" r="4"/><path d="M4.5 20c1.5-4 5-5 7.5-5s6 1 7.5 5"/>'),left:IC('<path d="M15 5l-7 7 7 7"/>'),right:IC('<path d="M9 5l7 7-7 7"/>'),minus:IC('<path d="M6 12h12"/>'),plus:IC('<path d="M12 6v12M6 12h12"/>'),down:IC('<path d="M6 9l6 6 6-6"/>'),up:IC('<path d="M12 19V5M6 11l6-6 6 6"/>')};
 let U=null,user=null,tab='day',renderedTab=null,pillAnim=null,slideCleanup=null,vd=TODAY,stripAnimDir=0,sub=null,editId=null,swapP=null,mode='login',msg='',un='',rest=null,AC=null,fa=null,draft=null,wmsg='',gmsg='',gok=false,swmsg='',es=null,wcarry=null,lift=null,amsg='',aok=false,booting=true,bootErr='',dname='',email='',pendingName='',msgok=false,dirty=false,pt=null,syncMsg='',folds={cal:false,wt:false,ses:false},rmP=null,pickP=null,addOpen=false,custOpen=false,axn=3,axp=null,cdraft={},cmsg='',wsel=null,smsg='';
@@ -464,7 +640,7 @@ function goalTable(){const gp=U.goal?goalPlan():null;if(!gp)return'';
  return adv+`<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Stage</th><th>Days</th><th>kcal/day vs maintenance</th><th>Ends at</th></tr></thead><tbody>${gp.phases.map(p=>`<tr><td>${cap(p.t)}<br><span class="m">${Math.round(p.wk)} weeks</span></td><td>${p.s+1} to ${p.e}<br><span class="m">${fdate(fromN(dn(U.start)+p.s),{day:'numeric',month:'short'})}</span></td><td>${p.kcal>0?'+':''}${Math.round(p.kcal)}</td><td>${f(p.w1)} kg<br><span class="m">${f(p.bf1,0)}% fat</span></td></tr>`).join('')}</tbody></table></div>`}
 
 // ---------- UI pieces, full-width side-by-side carousel slide & live tab scrubbing ----------
-const opts=(a,s)=>a.map(x=>`<option${x==s?' selected':''}>${esc(x)}</option>`).join('');
+const opts=(a,s)=>a.map(x=>`<option value="${esc(x)}"${x==s?' selected':''}>${esc(x)}</option>`).join('');
 const sl=(id,l,min,max,st,v,u,o={})=>{const at=(o.k?` data-s="${o.k}"`:'')+(o.f?` data-f="${o.f}"`:'')+(o.b?` data-b="${o.b}"`:'')+(o.cal?' data-cal="1"':'');
  return`<div class="fld"><div class="fl"><span>${l}</span>${u?`<em>${u}</em>`:''}</div><div class="sl"><input type="range" data-p="${id}"${at} min="${min}" max="${max}" step="${st}" value="${v??o.d??min}" aria-label="${l}"><input type="number" inputmode="decimal" id="${id}" data-p="${id}"${at} step="${st}" value="${v??''}"></div></div>`};
 const stp=(id,v,s)=>`<div class="step"><button data-st="${id}" data-dl="${-s}" aria-label="less">${I.minus}</button><input id="${id}" type="number" inputmode="decimal" step="${s}" value="${v??''}"><button data-st="${id}" data-dl="${s}" aria-label="more">${I.plus}</button></div>`;
@@ -744,7 +920,7 @@ function loadV(){renderedTab=null;$('#app').innerHTML=`<div class="auth"><div cl
 function errV(){renderedTab=null;$('#app').innerHTML=`<div class="auth"><div class="logo">${BRAND}</div><p class="warn">${esc(bootErr)}</p><button class="btn" data-a="retry">Try again</button></div>`}
 function authV(){renderedTab=null;$('#app').innerHTML=`<div class="auth"><div class="logo">${BRAND}</div><h1>${mode=='new'?'Make your account':'Welcome back'}</h1><p class="m">${mode=='new'?'Your data is saved to your account, so it follows you to any device.':'Log in to pick up where you left off.'}</p>
  <div class="seg"><button data-mode="login" class="${mode=='login'?'on':''}">Log in</button><button data-mode="new" class="${mode=='new'?'on':''}">Create account</button></div>
- <div class="card">${mode=='new'?'<div class="fl"><span>Display name</span><em>optional</em></div><input type="text" id="dn" maxlength="30" autocomplete="nickname"><div class="fld"></div>':''}<div class="fl"><span>Email</span></div><input type="email" id="un" value="${esc(un)}" autocomplete="email" autocapitalize="none" autocorrect="off"><div class="fld"><div class="fl"><span>Password</span>${mode=='new'?'<em>6 or more characters</em>':''}</div><input type="password" id="pw" autocomplete="${mode=='new'?'new-password':'current-password'}"></div>${msg?`<p class="${msgok?'good':'warn'}">${esc(msg)}</p>`:''}<button class="btn" data-a="auth">${mode=='new'?'Create account':'Log in'}</button>${mode=='login'?'<div class="c"><button class="tx" data-a="forgot" style="margin-top:8px">Forgot password?</button></div>':''}</div></div>`}
+ <div class="card">${mode=='new'?'<div class="fl"><span>Display name</span><em>optional</em></div><input type="text" id="dn" maxlength="30" autocomplete="nickname"><div class="fld"></div>':''}<div class="fl"><span>Email</span></div><input type="email" id="un" value="${esc(un)}" autocomplete="email" autocapitalize="none" autocorrect="off"><div class="fld"><div class="fl"><span>Password</span>${mode=='new'?'<em>6 or more characters</em>':''}</div><input type="password" id="pw" autocomplete="${mode=='new'?'new-password':'current-password'}"></div>${msg?`<p class="${msgok?'good':'warn'}">${esc(msg)}</p>`:''}<button class="btn" data-a="auth">${mode=='new'?'Create account':'Log in'}</button>${mode=='login'?'<div class="c"><button class="tx" data-a="forgot" style="margin-top:8px">Forgot password?</button></div>':''}</div><div style="margin-top:6px">${langSeg()}</div></div>`}
 
 // ---------- Today ----------
 function target(){const c=calc(),ph=phaseAt(vd),gp=U.goal?goalPlan():null,maint=c.maint||2700,delta=ph?ph.kcal:(gp&&gp.ok&&dn(vd)>=dn(U.start)?0:330);
@@ -772,7 +948,7 @@ function dayPick(t){if(!dpick)return'';return`<div class="dpick"><div class="eye
  <p class="m" style="margin-top:8px">Later workouts carry on the rotation from the session you pick.</p>${U.ov[vd]?'<button class="tx" data-dses="plan">Back to the planned day</button>':''}</div>`}
 function dayV(fromScrub=false){const N=dn(vd)-dn(U.start)+1,t=plan(vd),D=gd(vd),L=dayList(vd),tot=L.reduce((s,x)=>s+x[1],0),done=U.sets.filter(s=>s.d==vd).length,cd=cdue(vd).length;
  let h=`<div class="date-swipe" id="date-swipe"><div class="top"><div><div class="eyebrow">${fdate(vd,{weekday:'long',day:'numeric',month:'long'})}</div><h1>${N>0?'Day '+N:'Soon'}</h1></div><div class="nav2"><button class="ib" data-day="${fromN(dn(vd)-1)}" aria-label="Previous day">${I.left}</button><button class="ib" data-day="${fromN(dn(vd)+1)}" aria-label="Next day">${I.right}</button></div></div>
- <div class="strip-vp" id="date-vp"><div class="strip-track" id="date-track">${[-1,0,1].map(o=>{const tg=fromN(dn(vd)+o*7);return`<div class="strip">${wkDays(o).map(d=>`<button class="dc${d==tg?' sel':''}${d==TODAY?' tdy':''}" data-day="${d}">${DL[pd(d).getDay()]}<b>${pd(d).getDate()}</b><i class="${U.sets.some(s=>s.d==d)||U.acts.some(a=>a.d==d)?'d':(isW(d)||cdue(d).length)&&d>=U.start?'w':''}"></i></button>`).join('')}</div>`}).join('')}</div></div><div class="wklbl">${weekLbl()} · swipe for other weeks</div></div>`;
+ <div class="strip-vp" id="date-vp"><div class="strip-track" id="date-track">${[-1,0,1].map(o=>{const tg=fromN(dn(vd)+o*7);return`<div class="strip">${wkDays(o).map(d=>`<button class="dc${d==tg?' sel':''}${d==TODAY?' tdy':''}" data-day="${d}">${dl(pd(d).getDay())}<b>${pd(d).getDate()}</b><i class="${U.sets.some(s=>s.d==d)||U.acts.some(a=>a.d==d)?'d':(isW(d)||cdue(d).length)&&d>=U.start?'w':''}"></i></button>`).join('')}</div>`}).join('')}</div></div><div class="wklbl">${weekLbl()} · swipe for other weeks</div></div>`;
  if(vd!=TODAY)h+=`<button class="tx" data-day="${TODAY}">Back to today</button>`;
  if(N<1)h+=`<div class="card hero"><div class="eyebrow">Not started</div><h2>Day 1 is ${fdate(U.start,{weekday:'long',day:'numeric',month:'long'})}</h2><button class="tx" data-day="${U.start}">Jump to Day 1</button></div>`;
  else{h+=t?`<div class="card hero"><div class="eyebrow">Workout${U.ov[vd]?' · changed from plan':''}</div><h2>${t}</h2><p class="m"><span id="hc">${done}</span> of ${tot} sets · ${L.length} exercise${L.length==1?'':'s'}</p>${timeH()}<div class="bar"><i id="hb" style="width:${tot?Math.round(done/tot*100):0}%"></i></div><button class="tx" data-a="dayedit">${dpick?'Close':'Change this day'}</button>${dayPick(t)}</div>`
@@ -970,9 +1146,18 @@ function dayFood(d){return foodOf(d).reduce((a,e)=>{const t=tot(e,e.g);a.k+=t.k;
 function syncFood(d){const D=U.days[d]=U.days[d]||{};if(foodOf(d).length){const t=dayFood(d);D.kcal=Math.round(t.k);D.p=Math.round(t.p);D.fk=1}else if(D.fk){delete D.kcal;delete D.p;delete D.fk}}
 const shopsBut=it=>(it.sh||[]).filter(x=>x.toLowerCase()!=String(it.b||'').toLowerCase());
 const shopNames=tags=>[...new Set((tags||[]).map(t=>{t=String(t).trim();return SHOPN[SHOP_JA[t]||t.toLowerCase().replace(/&/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')]}).filter(Boolean))];
+const nn=x=>x==null||x===''||isNaN(+x)?null:Math.round(+x*100)/100;
+// UK front-of-pack traffic lights, judged per 100 g (food) or per 100 ml (drinks): [green up to, red above]
+const TL={fat:[3,17.5],sat:[1.5,5],sug:[5,22.5],salt:[.3,1.5]},TLD={fat:[1.5,8.75],sat:[.75,2.5],sug:[2.5,11.25],salt:[.3,.75]};
+const TLN={fat:'Fat',sat:'Saturates',sug:'Sugars',salt:'Salt'};
+const tlv=(it,k)=>k=='fat'?it.f:it[k];
+const tlOf=(it,k)=>{const v=tlv(it,k);if(v==null)return null;const[lo,hi]=(it.liq?TLD:TL)[k];return v<=lo?'g':v>hi?'r':'a'};
+const tlChips=it=>Object.keys(TL).map(k=>{const c=tlOf(it,k);return c?`<span class="tlc ${c}">${TLN[k]}</span>`:''}).join('');
+// How a day's total compares with its target: protein is a floor, the rest are ceilings.
+function dayCol(kind,a,b){if(!b)return'g';const r=a/b,past=vd<TODAY;if(kind=='p')return r>=.9?'g':past&&r<.6?'r':'a';if(r>1.15)return'r';if(r>1.05)return'a';if(past&&kind=='k'&&r<.85)return'a';return'g'}
 function offItem(p){const n=p.nutriments||{};let k=n['energy-kcal_100g'];if(k==null&&n.energy_100g!=null)k=n.energy_100g/4.184;const name=(p.product_name||p.product_name_en||p.product_name_ja||'').trim();if(k==null||!name)return null;
  const sv=parseFloat(p.serving_quantity)||0;
- return{n:name.slice(0,80),b:String(p.brands||'').split(',')[0].trim().slice(0,40),c:p.code,k:r1(k),p:r1(n.proteins_100g),cb:r1(n.carbohydrates_100g),f:r1(n.fat_100g),sv:sv>0&&sv<3000?r1(sv):0,svl:sv>0?String(p.serving_size||'').slice(0,30):'',liq:/\d\s*(ml|cl|l|pt|pints?)\b/i.test(p.quantity||''),sh:shopNames(p.stores_tags)}}
+ return{n:name.slice(0,80),b:String(p.brands||'').split(',')[0].trim().slice(0,40),c:p.code,k:r1(k),p:r1(n.proteins_100g),cb:r1(n.carbohydrates_100g),f:r1(n.fat_100g),sv:sv>0&&sv<3000?r1(sv):0,svl:sv>0?String(p.serving_size||'').slice(0,30):'',liq:/\d\s*(ml|cl|l|pt|pints?)\b/i.test(p.quantity||''),sh:shopNames(p.stores_tags),sat:nn(n['saturated-fat_100g']),sug:nn(n.sugars_100g),salt:n.salt_100g!=null?nn(n.salt_100g):n.sodium_100g!=null?nn(n.sodium_100g*2.5):null}}
 const OFF='https://world.openfoodfacts.org',OFF_F='code,product_name,product_name_en,product_name_ja,brands,stores_tags,serving_quantity,serving_size,quantity,nutriments';
 // Open Food Facts often turns requests away when it is busy, and those refusals reach the browser as a failed request.
 // So every request is retried with growing waits, and finished searches are kept on the phone for a day.
@@ -1014,7 +1199,7 @@ async function foodBarcode(){const code=(($('#fbc')||{}).value||'').replace(/\D/
   if(tk!=ftok)return;fbusy=false;fwait='';if(it)return pickFood(it);ferr='That barcode is not in Open Food Facts yet, or has no nutrition. Try searching by name, or use Quick add.'}
  catch(e){if(e.message=='cancel'||tk!=ftok)return;if(e.message=='fail'){ferr='Search failed.';fretry='fbar'}else ferr='That barcode is not in Open Food Facts yet. Try searching by name, or use Quick add.'}
  fbusy=false;fwait='';fresUpd()}
-const itemRowBase=(it,i,src)=>`<button class="rowsw" data-fpick="${src}|${i}"><span style="min-width:0"><b style="font-weight:600">${esc(it.n)}</b><br><span class="m" style="margin:0;font-size:.8rem">${[it.gen?'Basic food, typical values':esc(it.b),...shopsBut(it).map(esc)].filter(Boolean).join(' · ')}</span></span><span class="m" style="margin:0;text-align:right;flex:none;font-size:.8rem"><b style="color:var(--ink)">${Math.round(it.k)}</b> kcal<br>${r1(it.p)} g protein<br>per 100 ${it.liq?'ml':'g'}</span></button>`;
+const itemRowBase=(it,i,src)=>`<button class="rowsw" data-fpick="${src}|${i}"><span style="min-width:0"><b style="font-weight:600">${esc(it.n)}</b><br><span class="m" style="margin:0;font-size:.8rem">${[it.gen?'Basic food, typical values':esc(it.b),...shopsBut(it).map(esc)].filter(Boolean).join(' · ')}</span>${it.qa?'':`<br>${tlChips(it)}`}</span><span class="m" style="margin:0;text-align:right;flex:none;font-size:.8rem"><b style="color:var(--ink)">${Math.round(it.k)}</b> kcal<br>${r1(it.p)} g protein<br>${r1(it.f)} g fat<br>per 100 ${it.liq?'ml':'g'}</span></button>`;
 const itemRow=(it,i,src)=>{const row=itemRowBase(it,i,src);return src=='c'&&it.lu&&unitsFor(it).includes(it.lu)?`<div class="frow">${row}<button class="dchip fplus" data-frq="${i}" aria-label="Add ${esc(it.n)} again">+ ${esc(amtL({u:it.lu,q:it.lq||1,liq:it.liq,qa:it.qa,sv:it.sv,svl:it.svl,gen:it.gen}).replace(/ \(.*\)$/,''))}</button></div>`:row};
 function fresH(){if(fbusy)return'<p class="m">Searching…</p>';let h=ferr?`<p class="warn">${esc(ferr)}</p>${fretry?`<button class="btn ghost" data-a="${fretry}" style="margin-top:6px">Try again</button>`:''}`:'';
  if(fres&&ferr&&!fres.length)fres=null;
@@ -1071,26 +1256,29 @@ function famtV(){const it=fsel,us=unitsFor(it);if(!us.includes(fu)){fu=us[0];fam
  <div class="shops" id="fqc" style="margin-bottom:10px">${QCH[fu].map(v=>`<button data-fq="${v}" class="dchip${famt==v?' on':''}">${fmtQ(v)}</button>`).join('')}</div>
  ${stp('famt',famt,fstep(fu))}<p class="m c" id="ful">${fu=='100g'?`× 100 g = ${r1(famt*100)} ${it.liq?'ml':'g'}`:unitL(it,fu,famt)}</p>
  <div class="fld"><div class="fl"><span>Meal</span></div>${fmSeg()}</div>
- <div class="macros" id="fprev">${fprevH()}</div>
+ <div id="fprev">${fprevH()}</div>
  <p class="m">${it.qa?'Values per serving.':`${Math.round(it.k)} kcal, ${r1(it.p)} g protein per 100 ${it.liq?'ml':'g'}.${it.liq?' Drinks are counted as 1 ml = 1 g.':''}`}</p>
  <button class="btn" data-a="fsave">${fedit?'Save changes':'Add to diary'}</button>${fedit?'<div class="c"><button class="tx" data-a="fdel">Remove from diary</button></div>':''}</div></div>`,'famt')}
-function fprevH(){const q=parseFloat(($('#famt')||{}).value);const a=isNaN(q)?famt:q,t=tot(fsel,(a||0)*unitG(fsel,fu));return`<div><b>${Math.round(t.k)}</b><span>kcal</span></div><div><b>${r1(t.p)} g</b><span>Protein</span></div><div><b>${r1(t.cb)} g / ${r1(t.f)} g</b><span>Carbs / fat</span></div>`}
+function fprevH(){const q=parseFloat(($('#famt')||{}).value);const a=isNaN(q)?famt:q,gm=(a||0)*unitG(fsel,fu),t=tot(fsel,gm);
+ const lights=fsel.qa?'':`<div class="tlrow">${Object.keys(TL).map(k=>{const c=tlOf(fsel,k),v=tlv(fsel,k);return`<div class="tlb ${c||'n'}"><span>${TLN[k]}</span><b>${v==null?'–':(k=='salt'?Math.round(v*gm)/100:r1(v*gm/100))+' g'}</b><em>${c=='g'?'Low':c=='a'?'Medium':c=='r'?'High':'Not listed'}</em></div>`}).join('')}</div>`;
+ return`<div class="macros macros4"><div><b>${Math.round(t.k)}</b><span>kcal</span></div><div><b>${r1(t.p)} g</b><span>Protein</span></div><div><b>${r1(t.cb)} g</b><span>Carbs</span></div><div><b>${r1(t.f)} g</b><span>Fat</span></div></div>${lights}`}
 function saveFood(qq){const q=qq!=null?qq:parseFloat($('#famt').value);if(isNaN(q)||q<=0)return;const it=fsel,g=q*unitG(it,fu);U.food=U.food||{};const L=U.food[vd]=U.food[vd]||[];
- const e={i:fedit||Date.now(),m:fmeal,n:it.n,b:it.b||'',c:it.c||'',k:it.k,p:it.p,cb:it.cb,f:it.f,sv:it.sv||0,svl:it.svl||'',liq:it.liq?1:0,qa:it.qa?1:0,gen:it.gen?1:0,sh:it.sh||[],q:r1(q),u:fu,g:r1(g)};
+ const e={i:fedit||Date.now(),m:fmeal,n:it.n,b:it.b||'',c:it.c||'',k:it.k,p:it.p,cb:it.cb,f:it.f,sv:it.sv||0,svl:it.svl||'',liq:it.liq?1:0,qa:it.qa?1:0,gen:it.gen?1:0,sh:it.sh||[],sat:it.sat??null,sug:it.sug??null,salt:it.salt??null,q:r1(q),u:fu,g:r1(g)};
  const k=L.findIndex(x=>x.i==e.i);k>=0?L[k]=e:L.push(e);
- const key=x=>x.c||x.n,rec={lu:fu,lq:r1(q),n:e.n,b:e.b,c:e.c,k:e.k,p:e.p,cb:e.cb,f:e.f,sv:e.sv,svl:e.svl,liq:!!e.liq,qa:!!e.qa,gen:!!e.gen,sh:e.sh};
+ const key=x=>x.c||x.n,rec={lu:fu,lq:r1(q),n:e.n,b:e.b,c:e.c,k:e.k,p:e.p,cb:e.cb,f:e.f,sv:e.sv,svl:e.svl,liq:!!e.liq,qa:!!e.qa,gen:!!e.gen,sh:e.sh,sat:e.sat,sug:e.sug,salt:e.salt};
  U.frec=[rec,...(U.frec||[]).filter(x=>key(x)!=key(rec))].slice(0,25);
  syncFood(vd);save();sub=null;fsel=null;fedit=null;fres=null;fq='';render()}
 function foodV(fromScrub=false){const g=target(),t=dayFood(vd),L=foodOf(vd),D=gd(vd),left=g.kc-t.k,legacy=!L.length&&D.kcal!=null&&!D.fk;
- const bar=(a,b)=>`<div class="bar" style="margin-top:6px;height:6px;padding:0;border-radius:4px;background:rgba(128,128,128,.3)"><i style="width:${Math.min(100,b?a/b*100:0)}%"></i></div>`;
+ const bar=(a,b,c)=>`<div class="bar" style="margin-top:6px;height:6px;padding:0;border-radius:4px;background:rgba(128,128,128,.3)"><i style="width:${Math.min(100,b?a/b*100:0)}%;background:var(--tl-${c})"></i></div>`;
  let h=`<div class="top"><div><div class="eyebrow">${fdate(vd,{weekday:'long',day:'numeric',month:'long'})}</div><h1>Food</h1></div><div class="nav2"><button class="ib" data-fday="${fromN(dn(vd)-1)}" aria-label="Previous day">${I.left}</button><button class="ib" data-fday="${fromN(dn(vd)+1)}" aria-label="Next day">${I.right}</button></div></div>
  ${vd!=TODAY?`<button class="tx" data-fday="${TODAY}">Back to today</button>`:'<div style="height:14px"></div>'}
- <div class="card hero"><div class="eyebrow">Eaten</div><div class="fuel"><b>${Math.round(t.k)}</b><span style="color:inherit;opacity:.65">of ${g.kc} kcal</span></div>${bar(t.k,g.kc)}<p class="m">${left>=0?`${Math.round(left)} kcal left today.`:`${Math.round(-left)} kcal over today's target.`} The target already adjusts for today's training.</p>
- <div class="macros">${[['Protein',t.p,g.pr],['Carbs',t.cb,g.carb],['Fat',t.f,g.fat]].map(([l,a,b])=>`<div style="background:rgba(128,128,128,.18)"><b style="font-size:.92rem">${Math.round(a)} / ${b} g</b><span style="color:inherit;opacity:.65">${l}</span>${bar(a,b)}</div>`).join('')}</div></div>
+ <div class="card hero"><div class="eyebrow">Eaten</div><div class="fuel"><b>${Math.round(t.k)}</b><span style="color:inherit;opacity:.65">of ${g.kc} kcal</span></div>${bar(t.k,g.kc,dayCol('k',t.k,g.kc))}<p class="m">${left>=0?`${Math.round(left)} kcal left today.`:`${Math.round(-left)} kcal over today's target.`} The target already adjusts for today's training.</p>
+ <div class="macros">${[['Protein',t.p,g.pr,'p'],['Carbs',t.cb,g.carb,'c'],['Fat',t.f,g.fat,'f']].map(([l,a,b,kd])=>`<div style="background:rgba(128,128,128,.18)"><b style="font-size:.92rem">${Math.round(a)} / ${b} g</b><span style="color:inherit;opacity:.65">${l}</span>${bar(a,b,dayCol(kd,a,b))}</div>`).join('')}</div>
+ <p class="m" style="margin-top:10px;font-size:.78rem"><i class="tld g"></i>On track <i class="tld a"></i>${vd<TODAY?'A little off':'Close to or a little over'} <i class="tld r"></i>${vd<TODAY?'Well off target':'Well over'}</p></div>
  ${legacy?`<p class="m">Logged before the food diary: ${D.kcal} kcal${D.p!=null?`, ${D.p} g protein`:''}. Adding food here replaces it.</p>`:''}
  ${L.length?`<div class="row" style="margin:-2px 0 10px"><span class="m" style="margin:0">${fselMode?'Select the foods for your meal.':''}</span><button class="tx" data-a="fselmode" style="color:var(--ink)">${fselMode?'Cancel':'Save foods as a meal'}</button></div>`:''}`;
  h+=MEALS.map(([k,l])=>{const es=L.filter(e=>e.m==k),mk=es.reduce((a,e)=>a+tot(e,e.g).k,0);
-  return`<div class="card${fselMode?'':' mealc'}"${fselMode?'':` data-fadd="${k}" role="button" aria-label="Add food to ${l}"`}><div class="row"><h3>${l}</h3><span class="m" style="margin:0;display:flex;align-items:center;gap:10px">${Math.round(mk)} kcal${fselMode?'':`<i class="mplus">${I.plus}</i>`}</span></div>${es.map(e=>{const x=tot(e,e.g);return`<button class="rowsw" ${fselMode?`data-fsel="${e.i}" style="justify-content:flex-start"`:`data-fe="${e.i}"`}>${fselMode?`<i class="ck${fpicked.has(e.i)?' on':''}"></i>`:''}<span style="min-width:0;flex:1">${esc(e.n)}<br><span class="m" style="margin:0;font-size:.8rem">${esc(amtL(e))}${e.b?' · '+esc(e.b):''}</span></span><span class="m" style="margin:0;text-align:right;flex:none"><b style="color:var(--ink)">${Math.round(x.k)}</b> kcal<br>${r1(x.p)} g protein</span></button>`}).join('')}${es.length||fselMode?'':`<p class="m" style="margin:6px 0 0">Tap to add ${l.toLowerCase()}.</p>`}</div>`}).join('');
+  return`<div class="card${fselMode?'':' mealc'}"${fselMode?'':` data-fadd="${k}" role="button" aria-label="Add food to ${l}"`}><div class="row"><h3>${l}</h3><span class="m" style="margin:0;display:flex;align-items:center;gap:10px">${Math.round(mk)} kcal${fselMode?'':`<i class="mplus">${I.plus}</i>`}</span></div>${es.map(e=>{const x=tot(e,e.g);return`<button class="rowsw" ${fselMode?`data-fsel="${e.i}" style="justify-content:flex-start"`:`data-fe="${e.i}"`}>${fselMode?`<i class="ck${fpicked.has(e.i)?' on':''}"></i>`:''}<span style="min-width:0;flex:1">${esc(e.n)}<br><span class="m" style="margin:0;font-size:.8rem">${esc(amtL(e))}${e.b?' · '+esc(e.b):''}</span></span><span class="m" style="margin:0;text-align:right;flex:none"><b style="color:var(--ink)">${Math.round(x.k)}</b> kcal<br>${r1(x.p)} g protein · ${r1(x.f)} g fat</span></button>`}).join('')}${es.length||fselMode?'':`<p class="m" style="margin:6px 0 0">Tap to add ${l.toLowerCase()}.</p>`}</div>`}).join('');
  shell(h,fromScrub)}
 
 
@@ -1175,7 +1363,7 @@ function strengthCard(names){if(!names.length)return'';if(!names.includes(lift))
  if(!r)b=`<p class="m">A strength line needs at least 3 sessions of ${esc(lift)} spread over about a week or more. You have ${ds.length} so far.</p>`;
  else{const xe=Math.min(dn(U.goal?U.goal.date:U.date),dn(TODAY)+84),p=pred(r,Math.max(xe,dn(TODAY))),w=r.b*7,ci=tq(r.n-2)*r.seb*7;
   b=chart(r,xe,P,'Strength trend for '+lift)+`<h3 style="margin-top:10px">${w>=0?'+':''}${f(w,2)} ± ${f(ci,2)} kg a week</h3><p class="m">Estimated 1-rep max, best set each session, with a straight regression line and a 95% range. It reaches about ${f(p[0],0)} kg (${f(p[1],0)} to ${f(p[2],0)}) by ${fdate(fromN(Math.max(xe,dn(TODAY))),{day:'numeric',month:'short'})} if the trend holds. Based on ${r.n} sessions.</p>`}
- return`<div class="card"><div class="eyebrow">Strength trend</div><select data-lift="1" aria-label="Exercise">${names.map(n=>`<option${n==lift?' selected':''}>${esc(n)}</option>`).join('')}</select><div style="height:12px"></div>${b}</div>`}
+ return`<div class="card"><div class="eyebrow">Strength trend</div><select data-lift="1" aria-label="Exercise">${names.map(n=>`<option value="${esc(n)}"${n==lift?' selected':''}>${esc(n)}</option>`).join('')}</select><div style="height:12px"></div>${b}</div>`}
 function progV(fromScrub=false){const c=calc(),x1=dn(U.goal?U.goal.date:U.date),r=c.r,L=loads(),gp=U.goal?goalPlan():null;let h='<h1 style="margin-bottom:18px">Progress</h1>';
  if(gp&&gp.ok){const n=dn(TODAY)-dn(U.start),pw=planW(gp,n),aw=c.M.ok?c.M.wHat:r?r.a+r.b*dn(TODAY):(wpts().slice(-1)[0]||[0,null])[1],df=aw==null?null:aw-pw;
   h+=`<div class="card"><div class="eyebrow">Goal plan</div><h3>${f(gp.wEnd)} kg at ${f(gp.bfEnd,0)}% body fat by ${fdate(gp.tight?gp.earliest:U.goal.date,FD)}</h3><p class="m">Planned weight today ${f(pw)} kg.${df==null?' Log your weight to compare.':Math.abs(df)<.5?' You are on plan.':` You are ${f(Math.abs(df))} kg ${df>0?'above':'below'} plan, so eat about 100 kcal a day ${df>0?'less':'more'} and check again in two weeks.`}</p>${goalTable()}</div>`}
@@ -1194,8 +1382,10 @@ function progV(fromScrub=false){const c=calc(),x1=dn(U.goal?U.goal.date:U.date),
 
 // ---------- Me ----------
 function bstats(){const B=base();if(!B)return'<p class="m">Add height and weight to see your numbers.</p>';return`<div class="kv"><div><span>BMI</span><b>${f(B.bmi)} · ${B.cat}</b></div><div><span>Lean mass</span><b>${f(B.lbm)} kg</b></div><div><span>Fat-free mass index</span><b>${f(B.ffmi)} kg/m²</b></div><div><span>Resting energy</span><b>${Math.round(B.bmr)} kcal</b></div><div><span>Maintenance estimate</span><b>${Math.round(B.tdee)} kcal</b></div></div><p class="m">BMI ignores muscle, so lean mass and fat-free mass index say more. Once you log enough weight and calories, your measured maintenance replaces this estimate.</p>`}
+const langSeg=()=>`<div class="seg">${Object.entries(LANGS).map(([k,l])=>`<button data-lang="${k}" class="${LANG==k?'on':''}">${l}</button>`).join('')}</div>`;
 function meV(fromScrub=false){const s=U.set;
  shell(`<div class="top"><h1>${esc(dname)}</h1><div class="av">${esc(dname[0]||'?')}</div></div><div style="height:18px"></div>
+ <div class="card"><div class="eyebrow">Language</div><p class="m" style="margin-top:0">Choose the language for the app.</p>${langSeg()}</div>
  <div class="card"><div class="eyebrow">Baseline</div>${baseCard()}</div><div class="card"><div class="eyebrow">Your numbers</div><div id="bst">${bstats()}</div></div>
  <div class="card"><div class="eyebrow">Tuning</div>${sl('s1','Lift weight drop per hour of sleep under 7.5',0,5,.5,s.sc,'%',{k:'sc'})}${sl('s2','Drop when training fasted',0,5,.5,s.fc,'%',{k:'fc'})}${sl('s3','Activity multiplier for baseline maintenance',1.2,2,.05,s.pal,'×',{k:'pal'})}${sl('s4','Share of cardio and sport calories added to your target',0,1,.1,s.actAdd,'',{k:'actAdd'})}${sl('s5','Load units per gym set',5,40,1,s.setAU,'',{k:'setAU'})}${sl('s6','Rest timer length (1 is the default)',.5,1.5,.1,s.rest,'×',{k:'rest'})}<p class="m">These are rough starting values, not precise science.</p></div>
  <div class="card"><div class="eyebrow">Sports list</div><p class="m" style="margin-top:0">One per line: name, MET (energy intensity).</p><textarea id="sports" rows="6" data-sp="1">${esc(s.sports)}</textarea></div>
@@ -1208,7 +1398,7 @@ function meV(fromScrub=false){const s=U.set;
  <div class="fld"><div class="fl"><span>Delete account</span><em>removes the account and all its data</em></div><input type="password" id="dpw" placeholder="Enter your password" autocomplete="current-password"><button class="btn danger" data-a="delacct" style="margin-top:10px">Delete account</button></div></div>`,fromScrub)}
 
 const baseV=fs=>{({day:dayV,food:foodV,plan:planV,prog:progV,me:meV})[tab](fs);selbarUpd()};
-function render(fromScrub=false){const sv=!booting&&!bootErr&&U&&U.ready?(sub=='form'?formV:sub=='fadd'?faddV:sub=='famt'&&fsel?famtV:sub=='fmnew'?fmnewV:sub=='fmeal'&&(U.fmeals||[])[fmv]?fmealV:null):null;
+function render(fromScrub=false){if(U&&U.set&&U.set.lang&&U.set.lang!=LANG){LANG=U.set.lang;try{localStorage.setItem('setorder-lang',LANG)}catch(e){}}document.documentElement.lang=LANG;const sv=!booting&&!bootErr&&U&&U.ready?(sub=='form'?formV:sub=='fadd'?faddV:sub=='famt'&&fsel?famtV:sub=='fmnew'?fmnewV:sub=='fmeal'&&(U.fmeals||[])[fmv]?fmealV:null):null;
  if(!sv)closeSheet();selbarUpd();if(booting)return loadV();if(bootErr)return errV();if(!U)return authV();if(!U.ready)return setupV();
  if(sv){if(!$('.view-stage')||renderedTab!==tab)baseV(false);return sv()}
  baseV(fromScrub)}
@@ -1219,6 +1409,7 @@ document.addEventListener('click',e=>{if(e.target.id=='scrim'){sub=null;fsel=nul
  if(D.tab){switchTab(D.tab,false);return}
  if(D.day){const old=vd;vd=D.day;dpick=false;pickP=null;stripAnimDir=tab=='day'?Math.sign(monN(vd)-monN(old)):0;tab='day';sub=null;swapP=null;es=null;wcarry=null;rmP=null;return render()}
  if(D.dses){const c=D.dses;delete U.ov[vd];if(c!='plan'){const planned=plan(vd)||'rest';if(c!=planned)U.ov[vd]=c}dpick=false;rmP=null;pickP=null;save();return render()}
+ if(D.lang){setLang(D.lang);return}
  if(D.fday){vd=D.fday;fpicked.clear();return render()}
  if(D.fadd){fmeal=D.fadd;sub='fadd';ftok++;fbusy=false;fwait='';fretry='';fres=null;fall=null;ferr='';fq='';qmsg='';return render()}
  if(D.fm){fmeal=D.fm;document.querySelectorAll('[data-fm]').forEach(x=>x.classList.toggle('on',x.dataset.fm==fmeal));const qb=document.querySelector('[data-a=fqsave]');if(qb)qb.textContent='Add to '+MEALS.find(m=>m[0]==fmeal)[1];return}

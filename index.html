@@ -302,6 +302,7 @@ const JA={
 'Carbs / fat':'炭水化物 / 脂質','e.g. Canteen lunch':'例：社食のランチ','e.g. Landmine press':'例：ランドマインプレス','e.g. Usual breakfast':'例：いつもの朝食','e.g. Tesco semi skimmed milk':'例：Tesco 低脂肪乳','e.g. a product or brand name':'例：商品名やブランド名',
 'How much of your training is bodyweight.':'トレーニングのうち自重の割合です。','0% is all weights.':'0%はすべてウエイトです。','At 100% every movement that has a bodyweight option uses one.':'100%では、自重の選択肢がある動作はすべて自重になります。','In between, the movements best suited to calisthenics switch first.':'その間では、自重に向いた動作から先に切り替わります。',
 'Until then this is a simple trend line.':'それまでは単純な推移線です。','Until then your target uses your baseline.':'それまでは目標に基準値を使います。','RPE':'RPE',
+'Leg days only after sport':'脚の日はスポーツの後だけ','Lower-body sessions are never on a planned sport or cardio day, or the day before one.':'下半身のセッションは、予定しているスポーツ・有酸素の日とその前日には入れません。','An upper session moves forward instead.':'代わりに上半身のセッションが前に入ります。',
 'underweight':'低体重','healthy weight':'標準体重','overweight':'過体重','obese':'肥満'};
 const JM={b:'朝食',l:'昼食',d:'夕食',s:'間食'},jt=x=>JA[x]??x;
 // [pattern, replacement]: the replacement is a string with $1… or a function of the match
@@ -376,7 +377,7 @@ function norm(u){u=u||newU();const d=newU();
  for(const k in d)if(u[k]==null)u[k]=d[k];const spv=(u.set&&u.set.spv)||0;u.set=Object.assign({},DS,u.set);
  if(spv<2&&u.set.sports!==DS.sports){const have=new Set(u.set.sports.split('\n').map(l=>l.split(',')[0].trim().toLowerCase())),add=SPORTS.filter(x=>!have.has(x[0].toLowerCase())).map(x=>x[0]+', '+x[1]),L=u.set.sports.split('\n').filter(l=>l.trim()),oi=L.findIndex(l=>/^other\s*,/i.test(l));if(oi>=0)L.splice(oi,0,...add.filter(l=>!/^Other,/.test(l)));else L.push(...add);u.set.sports=L.join('\n')}
  u.set.spv=2;u.eq=Object.assign({},d.eq,u.eq);
- u.cal=Object.assign({pct:0,off:{}},u.cal);u.cal.off=u.cal.off||{};u.wtoff=u.wtoff||{};u.man=u.man||{};return u}
+ u.cal=Object.assign({pct:0,off:{}},u.cal);u.cal.off=u.cal.off||{};u.wtoff=u.wtoff||{};u.man=u.man||{};if(u.set.legFrom==null)u.set.legFrom=TODAY;return u}
 const save=()=>{if(!user||!U)return;U.t=Date.now();lss('setorder-d-'+user,U);push()};
 function push(){dirty=true;clearTimeout(pt);pt=setTimeout(flush,600);updSync()}
 async function flush(){clearTimeout(pt);if(!user||!U||!window.FB)return;const t=U.t,uid=user;
@@ -443,9 +444,19 @@ const crmOf=d=>(U.dex&&U.dex[d]&&U.dex[d].crm)||[];
 const cdue=d=>d<U.start?[]:U.cardio.filter(c=>c.days.includes(pd(d).getDay())&&!crmOf(d).includes(c.type));
 const cdueAll=d=>d<U.start?[]:U.cardio.filter(c=>c.days.includes(pd(d).getDay()));
 // Sessions rotate through SPLIT on workout days. A day set to a named session uses it, and the rotation carries on from there.
-function plan(d){if(d<U.start||!isW(d))return null;let k=0;
- for(let x=dn(U.start);x<dn(d);x++){const e=fromN(x);if(!isW(e))continue;const o=U.ov[e];k=SES[o]?SPLIT.indexOf(o)+1:k+1}
- const o=U.ov[d];return SES[o]?o:SPLIT[k%SPLIT.length]}
+// Leg days only after sport: a lower-body session never goes on a planned sport or cardio day, or the day before one.
+// On those days the next upper session in the rotation moves forward and the leg day waits for the next free workout day.
+// It applies from the day the rule was switched on, so past workouts keep their names.
+const isLowerS=s=>/^Lower/.test(s),sportOn=d=>cdue(d).length>0;
+const legBlocked=d=>U.set.legAfter!==0&&d>=(U.set.legFrom||'9999-12-31')&&(sportOn(d)||sportOn(fromN(dn(d)+1)));
+function plan(d){if(d<U.start||!isW(d))return null;let q=[],k=0,out=null;
+ for(let x=dn(U.start);x<=dn(d);x++){const e=fromN(x);if(!isW(e))continue;const o=U.ov[e];let s;
+  if(SES[o]){s=o;k=SPLIT.indexOf(o)+1;q=[]}
+  else{while(q.length<SPLIT.length){q.push(SPLIT[k%SPLIT.length]);k++}let i=0;if(legBlocked(e)){let j=q.findIndex(z=>!isLowerS(z));for(let n=0;j<0&&n<SPLIT.length;n++){q.push(SPLIT[k%SPLIT.length]);k++;j=q.findIndex(z=>!isLowerS(z))}if(j>=0)i=j}s=q.splice(i,1)[0];
+   // when lifting days rarely fit legs, don't let skipped leg days pile up: keep at most two waiting
+   while(q.filter(isLowerS).length>2)q.splice(q.findIndex(isLowerS),1)}
+  if(x==dn(d))out=s}
+ return out}
 const avail=p=>{const a=lad(p).map((e,i)=>({e,i})),r=a.filter(x=>x.e.eq=='bw'||x.e.eq=='cu'||U.eq[x.e.eq]);return r.length?r:a};
 // Training style: calisthenics exercises have no per-kg start ratio (bodyweight, or weighted dips and pull-ups).
 // U.cal.pct is the share of movements done with bodyweight. The movements best suited to calisthenics switch first.
@@ -1326,7 +1337,8 @@ async function startScan(){const box=$('#fscan');if(!box)return;stopScan();const
 // ---------- Plan ----------
 const restFree=()=>[0,1,2,3,4,5,6].some(i=>!U.wd[i]&&!U.cardio.some(c=>c.days.includes(i)));
 function daysCard(){return`<div class="fl"><span>Lifting days</span><em>keep at least one full rest day</em></div><div class="chips7">${ORD.map(i=>`<button class="dchip${U.wd[i]?' on':''}" data-wd="${i}">${NM[i]}</button>`).join('')}</div>
- <p class="m">Sessions rotate through ${SPLIT.join(', ')} on these days. You can still add or skip a single day from Today.</p>${wmsg?`<p class="warn">${wmsg}</p>`:''}
+ <p class="m">Sessions rotate through ${SPLIT.join(', ')} on these days. You can still add or skip a single day from Today.</p>
+ <button class="rowsw" data-a="legafter" style="margin-top:4px"><span>Leg days only after sport</span><i class="tg${U.set.legAfter!==0?' on':''}"></i></button><p class="m" style="margin-top:0">Lower-body sessions are never on a planned sport or cardio day, or the day before one. An upper session moves forward instead.</p>${wmsg?`<p class="warn">${wmsg}</p>`:''}
  <div class="fld"><div class="fl"><span>Day 1 is</span></div><input type="date" id="start" value="${U.start}"></div>`}
 function cardioCard(){return`<p class="m" style="margin-top:0">Optional. Every sport can be logged from Today; these are the ones the app can plan sessions for. Switch on what you do, then choose sessions per week and which days. Intensity is set for you.</p><div>${CARDIO.map(t=>`<button class="rowsw" data-cd="${t}"><span>${t}</span><i class="tg${U.cardio.some(c=>c.type==t)?' on':''}"></i></button>`).join('')}</div>
  ${U.cardio.map(c=>`<div class="fld"><div class="fl"><span>${c.type}: sessions per week</span><em>${c.days.length} of ${c.n} days chosen</em></div><div class="seg">${[1,2,3,4,5].map(n=>`<button data-cn="${c.type}|${n}" class="${c.n==n?'on':''}">${n}</button>`).join('')}</div><div class="chips7" style="margin-top:8px">${ORD.map(i=>`<button class="dchip${c.days.includes(i)?' on':''}" data-cday="${c.type}|${i}">${NM[i]}</button>`).join('')}</div></div>`).join('')}
@@ -1505,6 +1517,7 @@ document.addEventListener('click',e=>{if(e.target.id=='scrim'){sub=null;fsel=nul
  else if(a=='skip')rest=null;else if(a=='add30'&&rest){rest.end=Math.max(rest.end,Date.now())+30000;rest.b=0}
  else if(a=='fed'){sd(vd,{fed:!gd(vd).fed});b.querySelector('.tg').classList.toggle('on',!!gd(vd).fed);refreshDay()}
  else if(a=='afed'){fa=Object.assign({},fa);fa.fed=!fa.fed;$('#afedtg').classList.toggle('on',!!fa.fed)}
+ else if(a=='legafter'){const on=U.set.legAfter===0;U.set.legAfter=on?1:0;if(on)U.set.legFrom=TODAY;save();render()}
  else if(a=='dayedit'){dpick=!dpick;render()}
  else if(a=='toggle'){U.ov[vd]=isW(vd)?'rest':'work';rmP=null;save();render()}
  else if(a=='body'){sd(vd,{w:nv('lw')});render()}
